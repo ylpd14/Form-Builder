@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>專業表單規格生成器 v50.00 (Multi-Select Dropdown)</title>
+    <title>專業表單規格生成器 v50.00 (Multi-Select & Tooltip Visuals)</title>
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&display=swap" rel="stylesheet">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/Sortable/1.15.0/Sortable.min.js"></script>
     <style>
@@ -171,10 +171,6 @@
         .vis-header { background: #ddd; display: flex; align-items: center; justify-content: center; color: #555; font-size: 8px; font-weight: bold; }
         .vis-data { display: flex; align-items: center; justify-content: center; color: #ccc; font-size: 8px; }
 
-        /* v48+ Instructions */
-        .instruction-box { font-size: 11px; color: #555; background: #f1f3f4; padding: 8px; border-radius: 4px; margin-bottom: 8px; line-height: 1.4; border-left: 3px solid #ccc; }
-        .instruction-title { font-weight: bold; margin-bottom: 4px; color: #333; }
-
         /* v50 Multi-Select Dropdown */
         .ms-container { position: relative; width: 100%; }
         .ms-trigger { padding: 8px 12px; border: 1px solid #ccc; border-radius: 4px; background: #fff; cursor: pointer; display: flex; justify-content: space-between; align-items: center; font-size: 13px; color: #333; }
@@ -286,24 +282,14 @@
             </div>
 
             <div class="p-item sec-divider">
-                <label>Excel 排版設定</label>
+                <label>
+                    Excel 排版設定
+                    <span class="info-icon" data-msg="<b>排版示意：</b><br><br><div class='layout-visual-container' style='background:transparent; border:none; padding:0; justify-content:flex-start; gap:20px;'><div class='layout-option'><div class='vis-grid horizontal'><div class='vis-header'>標題</div><div class='vis-data'>內容</div></div><span>橫式 (列)</span></div><div class='layout-option'><div class='vis-grid vertical'><div class='vis-header'>標題</div><div class='vis-data'>內容</div></div><span>直式 (欄)</span></div></div>">?</span>
+                </label>
                 <select class="inp-p" id="gLayout" onchange="applyGlobal()">
                     <option value="horizontal">橫式 (標題在列, 內容在下)</option>
                     <option value="vertical">直式 (標題在欄, 內容在右)</option>
                 </select>
-                <div class="instruction-box" style="margin-top:8px;">
-                    <div class="instruction-title">ℹ️ 排版示意</div>
-                    <div class="layout-visual-container" style="background:transparent; border:none; padding:0; justify-content:flex-start; gap:20px;">
-                        <div class="layout-option">
-                            <div class="vis-grid horizontal"><div class="vis-header">標題</div><div class="vis-data">內容</div></div>
-                            <span>橫式 (列)</span>
-                        </div>
-                        <div class="layout-option">
-                            <div class="vis-grid vertical"><div class="vis-header">標題</div><div class="vis-data">內容</div></div>
-                            <span>直式 (欄)</span>
-                        </div>
-                    </div>
-                </div>
                 <div class="p-row-flex" style="margin-top:8px;">
                     <label style="font-size:12px; flex:1;">標題起始 (Row/Col)</label>
                     <input type="number" class="inp-p" style="flex:1;" id="gTitleIdx" value="1" oninput="applyGlobal()">
@@ -352,12 +338,6 @@
                     自動帶入規則 
                     <span class="info-icon" data-msg="<b>設計目的：</b><br>減少重複輸入(如工單/批號)。<br><br><b>運作邏輯：</b><br>在設定時段內，自動填入上一筆資料。<br>若非此時段(跨班)則留空。">?</span>
                 </label>
-                <div class="instruction-box">
-                    <div class="instruction-title">ℹ️ 設計目的與邏輯</div>
-                    設定「開始~結束」時間。在此區間內填寫新表單時，系統會自動抓取您<b>上一筆成功送出的資料</b>填入。<br>
-                    <span style="color:#e65100">適用：</span>工單、批號等重複資訊。<br>
-                    <span style="color:#d93025">注意：</span>非此時段則留空，避免跨班錯誤。
-                </div>
                 <div style="background:#f0f9ff; padding:10px; border-radius:6px; font-size:12px; color:#444; margin-top:5px;">
                     <div id="apRules"></div>
                     <span class="add-link" onclick="addAutoPrevRule()">+ 新增自動帶入區段</span>
@@ -382,17 +362,11 @@
                     <option value="radio">單選</option>
                     <option value="checkbox">多選</option>
                 </select>
-                <div class="instruction-box" style="margin-top:10px;">
-                    <div class="instruction-title">ℹ️ 機台連動邏輯</div>
-                    當選擇特定機台時，可動態變更指定<b>「綜合格點 (Grid)」</b>的列內容。<br>
-                    <span style="color:#1a73e8">情境：</span>機台A驗3軸、機台B驗2軸。<br>
-                    <b>設定方式：</b><br>
-                    1. 機台 = 填入選項值 (如: CNC-01)<br>
-                    2. 目標 = Grid標題 (如: 尺寸檢查)<br>
-                    3. 選項 = 新的列名 (如: X軸,Y軸)
-                </div>
                 <div style="background:#f0f9ff; padding:10px; border-radius:6px; font-size:12px; color:#444; margin-top:5px;">
-                    <label style="margin:0 0 5px 0;">智慧連動規則</label>
+                    <label style="margin:0 0 5px 0;">
+                        智慧連動規則
+                        <span class="info-icon" data-msg="<b>設計目的：</b><br>不同機台對應不同檢查項目。<br><br><b>運作邏輯：</b><br>當選中特定機台時，自動更換目標格點(Grid)的列內容。">?</span>
+                    </label>
                     <div id="mRules"></div>
                     <span class="add-link" onclick="addMachineRule()">+ 新增連動規則</span>
                 </div>
@@ -431,6 +405,7 @@
                     <input type="text" class="inp-p" id="pLink" placeholder="插入連結 (URL)" oninput="apply()" style="margin-bottom:6px;">
                     <input type="text" class="inp-p" id="pDefVal" placeholder="預設值" oninput="apply()" style="margin-bottom:6px;">
                 </div>
+                
                 <div style="margin-top:10px; background:#fff3e0; padding:8px; border-radius:4px; border:1px solid #ffe0b2;">
                     <label style="margin-bottom:4px; color:#e65100;">內容驗證規則</label>
                     <div style="font-size:11px; color:#888; margin-bottom:5px;">(支援 字數 / 數值 / 小數位 驗證)</div>
@@ -504,6 +479,7 @@
                 <div id="pal${idPrefix}" class="palette-popover">
                     <div class="palette-title">${targetType==='text'?'文字顏色':'文字背景'}</div>
                     <div class="color-cell ${targetType==='bg'?'transparent':''}" style="width:100%; text-align:center; font-size:11px; line-height:24px; border:1px solid #ddd; margin-bottom:6px;" onclick="setPaletteColor('${idPrefix}', '${targetType}','${targetType==='bg'?'transparent':'#000000'}')">${targetType==='bg'?'無填滿':'自動 (黑色)'}</div>
+                    
                     <div class="palette-title">基本色</div>
                     <div class="color-grid">
                         ${['#000000','#ffffff','#eeece1','#1f497d','#4f81bd','#c0504d','#9bbb59','#8064a2','#4bacc6','#f79646'].map(c => 
