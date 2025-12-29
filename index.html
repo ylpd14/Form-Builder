@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>專業表單規格生成器 v51.00 (Fixes & Restored Features)</title>
+    <title>專業表單規格生成器 v52.00 (Focus Fix & Tooltips)</title>
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&display=swap" rel="stylesheet">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/Sortable/1.15.0/Sortable.min.js"></script>
     <style>
@@ -130,29 +130,28 @@
         .modal-body { flex: 1; overflow-y: auto; padding: 15px; }
         .modal-footer { padding: 15px; border-top: 1px solid #eee; text-align: right; background: #f9f9f9; border-radius: 0 0 8px 8px; }
         .temp-section-title { font-size: 14px; font-weight: bold; margin-bottom: 8px; color: #333; background: #e8f0fe; padding: 5px 8px; border-radius: 4px; }
-        .field-checkbox-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 8px; margin-bottom: 15px; }
-        .field-chk-item { display: flex; align-items: center; gap: 6px; font-size: 13px; padding: 6px; border: 1px solid #eee; border-radius: 4px; cursor: pointer; transition: 0.2s; }
-        .field-chk-item:hover { background: #f5f5f5; border-color: #ddd; }
         .calc-box { background: #fdfdfd; border: 1px solid #e0e0e0; padding: 10px; border-radius: 6px; margin-bottom: 10px; position: relative; box-shadow: 0 1px 2px rgba(0,0,0,0.05); }
         .calc-box .del-calc { position: absolute; top: 8px; right: 8px; color: #ccc; cursor: pointer; font-size: 16px; }
         .calc-box .del-calc:hover { color: var(--danger); }
-        .target-field-select { max-height: 100px; overflow-y: auto; border: 1px solid #eee; padding: 4px; border-radius: 4px; margin-top: 4px; background: #fff; }
         .time-row { display: flex; align-items: center; gap: 8px; margin-bottom: 5px; }
         .time-row input { padding: 4px; border: 1px solid #ccc; border-radius: 4px; }
 
-        /* Palette UI */
+        /* v46 Palette UI (Word-Style) */
         .palette-btn { display: flex; align-items: center; gap: 2px; padding: 2px 4px; border: 1px solid transparent; border-radius: 3px; cursor: pointer; background: transparent; transition: 0.1s; position: relative; height: 32px; }
         .palette-btn:hover { background: #e0e0e0; border-color: #ccc; }
         .palette-icon-wrap { display: flex; flex-direction: column; align-items: center; justify-content: center; width: 20px; }
         .palette-color-bar { width: 100%; height: 3px; margin-top: 1px; }
         .palette-arrow { font-size: 10px; color: #666; margin-left: 2px; }
+        
         .palette-popover { display: none; position: absolute; top: 35px; left: 0; background: #fff; border: 1px solid #bababa; box-shadow: 0 4px 8px rgba(0,0,0,0.2); padding: 6px; border-radius: 2px; z-index: 3000; width: 190px; }
         .palette-popover.active { display: block; }
         .palette-title { font-size: 11px; font-weight: bold; color: #555; margin: 6px 0 4px 2px; }
+        
         .color-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 4px; margin-bottom: 4px; }
         .color-cell { width: 28px; height: 28px; border: 1px solid #ddd; cursor: pointer; position: relative; }
         .color-cell:hover { outline: 1px solid #ff9800; z-index: 10; transform: scale(1.1); }
         .color-cell.transparent { background: linear-gradient(to bottom right, #fff 45%, #f00 50%, #fff 55%); border: 1px solid #ccc; }
+        
         .palette-custom-row { margin-top: 8px; padding-top: 6px; border-top: 1px solid #eee; display: flex; align-items: center; gap: 6px; font-size: 11px; cursor: pointer; color: #333; }
         .palette-custom-row:hover { background: #f5f5f5; }
         .custom-color-icon { width: 16px; height: 16px; border-radius: 50%; background: linear-gradient(to right, red, yellow, lime, cyan, blue, magenta, red); border: 1px solid #ccc; }
@@ -176,9 +175,9 @@
         .ms-container { position: relative; width: 100%; }
         .ms-trigger { padding: 8px 12px; border: 1px solid #ccc; border-radius: 4px; background: #fff; cursor: pointer; display: flex; justify-content: space-between; align-items: center; font-size: 13px; color: #333; }
         .ms-trigger:hover { border-color: var(--p); }
-        .ms-dropdown { display: none; position: absolute; top: 100%; left: 0; width: 100%; background: #fff; border: 1px solid #ccc; border-radius: 4px; box-shadow: 0 4px 12px rgba(0,0,0,0.15); z-index: 5000; margin-top: 4px; overflow: hidden; max-height: 250px; display: flex; flex-direction: column; }
-        .ms-dropdown.hidden { display: none !important; }
-        .ms-dropdown.active { display: flex !important; }
+        /* v52 Fix: Increased z-index to avoid overlap */
+        .ms-dropdown { display: none; position: absolute; top: 100%; left: 0; width: 100%; background: #fff; border: 1px solid #ccc; border-radius: 4px; box-shadow: 0 4px 12px rgba(0,0,0,0.15); z-index: 50000; margin-top: 4px; overflow: hidden; max-height: 250px; flex-direction: column; }
+        .ms-dropdown.active { display: flex; }
         .ms-header { padding: 8px; border-bottom: 1px solid #eee; background: #f9f9f9; font-size: 13px; font-weight: bold; }
         .ms-list { flex: 1; overflow-y: auto; padding: 5px 0; }
         .ms-item { display: flex; align-items: center; padding: 6px 10px; cursor: pointer; font-size: 13px; transition: 0.1s; }
@@ -202,9 +201,11 @@
             <div class="modal-body">
                 <div class="temp-section-title">1. 基本欄位顯示</div>
                 <div id="msBasicFields" class="ms-container"></div>
+
                 <div class="temp-section-title" style="margin-top:20px;">2. 進階統計與合併</div>
                 <div id="modalCalcList"></div>
                 <button class="btn-main" style="background:#fff; border:1px dashed #999; margin-top:8px;" onclick="addTempCalc()">+ 新增統計欄</button>
+
                 <div class="temp-section-title" style="margin-top:20px;">3. 自動清空設定</div>
                 <label class="p-check-row"><input type="checkbox" id="mClearOnSubmit"> 當所有紀錄送出後自動清空</label>
                 <div style="font-size:13px; font-weight:bold; margin:8px 0 4px 0;">指定清空時間點：</div>
@@ -655,8 +656,8 @@
                 try {
                     sanitizeField(f);
                     const s = `font-size:${f.size}px; color:${f.color}; background-color:${f.bgColor}; font-weight:${f.bold?'bold':'normal'}; font-style:${f.italic?'italic':'normal'}; text-decoration:${f.underline?'underline':'none'};`;
-                    const renderInput = (cls, ph) => `<input class="${cls} no-drag" style="width:100%; border:1px solid #ccc; border-radius:4px; padding:4px 6px; font-size:12px; height:28px; outline:none; background:#fff; ${f.upper ? 'text-transform:uppercase;' : ''}" placeholder="${ph}" oninput="validateInput(this, '${f.id}')" onblur="handleBlur(this, '${f.id}')" data-fid="${f.id}" value="${f.defVal || ''}">`;
-                    const renderMark = (isRadio, customMarkStyle) => `<div class="fake-icon ${isRadio?'radio':'checkbox'} no-drag" onclick="toggleCheck(this, '${customMarkStyle || f.markStyle}', ${isRadio})" onmousedown="event.stopPropagation()"></div>`;
+                    const renderInput = (cls, ph) => `<input class="${cls}" style="width:100%; border:1px solid #ccc; border-radius:4px; padding:4px 6px; font-size:12px; height:28px; outline:none; background:#fff; ${f.upper ? 'text-transform:uppercase;' : ''}" placeholder="${ph}" oninput="validateInput(this, '${f.id}')" onblur="handleBlur(this, '${f.id}')" onfocus="select('${f.id}')" data-fid="${f.id}" value="${f.defVal || ''}">`;
+                    const renderMark = (isRadio, customMarkStyle) => `<div class="fake-icon ${isRadio?'radio':'checkbox'}" onclick="toggleCheck(this, '${customMarkStyle || f.markStyle}', ${isRadio}); select('${f.id}')"></div>`;
                     
                     let autoPrevBadge = '';
                     if((f.autoPrevRules || []).length > 0) {
@@ -665,50 +666,50 @@
                     }
 
                     let body = '';
-                    if(f.type === 'batch') body = `<div class="batch-container"><label class="batch-label"><div class="fake-icon checkbox no-drag" onclick="toggleCheck(this, 'mark-check')"></div> FA</label>${renderInput('batch-input-flex', '主批號(3)')}<span>-</span>${renderInput('batch-input-flex', '子批號(2)')}</div>`;
+                    if(f.type === 'batch') body = `<div class="batch-container"><label class="batch-label"><div class="fake-icon checkbox" onclick="toggleCheck(this, 'mark-check'); select('${f.id}')"></div> FA</label>${renderInput('batch-input-flex', '主批號(3)')}<span>-</span>${renderInput('batch-input-flex', '子批號(2)')}</div>`;
                     else if(f.type === 'machine') {
-                        if(f.machineStyle === 'dropdown') body = `${autoPrevBadge}<div class="preview-dropdown"><select class="no-drag" style="width:100%; border:none; background:transparent;"><option>-- 請選擇機台 --</option>${(f.opts||[]).map(o=>`<option>${o}</option>`).join('')}</select></div>`;
-                        else body = `${autoPrevBadge}<div style="display:flex; gap:10px; flex-wrap:wrap;">${(f.opts||[]).map(o=>`<label style="display:flex;align-items:center;gap:4px;font-size:13px;">${renderMark(f.machineStyle==='radio')} ${o}</label>`).join('')}</div>`;
+                        if(f.machineStyle === 'dropdown') body = `${autoPrevBadge}<div class="preview-dropdown" onclick="select('${f.id}')"><select style="width:100%; border:none; background:transparent;"><option>-- 請選擇機台 --</option>${(f.opts||[]).map(o=>`<option>${o}</option>`).join('')}</select></div>`;
+                        else body = `${autoPrevBadge}<div style="display:flex; gap:10px; flex-wrap:wrap;">${(f.opts||[]).map(o=>`<label style="display:flex;align-items:center;gap:4px;font-size:13px;" onclick="select('${f.id}')">${renderMark(f.machineStyle==='radio')} ${o}</label>`).join('')}</div>`;
                         if((f.machineRules||[]).length > 0) {
                             const ruleText = f.machineRules.map(r=> `<span style="font-size:10px; background:#eee; padding:1px 3px;">${r.val}→${r.target}</span>`).join(' ');
                             body = `<div style="font-size:11px; color:#888; margin-bottom:4px;">連動: ${ruleText}</div>` + body;
                         }
                     } else if(f.type === 'shift') {
-                        if(f.shiftStyle === 'radio') body = `${autoPrevBadge}<div style="display:flex; gap:10px; flex-wrap:wrap;">${(f.opts||[]).map(o=>`<label style="display:flex;align-items:center;gap:4px;font-size:13px;">${renderMark(true, 'mark-check')} ${o}</label>`).join('')}</div>`;
-                        else body = `${autoPrevBadge}<div class="preview-dropdown"><select class="no-drag" style="width:100%; border:none; background:transparent;"><option>-- 請選擇班別 --</option>${(f.opts||[]).map(o=>`<option>${o}</option>`).join('')}</select></div>`;
+                        if(f.shiftStyle === 'radio') body = `${autoPrevBadge}<div style="display:flex; gap:10px; flex-wrap:wrap;">${(f.opts||[]).map(o=>`<label style="display:flex;align-items:center;gap:4px;font-size:13px;" onclick="select('${f.id}')">${renderMark(true, 'mark-check')} ${o}</label>`).join('')}</div>`;
+                        else body = `${autoPrevBadge}<div class="preview-dropdown" onclick="select('${f.id}')"><select style="width:100%; border:none; background:transparent;"><option>-- 請選擇班別 --</option>${(f.opts||[]).map(o=>`<option>${o}</option>`).join('')}</select></div>`;
                         if(f.shiftLogicE) body = `<span style="font-size:11px; color:#1a73e8; background:#e8f0fe; padding:2px;">⚡ 智慧帶入</span> ` + body;
-                    } else if(f.type === 'datetime') body = `<div style="display:flex; gap:10px;"><div style="border:1px solid #ccc; padding:6px; flex:1; border-radius:4px; background:#fff;">YYYY/MM/DD 📅</div>${f.showTime?'<div style="border:1px solid #ccc; padding:6px; width:80px; border-radius:4px; background:#fff;">--:-- 🕒</div>':''}</div>`;
-                    else if(f.type === 'remark') body = `${autoPrevBadge}<textarea class="remark-box no-drag" placeholder="備註...">${f.defVal || ''}</textarea>`;
+                    } else if(f.type === 'datetime') body = `<div style="display:flex; gap:10px;" onclick="select('${f.id}')"><div style="border:1px solid #ccc; padding:6px; flex:1; border-radius:4px; background:#fff;">YYYY/MM/DD 📅</div>${f.showTime?'<div style="border:1px solid #ccc; padding:6px; width:80px; border-radius:4px; background:#fff;">--:-- 🕒</div>':''}</div>`;
+                    else if(f.type === 'remark') body = `${autoPrevBadge}<textarea class="remark-box" placeholder="備註..." onclick="select('${f.id}')">${f.defVal || ''}</textarea>`;
                     else if(f.type === 'grid') {
                          let thead = '';
                          if(f.showCol) {
-                            let headerCell = f.corner && f.showRow ? `<th class="slash-header"><input class="slash-top no-drag" value="${f.cornerTop}" placeholder="欄"><input class="slash-bot no-drag" value="${f.cornerBot}" placeholder="列"></th>` : (f.showRow ? `<th></th>` : '');
-                            const ths = f.cols.map((c,i) => `<th><div style="display:flex;align-items:center;justify-content:center;position:relative;"><input class="grid-inp no-drag" value="${c}" onchange="syncGridCol('${f.id}',${i},this.value)" onmousedown="event.stopPropagation()"><span class="del-col-btn no-drag" onclick="delCol('${f.id}',${i})">×</span></div></th>`).join('');
-                            thead = `<thead><tr>${headerCell}${ths}<th class="grid-add-btn grid-add-col no-drag" onclick="addCol('${f.id}')">+</th></tr></thead>`;
+                            let headerCell = f.corner && f.showRow ? `<th class="slash-header"><input class="slash-top" value="${f.cornerTop}" placeholder="欄" onfocus="select('${f.id}')"><input class="slash-bot" value="${f.cornerBot}" placeholder="列" onfocus="select('${f.id}')"></th>` : (f.showRow ? `<th></th>` : '');
+                            const ths = f.cols.map((c,i) => `<th><div style="display:flex;align-items:center;justify-content:center;position:relative;"><input class="grid-inp" value="${c}" onchange="syncGridCol('${f.id}',${i},this.value)" onfocus="select('${f.id}')"><span class="del-col-btn" onclick="delCol('${f.id}',${i})">×</span></div></th>`).join('');
+                            thead = `<thead><tr>${headerCell}${ths}<th class="grid-add-btn grid-add-col" onclick="addCol('${f.id}')">+</th></tr></thead>`;
                          }
-                         const trs = f.rows.map((r,i) => `<tr>${f.showRow?`<td><div style="display:flex;align-items:center;justify-content:center;"><input class="grid-inp no-drag" value="${r}" onchange="syncGridRow('${f.id}',${i},this.value)"><span class="del-row-btn no-drag" onclick="delRow('${f.id}',${i})">🗑</span></div></td>`:''}${f.cols.map((c, colIndex) => {
+                         const trs = f.rows.map((r,i) => `<tr>${f.showRow?`<td><div style="display:flex;align-items:center;justify-content:center;"><input class="grid-inp" value="${r}" onchange="syncGridRow('${f.id}',${i},this.value)" onfocus="select('${f.id}')"><span class="del-row-btn" onclick="delRow('${f.id}',${i})">🗑</span></div></td>`:''}${f.cols.map((c, colIndex) => {
                              const mode = f.colModes[colIndex] || 'text';
                              let inner = '';
                              if(mode === 'text') inner = renderInput('style-v27-box','');
-                             else if(mode === 'radio') inner = `<div class="grid-cell-wrapper">${renderMark(true)}</div>`;
-                             else if(mode === 'checkbox') inner = `<div class="grid-cell-wrapper">${renderMark(false)}</div>`;
-                             else if(mode === 'mixed-radio') inner = `<div class="grid-cell-wrapper">${renderMark(true)}${renderInput('style-v27-box','')}</div>`;
-                             else if(mode === 'mixed-checkbox') inner = `<div class="grid-cell-wrapper">${renderMark(false)}${renderInput('style-v27-box','')}</div>`;
+                             else if(mode === 'radio') inner = `<div class="grid-cell-wrapper" onclick="select('${f.id}')">${renderMark(true)}</div>`;
+                             else if(mode === 'checkbox') inner = `<div class="grid-cell-wrapper" onclick="select('${f.id}')">${renderMark(false)}</div>`;
+                             else if(mode === 'mixed-radio') inner = `<div class="grid-cell-wrapper" onclick="select('${f.id}')">${renderMark(true)}${renderInput('style-v27-box','')}</div>`;
+                             else if(mode === 'mixed-checkbox') inner = `<div class="grid-cell-wrapper" onclick="select('${f.id}')">${renderMark(false)}${renderInput('style-v27-box','')}</div>`;
                              return `<td>${inner}</td>`;
                          }).join('')}</tr>`).join('');
-                         const footerRow = `<tr><td colspan="${f.cols.length + (f.showRow?1:0) + 1}" class="grid-add-btn grid-add-row no-drag" onclick="addRow('${f.id}')">+</td></tr>`;
+                         const footerRow = `<tr><td colspan="${f.cols.length + (f.showRow?1:0) + 1}" class="grid-add-btn grid-add-row" onclick="addRow('${f.id}')">+</td></tr>`;
                          body = `${autoPrevBadge}<table class="grid-table">${thead}<tbody>${trs}${footerRow}</tbody></table>`;
                     } else if(f.type === 'text') {
                          let unitHtml = f.uEnable ? `<div class="unit-label" style="background:#f0f0f0; padding:0 8px; display:flex; align-items:center; border-left:1px solid #ccc; font-size:12px; color:#555;">${f.unitB}</div>` : '';
                          body = `${autoPrevBadge}<div style="display:flex; border:1px solid #ccc; border-radius:4px; overflow:hidden;">${renderInput('style-v27-box','請輸入...')}${unitHtml}</div>`;
                     } else if(['choices','dropdown'].includes(f.type)) {
-                         if(f.type==='dropdown') body = `${autoPrevBadge}<div class="preview-dropdown"><select class="no-drag" style="width:100%; border:none; background:transparent;"><option>-- 請選擇 --</option>${(f.opts||[]).map(o=>`<option>${o}</option>`).join('')}</select></div>`;
+                         if(f.type==='dropdown') body = `${autoPrevBadge}<div class="preview-dropdown" onclick="select('${f.id}')"><select style="width:100%; border:none; background:transparent;"><option>-- 請選擇 --</option>${(f.opts||[]).map(o=>`<option>${o}</option>`).join('')}</select></div>`;
                          else body = `${autoPrevBadge}<div style="display:flex; flex-direction:column; gap:8px;">${(f.opts||[]).map(o=> {
                                 const mark = renderMark(f.mode==='radio' || f.mode==='mixed-radio');
                                 const input = (f.mode==='mixed-radio'||f.mode==='mixed-checkbox') ? renderInput('style-v27-box','') : '';
-                                return `<div class="opt-item">${mark} ${o} ${input}</div>`;
+                                return `<div class="opt-item" onclick="select('${f.id}')">${mark} ${o} ${input}</div>`;
                             }).join('')}</div>`;
-                    } else if(f.type === 'header') body = `<div style="border-bottom:2px solid #ddd; padding:5px; color:#666;">(章節標題)</div>`;
+                    } else if(f.type === 'header') body = `<div style="border-bottom:2px solid #ddd; padding:5px; color:#666;" onclick="select('${f.id}')">(章節標題)</div>`;
 
                     return `
                         <div class="card ${f.width} ${activeId===f.id?'selected':''}" data-id="${f.id}" onclick="select('${f.id}')">
