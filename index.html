@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>專業表單規格生成器 v55.00 (Searchable Multi-Select & Machine Rules)</title>
+    <title>專業表單規格生成器 v55.00 (Search Filter & Machine UI)</title>
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&display=swap" rel="stylesheet">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/Sortable/1.15.0/Sortable.min.js"></script>
     <style>
@@ -171,17 +171,15 @@
         .vis-header { background: #ddd; display: flex; align-items: center; justify-content: center; color: #555; font-size: 8px; font-weight: bold; }
         .vis-data { display: flex; align-items: center; justify-content: center; color: #ccc; font-size: 8px; }
 
-        /* v48+ Instructions */
-        .instruction-box { font-size: 11px; color: #555; background: #f1f3f4; padding: 8px; border-radius: 4px; margin-bottom: 8px; line-height: 1.4; border-left: 3px solid #ccc; }
-        .instruction-title { font-weight: bold; margin-bottom: 4px; color: #333; }
-
         /* v50+ Multi-Select Dropdown */
         .ms-container { position: relative; width: 100%; }
-        .ms-trigger { padding: 8px 12px; border: 1px solid #ccc; border-radius: 4px; background: #fff; cursor: pointer; display: flex; justify-content: space-between; align-items: center; font-size: 13px; color: #333; }
+        .ms-trigger { padding: 6px 10px; border: 1px solid #ccc; border-radius: 4px; background: #fff; cursor: pointer; display: flex; justify-content: space-between; align-items: center; font-size: 13px; color: #333; }
         .ms-trigger:hover { border-color: var(--p); }
+        /* v52 Z-Index Fix */
         .ms-dropdown { display: none; position: absolute; top: 100%; left: 0; width: 100%; background: #fff; border: 1px solid #ccc; border-radius: 4px; box-shadow: 0 4px 12px rgba(0,0,0,0.15); z-index: 50000; margin-top: 4px; overflow: hidden; max-height: 250px; flex-direction: column; }
         .ms-dropdown.active { display: flex; }
         .ms-header { padding: 8px; border-bottom: 1px solid #eee; background: #f9f9f9; font-size: 13px; font-weight: bold; }
+        .ms-search { width: 100%; margin-top: 5px; padding: 4px; font-size: 12px; border: 1px solid #ddd; border-radius: 3px; }
         .ms-list { flex: 1; overflow-y: auto; padding: 5px 0; }
         .ms-item { display: flex; align-items: center; padding: 6px 10px; cursor: pointer; font-size: 13px; transition: 0.1s; }
         .ms-item:hover { background: #f0f7ff; }
@@ -778,6 +776,7 @@
                 const mS = formConfig.metaStyle || { size: 28, color: '#000000', bgColor: 'transparent', bold: true };
                 document.getElementById('mSize').value = mS.size;
                 document.getElementById('mWidth').value = mS.width || 'w-100';
+                // Inject Palette for Meta
                 document.getElementById('metaPaletteContainer').innerHTML = getPaletteHTML('metaText', 'text', mS.color, 'indmetaText') + getPaletteHTML('metaBg', 'bg', mS.bgColor, 'indmetaBg');
 
                 ['mB','mI','mU'].forEach(b => document.getElementById(b).classList.remove('active'));
@@ -801,6 +800,7 @@
             
             ['pSize','pWidth','pMode','pUnitB','pLink','pDefVal','pMinLen','pMaxLen','pMinVal','pMaxVal','pDecPlaces','pRoundMode'].forEach(k => { if(document.getElementById(k)) document.getElementById(k).value = f[k.replace('p','').replace(k.charAt(1),k.charAt(1).toLowerCase())] || (k==='pSize'?14:''); });
             
+            // Inject Palette for Field Editor
             document.getElementById('editorPaletteContainer').innerHTML = getPaletteHTML('editorText', 'text', f.color, 'indeditorText') + getPaletteHTML('editorBg', 'bg', f.bgColor, 'indeditorBg');
 
             document.getElementById('pUpperCase').checked = f.upper;
@@ -836,6 +836,10 @@
             if(f.bold) document.getElementById('bB').classList.add('active');
             if(f.italic) document.getElementById('bI').classList.add('active');
             if(f.underline) document.getElementById('bU').classList.add('active');
+            
+            Array.from(list.children).forEach(c => {
+                if(c.dataset.id === id) c.classList.add('selected'); else c.classList.remove('selected');
+            });
         }
         
         function getIconForMode(m) {
@@ -875,8 +879,12 @@
             tempModalState.clearTimes = [...(formConfig.clearTimes || [])];
             tempModalState.clearOnSubmit = formConfig.clearOnSubmit || false;
             document.getElementById('mClearOnSubmit').checked = tempModalState.clearOnSubmit;
+            
+            // v50: Render Multi-Select for Basic Fields
             renderMultiSelectHTML('msBasicFields', fields.filter(f => f.type !== 'header'), tempModalState.tempColIds, 'basic');
-            renderModalCalcs(); renderModalTimes();
+            
+            renderModalCalcs(); 
+            renderModalTimes();
             document.getElementById('tempConfigModal').style.display = 'flex';
         }
         function closeTempModal() { document.getElementById('tempConfigModal').style.display = 'none'; }
@@ -888,30 +896,107 @@
             render(); closeTempModal();
         }
 
-        /* v50 Multi-Select Logic */
+        /* v50 Multi-Select Logic (w/ Search) */
         function renderMultiSelectHTML(containerId, options, selectedIds, contextStr) {
             const container = document.getElementById(containerId);
             if(!container) return;
             const uniqueId = containerId;
             const count = selectedIds.length;
             const labelText = count === 0 ? '無選擇' : `已選擇 ${count} 欄位`;
-            let itemsHtml = options.map(opt => `<label class="ms-item"><input type="checkbox" value="${opt.id}" ${selectedIds.includes(opt.id)?'checked':''}>${opt.title}</label>`).join('');
-            container.innerHTML = `<div class="ms-trigger" onclick="toggleMS('${uniqueId}')"><span>${labelText}</span> <span>▾</span></div><div id="dropdown-${uniqueId}" class="ms-dropdown"><div class="ms-header"><label><input type="checkbox" onchange="toggleAllMS('${uniqueId}', this.checked)"> 全選</label></div><div class="ms-list">${itemsHtml}</div><div class="ms-footer"><button class="ms-btn clear" onclick="clearMS('${uniqueId}')">清空</button><button class="ms-btn confirm" onclick="confirmMS('${uniqueId}', '${contextStr}')">確定</button></div></div>`;
+            
+            let itemsHtml = options.map(opt => `
+                <label class="ms-item">
+                    <input type="checkbox" value="${opt.id}" ${selectedIds.includes(opt.id)?'checked':''}>
+                    ${opt.title}
+                </label>`).join('');
+
+            container.innerHTML = `
+                <div class="ms-trigger" onclick="toggleMS('${uniqueId}')">
+                    <span>${labelText}</span> <span>▾</span>
+                </div>
+                <div id="dropdown-${uniqueId}" class="ms-dropdown">
+                    <div class="ms-header">
+                        <label><input type="checkbox" onchange="toggleAllMS('${uniqueId}', this.checked)"> 全選</label>
+                        <input type="text" class="ms-search" placeholder="🔍 搜尋..." oninput="filterMS('${uniqueId}', this.value)" onclick="event.stopPropagation()">
+                    </div>
+                    <div class="ms-list">${itemsHtml}</div>
+                    <div class="ms-footer">
+                        <button class="ms-btn clear" onclick="clearMS('${uniqueId}')">清空</button>
+                        <button class="ms-btn confirm" onclick="confirmMS('${uniqueId}', '${contextStr}')">確定</button>
+                    </div>
+                </div>
+            `;
         }
-        function toggleMS(id) { const dd = document.getElementById('dropdown-' + id); document.querySelectorAll('.ms-dropdown').forEach(d => { if(d.id !== 'dropdown-'+id) d.classList.remove('active'); }); dd.classList.toggle('active'); }
-        function toggleAllMS(id, checked) { const dd = document.getElementById('dropdown-' + id); dd.querySelectorAll('.ms-list input[type="checkbox"]').forEach(chk => chk.checked = checked); }
-        function clearMS(id) { toggleAllMS(id, false); }
+
+        function filterMS(uniqueId, text) {
+            const list = document.getElementById('dropdown-'+uniqueId).querySelector('.ms-list');
+            const items = list.querySelectorAll('.ms-item');
+            items.forEach(item => {
+                item.style.display = item.textContent.toLowerCase().includes(text.toLowerCase()) ? 'flex' : 'none';
+            });
+        }
+
+        function toggleMS(id) {
+            const dd = document.getElementById('dropdown-' + id);
+            // Close others
+            document.querySelectorAll('.ms-dropdown').forEach(d => { if(d.id !== 'dropdown-'+id) d.classList.remove('active'); });
+            dd.classList.toggle('active');
+        }
+        function toggleAllMS(id, checked) {
+            const dd = document.getElementById('dropdown-' + id);
+            dd.querySelectorAll('.ms-list input[type="checkbox"]').forEach(chk => {
+                if(chk.closest('.ms-item').style.display !== 'none') chk.checked = checked;
+            });
+        }
+        function clearMS(id) {
+            toggleAllMS(id, false);
+        }
         function confirmMS(id, contextStr) {
-            const dd = document.getElementById('dropdown-' + id); const selected = [];
+            const dd = document.getElementById('dropdown-' + id);
+            const selected = [];
             dd.querySelectorAll('.ms-list input[type="checkbox"]:checked').forEach(chk => selected.push(chk.value));
-            if(contextStr === 'basic') { tempModalState.tempColIds = selected; renderMultiSelectHTML(id, fields.filter(f => f.type !== 'header'), tempModalState.tempColIds, 'basic'); } 
-            else if(contextStr.startsWith('calc:')) { const idx = parseInt(contextStr.split(':')[1]); tempModalState.calcCols[idx].targets = selected; renderModalCalcs(); }
+            
+            // Update State based on context
+            if(contextStr === 'basic') {
+                tempModalState.tempColIds = selected;
+                // Re-render the specific MS to update trigger text
+                renderMultiSelectHTML(id, fields.filter(f => f.type !== 'header'), tempModalState.tempColIds, 'basic');
+            } else if(contextStr.startsWith('calc:')) {
+                const idx = parseInt(contextStr.split(':')[1]);
+                tempModalState.calcCols[idx].targets = selected;
+                // Don't re-render whole list, just update the trigger text? 
+                // For simplicity, re-render specific MS if possible, but renderModalCalcs is easier
+                renderModalCalcs(); 
+            } else if(contextStr.startsWith('mach_val:')) {
+                const idx = parseInt(contextStr.split(':')[1]);
+                fields.find(x=>x.id===activeId).machineRules[idx].val = selected.join(','); // Store as csv
+                renderMachineRules(); // Re-render to show text
+                render(); 
+            } else if(contextStr.startsWith('mach_target:')) {
+                const idx = parseInt(contextStr.split(':')[1]);
+                 // Target is usually single but we use multi-select UI. Take first or join.
+                 // The logic implies single target grid title.
+                 // We store the Title, but selection is by ID (if we passed ID). 
+                 // Wait, renderMultiSelectHTML uses IDs. Machine rules store Titles/Values?
+                 // Let's store Titles for Machine Rules as per requirement? 
+                 // Actually, using Title is risky if duplicate. ID is better. 
+                 // But requirements say "Target Grid Title". I will map ID back to Title.
+                 const titles = selected.map(sid => {
+                     const f = fields.find(x=>x.id===sid);
+                     return f ? f.title : sid;
+                 });
+                fields.find(x=>x.id===activeId).machineRules[idx].target = titles.join(',');
+                renderMachineRules(); 
+                render();
+            }
+
             dd.classList.remove('active');
         }
 
         function addTempCalc() { tempModalState.calcCols.push({ id: 'c'+Date.now(), title: '新統計', type: 'sum_fields', targets: [], ruleVal: '', ruleOp: '>', ruleColor: '#d93025' }); renderModalCalcs(); }
         function delModalCalc(i) { tempModalState.calcCols.splice(i, 1); renderModalCalcs(); }
         function updateModalCalc(i, key, val) { tempModalState.calcCols[i][key] = val; renderModalCalcs(); }
+        
         function renderModalCalcs() {
             const container = document.getElementById('modalCalcList');
             container.innerHTML = tempModalState.calcCols.map((c, i) => {
@@ -921,7 +1006,9 @@
                     const validFields = fields.filter(f => ['text','batch'].includes(f.type)); 
                     const msId = `msCalc${i}`;
                     targetHtml = `<div id="${msId}" class="ms-container" style="margin-top:4px;"></div>`;
-                    setTimeout(() => { renderMultiSelectHTML(msId, validFields, c.targets, `calc:${i}`); }, 0);
+                    setTimeout(() => {
+                        renderMultiSelectHTML(msId, validFields, c.targets, `calc:${i}`);
+                    }, 0);
                 } else {
                     targetHtml = `<select class="inp-p" style="margin-top:4px;" onchange="updateModalCalc(${i},'targets',[this.value])"><option value="">--選擇章節標題--</option>${fields.filter(x=>x.type==='header').map(h=>`<option value="${h.id}" ${c.targets[0]===h.id?'selected':''}>${h.title}</option>`).join('')}</select>`;
                 }
@@ -943,7 +1030,7 @@
                 if(!f.autoPrevRules) f.autoPrevRules = [];
                 f.autoPrevRules.push({start:'08:00', end:'12:00'}); 
                 renderAutoPrevRules(); 
-                render(); // Updates badge
+                render(); 
             }
         }
         function renderAutoPrevRules() { 
@@ -998,7 +1085,7 @@
             const f = fields.find(x=>x.id===activeId);
             if(f) {
                 if(!f.machineRules) f.machineRules = [];
-                f.machineRules.push({val:'A4', target:'', targetOpts:'1軸,2軸'}); 
+                f.machineRules.push({val:'', target:'', targetOpts:'1軸,2軸'}); 
                 renderMachineRules(); 
                 render();
             }
@@ -1007,7 +1094,45 @@
             if(!activeId) return;
             const f = fields.find(x=>x.id===activeId);
             if(f) {
-                document.getElementById('mRules').innerHTML = (f.machineRules||[]).map((r,i) => `<div style="background:#fff; border:1px solid #ddd; padding:6px; border-radius:4px; margin-bottom:5px;"><div style="display:flex; align-items:center; gap:4px; margin-bottom:4px;"><span style="font-size:11px; color:#666;">當機台=</span><input style="width:130px; border:1px solid #ccc; padding:2px;" placeholder="機台 (可多選, 逗號隔開)" value="${r.val}" oninput="upM(${i},'val',this.value)"><span style="cursor:pointer; margin-left:auto; color:#999;" onclick="delM(${i})">✕</span></div><div style="display:flex; flex-direction:column; gap:4px;"><input style="width:100%; border:1px solid #ccc; padding:3px; font-size:12px;" placeholder="連動欄位名稱" value="${r.target}" oninput="upM(${i},'target',this.value)"><input style="width:100%; border:1px solid #ccc; padding:3px; font-size:12px;" placeholder="選項 (逗號隔開)" value="${r.targetOpts}" oninput="upM(${i},'targetOpts',this.value)"></div></div>`).join('');
+                document.getElementById('mRules').innerHTML = (f.machineRules||[]).map((r,i) => {
+                    const msIdVal = `msMachVal${i}`;
+                    const msIdTarget = `msMachTarget${i}`;
+                    
+                    // Prepare options for Val (Machine Options)
+                    const machOpts = (f.opts || []).map(o => ({id: o, title: o}));
+                    const selectedVals = r.val ? r.val.split(',') : [];
+
+                    // Prepare options for Target (Grid Titles)
+                    const gridOpts = fields.filter(ff => ff.type === 'grid').map(ff => ({id: ff.id, title: ff.title}));
+                    // Map current target title back to ID for selection? Or just match by title.
+                    // Let's assume we store Titles in r.target. We need to find ID to check it.
+                    // Or we just use Title as ID for this specific simple logic.
+                    // Better: The MultiSelect component expects {id, title}.
+                    // If r.target is "Title", we find ID.
+                    const selectedTargets = [];
+                    if(r.target) {
+                        const tObj = fields.find(ff => ff.title === r.target && ff.type === 'grid');
+                        if(tObj) selectedTargets.push(tObj.id);
+                    }
+
+                    setTimeout(() => {
+                        renderMultiSelectHTML(msIdVal, machOpts, selectedVals, `mach_val:${i}`);
+                        renderMultiSelectHTML(msIdTarget, gridOpts, selectedTargets, `mach_target:${i}`);
+                    }, 0);
+
+                    return `<div style="background:#fff; border:1px solid #ddd; padding:6px; border-radius:4px; margin-bottom:5px;">
+                        <div style="display:flex; align-items:center; gap:4px; margin-bottom:4px;">
+                            <span style="font-size:11px; color:#666; width:50px;">當機台=</span>
+                            <div id="${msIdVal}" class="ms-container" style="flex:1;"></div>
+                            <span style="cursor:pointer; margin-left:4px; color:#999;" onclick="delM(${i})">✕</span>
+                        </div>
+                        <div style="display:flex; flex-direction:column; gap:4px;">
+                             <label style="font-size:11px; color:#666;">連動目標 (Grid)</label>
+                             <div id="${msIdTarget}" class="ms-container"></div>
+                             <input style="width:100%; border:1px solid #ccc; padding:3px; font-size:12px; margin-top:4px;" placeholder="選項 (逗號隔開)" value="${r.targetOpts}" oninput="upM(${i},'targetOpts',this.value)">
+                        </div>
+                    </div>`;
+                }).join('');
             }
         }
         window.upM = (i,k,v) => { if(!activeId) return; fields.find(x=>x.id===activeId).machineRules[i][k]=v; render(); };
