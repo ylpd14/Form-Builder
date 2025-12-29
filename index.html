@@ -3,359 +3,120 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>專業表單規格生成器 v40.00 (Final Master)</title>
+    <title>專業表單規格生成器 v41.00 (Global & Meta Update)</title>
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&display=swap" rel="stylesheet">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/Sortable/1.15.0/Sortable.min.js"></script>
     <style>
         :root { 
-            --p: #1a73e8; /* 主要藍色 */
-            --bg: #f8f9fa; 
-            --border: #dadce0; 
-            --radius: 4px; 
-            --danger: #d93025; 
-            --highlight: #fef08a; 
-            --temp-btn: #fbc02d; 
-            --submit-btn: #34a853;
+            --p: #1a73e8; --bg: #f8f9fa; --border: #dadce0; --radius: 4px; 
+            --danger: #d93025; --highlight: #fef08a; --temp-btn: #fbc02d; --submit-btn: #34a853;
         }
         * { box-sizing: border-box; }
-        
-        /* 1. Layout: Zero Gap & Compact */
         body { 
-            font-family: 'Noto Sans TC', sans-serif;
-            margin: 0; padding: 5px; 
-            display: flex; height: 100vh; overflow: hidden; 
-            background: var(--bg); color: #202124; 
-            gap: 8px; /* 全域間距 8px */
+            font-family: 'Noto Sans TC', sans-serif; margin: 0; padding: 5px; 
+            display: flex; height: 100vh; overflow: hidden; background: var(--bg); color: #202124; gap: 8px; 
         }
-
-        /* 左側欄 */
-        .sidebar-l { 
-            width: 240px; background: #fff; border: 1px solid var(--border); 
-            display: flex; flex-direction: column; flex-shrink: 0; border-radius: 4px; 
-        }
-        /* 右側欄 */
-        .sidebar-r { 
-            width: 360px; background: #fff;
-            border: 1px solid var(--border); padding: 10px; 
-            overflow-y: auto; flex-shrink: 0; border-radius: 4px;
-        }
-        
+        .sidebar-l { width: 240px; background: #fff; border: 1px solid var(--border); display: flex; flex-direction: column; flex-shrink: 0; border-radius: 4px; }
+        .sidebar-r { width: 360px; background: #fff; border: 1px solid var(--border); padding: 10px; overflow-y: auto; flex-shrink: 0; border-radius: 4px; }
         .scroll-area { flex: 1; overflow-y: auto; padding: 10px; }
-        
-        /* 中間畫布 */
-        .canvas-area { 
-            flex: 1;
-            padding: 10px 20px; overflow-y: auto; background: #eef1f4; 
-            display: flex; flex-direction: column; align-items: center; 
-            border: 1px solid var(--border); border-radius: 4px;
-        }
+        .canvas-area { flex: 1; padding: 10px 20px; overflow-y: auto; background: #eef1f4; display: flex; flex-direction: column; align-items: center; border: 1px solid var(--border); border-radius: 4px; }
         .canvas-container { width: 100%; max-width: 900px; padding-bottom: 50px; }
-
-        h3 { 
-            border-bottom: 2px solid #333; margin: 0 0 8px 0;
-            padding-bottom: 5px; font-size: 0.95rem; font-weight: bold; 
-        }
-        .cat { 
-            font-size: 11px; font-weight: bold;
-            color: #70757a; margin: 10px 0 4px 0; text-transform: uppercase; 
-            border-left: 3px solid var(--p); padding-left: 5px;
-        }
-
-        .btn-t { 
-            width: 100%; padding: 8px; margin-bottom: 4px; background: #fff;
-            border: 1px solid var(--border); border-radius: 4px; cursor: pointer; 
-            text-align: left; font-size: 13px; display: flex; align-items: center; 
-            gap: 8px; transition: 0.2s;
-        }
+        h3 { border-bottom: 2px solid #333; margin: 0 0 8px 0; padding-bottom: 5px; font-size: 0.95rem; font-weight: bold; }
+        .cat { font-size: 11px; font-weight: bold; color: #70757a; margin: 10px 0 4px 0; text-transform: uppercase; border-left: 3px solid var(--p); padding-left: 5px; }
+        .btn-t { width: 100%; padding: 8px; margin-bottom: 4px; background: #fff; border: 1px solid var(--border); border-radius: 4px; cursor: pointer; text-align: left; font-size: 13px; display: flex; align-items: center; gap: 8px; transition: 0.2s; }
         .btn-t:hover { background: #f8f9fa; border-color: var(--p); color: var(--p); }
-
-        /* Card Styles & Focus Logic */
-        .meta-card { 
-            background: #fff;
-            border: 1px solid var(--border); border-radius: var(--radius); padding: 15px; 
-            border-top: 8px solid #333; margin-bottom: 10px; 
-            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-            cursor: pointer; 
-        }
-        /* 選取狀態：藍色實線邊框 2px */
-        .meta-card.selected { 
-            border: 2px solid var(--p);
-            box-shadow: 0 0 8px rgba(26, 115, 232, 0.2); 
-        }
-
-        .sortable-list { 
-            display: grid;
-            grid-template-columns: repeat(12, 1fr); gap: 10px; 
-            min-height: 100px; width: 100%; 
-        }
-        .card { 
-            grid-column: span 12;
-            background: #fff; border: 1px solid var(--border); 
-            border-radius: var(--radius); padding: 15px; 
-            position: relative; cursor: default; transition: 0.2s;
-            box-shadow: 0 1px 2px rgba(0,0,0,0.05); 
-        }
-        
-        /* 🔵 Focus Visual Feedback */
-        .card.selected { 
-            border: 2px solid var(--p) !important;
-            box-shadow: 0 0 8px rgba(26, 115, 232, 0.3); z-index: 10;
-        }
-        .w-100 { grid-column: span 12; } 
-        .w-50 { grid-column: span 6; } 
-        .w-33 { grid-column: span 4; }
-
-        /* Inputs & Drag Safety (no-drag) */
-        .title-inp { 
-            width: 100%; border: none; border-bottom: 1px solid transparent; 
-            outline: none; background: transparent; transition: 0.2s; padding: 2px; 
-            font-weight: bold; min-width: 0; resize: none; overflow: hidden; 
-            font-family: inherit; display: block; height: auto; position: relative; z-index: 2;
-        }
+        .meta-card { background: #fff; border: 1px solid var(--border); border-radius: var(--radius); padding: 15px; border-top: 8px solid #333; margin-bottom: 10px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); cursor: pointer; }
+        .meta-card.selected { border: 2px solid var(--p); box-shadow: 0 0 8px rgba(26, 115, 232, 0.2); }
+        .sortable-list { display: grid; grid-template-columns: repeat(12, 1fr); gap: 10px; min-height: 100px; width: 100%; }
+        .card { grid-column: span 12; background: #fff; border: 1px solid var(--border); border-radius: var(--radius); padding: 15px; position: relative; cursor: default; transition: 0.2s; box-shadow: 0 1px 2px rgba(0,0,0,0.05); }
+        .card.selected { border: 2px solid var(--p) !important; box-shadow: 0 0 8px rgba(26, 115, 232, 0.3); z-index: 10; }
+        .w-100 { grid-column: span 12; } .w-50 { grid-column: span 6; } .w-33 { grid-column: span 4; }
+        .title-inp { width: 100%; border: none; border-bottom: 1px solid transparent; outline: none; background: transparent; transition: 0.2s; padding: 2px; font-weight: bold; min-width: 0; resize: none; overflow: hidden; font-family: inherit; display: block; height: auto; position: relative; z-index: 2; }
         .title-inp:hover { border-bottom: 1px dashed #ccc; }
         .title-inp:focus { border-bottom: 2px solid var(--p); background: #fefefe; }
-        
-        .desc-inp { 
-            width: 100%; border: none; border-bottom: 1px solid #eee;
-            padding: 4px 2px; font-size: 13px; outline: none; background: transparent; 
-            resize: none; overflow: hidden; font-family: inherit; color: #666; 
-            position: relative; z-index: 2; 
-        }
+        .desc-inp { width: 100%; border: none; border-bottom: 1px solid #eee; padding: 4px 2px; font-size: 13px; outline: none; background: transparent; resize: none; overflow: hidden; font-family: inherit; color: #666; position: relative; z-index: 2; }
         .desc-inp:focus { border-bottom: 1px solid var(--p); color: #333; background: #fff; }
-
-        /* 🔴 Validation Styles */
-        .style-v27-box { 
-            width: 100%;
-            border: 1px solid #ccc; border-radius: 4px; padding: 4px 6px; 
-            font-size: 12px; height: 28px; outline: none; transition: 0.2s; background: #fff;
-            position: relative; z-index: 2; 
-        }
-        .style-v27-box:focus { 
-            border-color: var(--p);
-            box-shadow: 0 0 0 2px rgba(26,115,232,0.1); 
-        }
-        .style-v27-box.error { 
-            border-color: var(--danger) !important;
-            background-color: #fff5f5 !important; 
-            box-shadow: 0 0 0 1px var(--danger) !important;
-        }
-        .batch-input-flex.error { 
-            border-color: var(--danger) !important; background-color: #fff5f5 !important;
-        }
-
-        /* Icons & Marks */
-        .fake-icon { 
-            display: inline-flex; align-items: center; justify-content: center; 
-            width: 18px; height: 18px; border: 2px solid #ccc; background: #fff; 
-            cursor: pointer; flex-shrink: 0; font-size: 14px; color: transparent; 
-            font-weight: bold; transition: 0.2s; user-select: none; position: relative; z-index: 2;
-        }
+        .style-v27-box { width: 100%; border: 1px solid #ccc; border-radius: 4px; padding: 4px 6px; font-size: 12px; height: 28px; outline: none; transition: 0.2s; background: #fff; position: relative; z-index: 2; }
+        .style-v27-box:focus { border-color: var(--p); box-shadow: 0 0 0 2px rgba(26,115,232,0.1); }
+        .style-v27-box.error { border-color: var(--danger) !important; background-color: #fff5f5 !important; box-shadow: 0 0 0 1px var(--danger) !important; }
+        .batch-input-flex.error { border-color: var(--danger) !important; background-color: #fff5f5 !important; }
+        .fake-icon { display: inline-flex; align-items: center; justify-content: center; width: 18px; height: 18px; border: 2px solid #ccc; background: #fff; cursor: pointer; flex-shrink: 0; font-size: 14px; color: transparent; font-weight: bold; transition: 0.2s; user-select: none; position: relative; z-index: 2; }
         .fake-icon:hover { border-color: #999; }
         .fake-icon.radio { border-radius: 50%; }
         .fake-icon.checkbox { border-radius: 4px; }
-        
-        .fake-icon.checked-v { 
-            border-color: var(--p); background-color: #f0f7ff; color: var(--p);
-        } 
-        .fake-icon.checked-v::after { content: '✓'; }
-        
-        .fake-icon.checked-x { 
-            border-color: var(--danger); background-color: #fff5f5; color: var(--danger); font-size: 12px;
-        } 
-        .fake-icon.checked-x::after { content: '✕'; }
-        
-        .fake-icon.radio.checked-v.standard-mode::after { 
-            content: ''; width: 10px; height: 10px; background: var(--p); border-radius: 50%;
-        }
-
-        /* Grid Table */
-        .grid-table { 
-            width: 100%; border-collapse: collapse; margin-top: 5px; table-layout: fixed; 
-        }
-        .grid-table th, .grid-table td { 
-            border: 1px solid #ddd; padding: 4px; text-align: center; 
-            vertical-align: middle; position: relative; font-size: 13px;
-        }
-        .grid-inp { 
-            border: none; text-align: center; width: 100%; outline: none; font-weight: bold;
-            background: transparent; font-size: 12px; position: relative; z-index: 2; 
-        }
+        .fake-icon.checked-v { border-color: var(--p); background-color: #f0f7ff; color: var(--p); } .fake-icon.checked-v::after { content: '✓'; }
+        .fake-icon.checked-x { border-color: var(--danger); background-color: #fff5f5; color: var(--danger); font-size: 12px; } .fake-icon.checked-x::after { content: '✕'; }
+        .fake-icon.radio.checked-v.standard-mode::after { content: ''; width: 10px; height: 10px; background: var(--p); border-radius: 50%; }
+        .grid-table { width: 100%; border-collapse: collapse; margin-top: 5px; table-layout: fixed; }
+        .grid-table th, .grid-table td { border: 1px solid #ddd; padding: 4px; text-align: center; vertical-align: middle; position: relative; font-size: 13px; }
+        .grid-inp { border: none; text-align: center; width: 100%; outline: none; font-weight: bold; background: transparent; font-size: 12px; position: relative; z-index: 2; }
         .grid-inp:focus { border-bottom: 2px solid var(--p); }
-        .grid-cell-wrapper { 
-            display: flex; align-items: center; justify-content: center; width: 100%; height: 100%; gap: 6px; 
-        }
-        
-        /* Grid Slash Header */
-        .slash-header { 
-            position: relative; background-color: #fff; height: 45px; 
-            background-image: linear-gradient(to bottom right, transparent calc(50% - 0.5px), #ddd calc(50% - 0.5px), #ddd calc(50% + 0.5px), transparent calc(50% + 0.5px));
-        }
-        .slash-top { 
-            position: absolute; top: 2px; right: 4px; width: 45%; border: none;
-            background: transparent; text-align: right; font-size: 11px; outline: none; 
-            color: #666; font-weight: bold; z-index: 2;
-        }
-        .slash-bot { 
-            position: absolute; bottom: 2px; left: 4px; width: 45%; border: none;
-            background: transparent; text-align: left; font-size: 11px; outline: none; 
-            color: #666; font-weight: bold; z-index: 2;
-        }
+        .grid-cell-wrapper { display: flex; align-items: center; justify-content: center; width: 100%; height: 100%; gap: 6px; }
+        .slash-header { position: relative; background-color: #fff; height: 45px; background-image: linear-gradient(to bottom right, transparent calc(50% - 0.5px), #ddd calc(50% - 0.5px), #ddd calc(50% + 0.5px), transparent calc(50% + 0.5px)); }
+        .slash-top { position: absolute; top: 2px; right: 4px; width: 45%; border: none; background: transparent; text-align: right; font-size: 11px; outline: none; color: #666; font-weight: bold; z-index: 2; }
+        .slash-bot { position: absolute; bottom: 2px; left: 4px; width: 45%; border: none; background: transparent; text-align: left; font-size: 11px; outline: none; color: #666; font-weight: bold; z-index: 2; }
         .slash-top:focus, .slash-bot:focus { border-bottom: 1px solid var(--p); color: #000; }
-
         .add-btn-icon { font-size: 16px; color: #ccc; cursor: pointer; vertical-align: middle; }
-        .del-col-btn { 
-            position: absolute; top: -10px; right: -5px; color: var(--danger); cursor: pointer;
-            font-size: 14px; background: #fff; border-radius: 50%; padding: 0 4px; 
-            display: none; border: 1px solid #eee; z-index: 5;
-        }
+        .del-col-btn { position: absolute; top: -10px; right: -5px; color: var(--danger); cursor: pointer; font-size: 14px; background: #fff; border-radius: 50%; padding: 0 4px; display: none; border: 1px solid #eee; z-index: 5; }
         .grid-table th:hover .del-col-btn { display: block; }
-        
-        .del-row-btn { 
-            font-size: 16px; color: #bbb; cursor: pointer; margin-left: 6px; vertical-align: middle;
-            visibility: hidden; padding: 2px; 
-        }
+        .del-row-btn { font-size: 16px; color: #bbb; cursor: pointer; margin-left: 6px; vertical-align: middle; visibility: hidden; padding: 2px; }
         .del-row-btn:hover { color: var(--danger); }
         .grid-table tr:hover .del-row-btn { visibility: visible; }
-        
-        .grid-add-btn { 
-            display: flex; align-items: center; justify-content: center; 
-            background: #fdfdfd; color: #f9c22e; font-weight: bold; cursor: pointer; 
-            transition: 0.2s; text-shadow: 0 0 1px #999; font-size: 20px; position: relative; z-index: 2; 
-        }
+        .grid-add-btn { display: flex; align-items: center; justify-content: center; background: #fdfdfd; color: #f9c22e; font-weight: bold; cursor: pointer; transition: 0.2s; text-shadow: 0 0 1px #999; font-size: 20px; position: relative; z-index: 2; }
         .grid-add-btn:hover { background: #eee; }
         .grid-add-col { width: 40px; height: 100%; border-left: 1px solid #ddd; }
         .grid-add-row { height: 35px; border-top: 1px solid #eee; }
-
-        /* Components */
-        .batch-container { 
-            display: flex; align-items: center; gap: 8px; padding: 8px 12px; 
-            border: 1px solid #e0e0e0; border-radius: 6px; background: #fff; width: 100%; margin-top: 5px;
-        }
-        .batch-label { 
-            display: flex; align-items: center; gap: 4px; font-weight: bold; font-size: 13px;
-            margin-right: 8px; white-space: nowrap; 
-        }
-        .batch-input-flex { 
-            flex: 1; min-width: 0; text-align: center; width: 100%; 
-            border: 1px solid #ccc; border-radius: 4px; padding: 4px; 
-            outline: none; position: relative; z-index: 2;
-        }
-        .remark-box { 
-            width: 100%; border: 1px solid #ccc; border-radius: 6px; padding: 8px;
-            font-size: 13px; resize: vertical; outline: none; transition: 0.2s; 
-            background: #fff; min-height: 60px; position: relative; z-index: 2;
-        }
+        .batch-container { display: flex; align-items: center; gap: 8px; padding: 8px 12px; border: 1px solid #e0e0e0; border-radius: 6px; background: #fff; width: 100%; margin-top: 5px; }
+        .batch-label { display: flex; align-items: center; gap: 4px; font-weight: bold; font-size: 13px; margin-right: 8px; white-space: nowrap; }
+        .batch-input-flex { flex: 1; min-width: 0; text-align: center; width: 100%; border: 1px solid #ccc; border-radius: 4px; padding: 4px; outline: none; position: relative; z-index: 2; }
+        .remark-box { width: 100%; border: 1px solid #ccc; border-radius: 6px; padding: 8px; font-size: 13px; resize: vertical; outline: none; transition: 0.2s; background: #fff; min-height: 60px; position: relative; z-index: 2; }
         .remark-box:focus { border-color: var(--p); box-shadow: 0 0 0 2px rgba(26,115,232,0.1); }
-
         .opt-item { display: flex; align-items: center; gap: 8px; margin-top: 5px; }
-        .preview-dropdown { 
-            display: flex; justify-content: space-between; align-items: center; 
-            border: 1px solid #ccc; padding: 10px; border-radius: 8px; 
-            background: #fff; color: #666; font-size: 14px; cursor: pointer;
-        }
-
-        /* Sidebar Elements */
+        .preview-dropdown { display: flex; justify-content: space-between; align-items: center; border: 1px solid #ccc; padding: 10px; border-radius: 8px; background: #fff; color: #666; font-size: 14px; cursor: pointer; }
         .p-item { margin-bottom: 15px; }
-        .p-item label { 
-            display: flex; align-items: center; font-weight: bold; font-size: 13px; margin-bottom: 5px; 
-        }
-        .inp-p { 
-            width: 100%; padding: 8px; border: 1px solid var(--border);
-            border-radius: 6px; font-size: 13px; 
-        }
+        .p-item label { display: flex; align-items: center; font-weight: bold; font-size: 13px; margin-bottom: 5px; }
+        .inp-p { width: 100%; padding: 8px; border: 1px solid var(--border); border-radius: 6px; font-size: 13px; }
         .p-row-flex { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; flex-wrap: wrap; }
-        .p-check-row { 
-            display: flex; align-items: center; gap: 8px; font-size: 13px; 
-            margin-bottom: 6px; font-weight: 500; cursor: pointer; 
-        }
-        .biu-btn { 
-            border: 1px solid #ccc; background: #fff; padding: 6px 12px; 
-            border-radius: 4px; cursor: pointer; font-weight: bold; font-size: 12px;
-        }
+        .p-check-row { display: flex; align-items: center; gap: 8px; font-size: 13px; margin-bottom: 6px; font-weight: 500; cursor: pointer; }
+        .biu-btn { border: 1px solid #ccc; background: #fff; padding: 6px 12px; border-radius: 4px; cursor: pointer; font-weight: bold; font-size: 12px; }
         .biu-btn.active { background: #333; color: #fff; border-color: #333; }
-        
-        .logic-panel { 
-            background: #fffde7; border: 1px dashed #fbc02d; padding: 10px; 
-            border-radius: 8px; margin-top: 8px; 
-        }
+        .logic-panel { background: #fffde7; border: 1px dashed #fbc02d; padding: 10px; border-radius: 8px; margin-top: 8px; }
         .logic-line { display: flex; align-items: center; gap: 4px; margin-bottom: 5px; font-size: 12px; }
         .logic-line input, .logic-line select { padding: 3px; border: 1px solid #ccc; border-radius: 3px; }
-        
         .opt-manage-item { display: flex; align-items: center; gap: 5px; margin-bottom: 6px; }
         .opt-manage-item input { flex: 1; padding: 6px; border: 1px solid #eee; border-radius: 4px; font-size: 12px; }
         .opt-manage-item span { cursor: pointer; color: #ccc; }
         .opt-manage-item span:hover { color: var(--danger); }
-        
-        .add-link { 
-            color: var(--p); font-size: 12px; font-weight: bold; cursor: pointer; 
-            margin-top: 8px; display: inline-block; 
-        }
+        .add-link { color: var(--p); font-size: 12px; font-weight: bold; cursor: pointer; margin-top: 8px; display: inline-block; }
         .sec-divider { margin-top: 15px; border-top: 1px solid #eee; padding-top: 10px; }
-        .link-icon { 
-            color: var(--p); margin-left: 5px; text-decoration: none; font-size: 14px; cursor: pointer;
-        }
-
-        /* Footer & Tooltip */
-        .footer-actions { 
-            margin-top: 20px; width: 100%; display: flex; flex-direction: column; gap: 10px; 
-        }
-        .btn-temp { 
-            width: 100%; background: var(--temp-btn); color: #000; border: 1px solid #e0a800; 
-            padding: 12px; border-radius: 6px; font-weight: bold; cursor: pointer; text-align: center; 
-        }
-        .btn-submit { 
-            width: 100%; background: var(--submit-btn); color: #fff; border: none; 
-            padding: 12px; border-radius: 6px; font-weight: bold; cursor: pointer; text-align: center; 
-        }
-        .temp-table-view { 
-            background: #fff; border: 1px solid #ddd; border-radius: 6px; padding: 10px; 
-            font-size: 12px; margin-top: 5px; 
-        }
+        .link-icon { color: var(--p); margin-left: 5px; text-decoration: none; font-size: 14px; cursor: pointer; }
+        .footer-actions { margin-top: 20px; width: 100%; display: flex; flex-direction: column; gap: 10px; }
+        .btn-temp { width: 100%; background: var(--temp-btn); color: #000; border: 1px solid #e0a800; padding: 12px; border-radius: 6px; font-weight: bold; cursor: pointer; text-align: center; }
+        .btn-submit { width: 100%; background: var(--submit-btn); color: #fff; border: none; padding: 12px; border-radius: 6px; font-weight: bold; cursor: pointer; text-align: center; }
+        .temp-table-view { background: #fff; border: 1px solid #ddd; border-radius: 6px; padding: 10px; font-size: 12px; margin-top: 5px; }
         .temp-table-header { font-weight: bold; margin-bottom: 5px; color: #333; }
         .temp-table-mock { width: 100%; border-collapse: collapse; margin-top: 5px; }
-        .temp-table-mock th, .temp-table-mock td { 
-            border: 1px solid #eee; padding: 6px; text-align: center; color: #666; 
-        }
+        .temp-table-mock th, .temp-table-mock td { border: 1px solid #eee; padding: 6px; text-align: center; color: #666; }
         .temp-table-mock th { background: #f9f9f9; font-weight: bold; }
-        
-        .info-icon { 
-            display: inline-flex; align-items: center; justify-content: center; 
-            width: 14px; height: 14px; background: #ccc; color: #fff; border-radius: 50%; 
-            font-size: 10px; margin-left: 6px; cursor: help; font-weight: bold; 
-        }
-        .global-tooltip { 
-            position: fixed; background: #222; color: #fff; padding: 10px; 
-            border-radius: 6px; z-index: 10000; font-weight: normal; font-family: sans-serif; 
-            line-height: 1.4; font-size: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.3); 
-            pointer-events: none; max-width: 220px; text-align: left; 
-        }
-        
-        .btn-main { 
-            width: 100%; padding: 12px; border: none; border-radius: 8px; 
-            font-weight: bold; cursor: pointer; font-size: 13px;
-        }
+        .info-icon { display: inline-flex; align-items: center; justify-content: center; width: 14px; height: 14px; background: #ccc; color: #fff; border-radius: 50%; font-size: 10px; margin-left: 6px; cursor: help; font-weight: bold; }
+        .global-tooltip { position: fixed; background: #222; color: #fff; padding: 10px; border-radius: 6px; z-index: 10000; font-weight: normal; font-family: sans-serif; line-height: 1.4; font-size: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.3); pointer-events: none; max-width: 220px; text-align: left; }
+        .btn-main { width: 100%; padding: 12px; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; font-size: 13px; }
         .btn-blue { background: var(--p); color: #fff; }
-        
-        .card-tools { 
-            display: flex; justify-content: flex-end; gap: 15px; margin-top: 15px; 
-            padding-top: 10px; border-top: 1px solid #f0f0f0; 
-        }
-        .tool-action { 
-            font-size: 12px; color: #666; cursor: pointer; display: flex; 
-            align-items: center; gap: 4px; font-weight: 600; 
-        }
+        .card-tools { display: flex; justify-content: flex-end; gap: 15px; margin-top: 15px; padding-top: 10px; border-top: 1px solid #f0f0f0; }
+        .tool-action { font-size: 12px; color: #666; cursor: pointer; display: flex; align-items: center; gap: 4px; font-weight: 600; }
         .tool-action:hover { color: var(--p); }
-
-        /* Grid Config Icons */
         .grid-col-config { display: flex; gap: 5px; margin-bottom: 5px; align-items: center; }
         .grid-col-config input { flex: 1; padding: 4px; font-size: 12px; border: 1px solid #ccc; border-radius: 3px; }
-        .mode-icon-btn { 
-            width: 32px; height: 26px; border: 1px solid #ccc; border-radius: 3px;
-            background: #f0f0f0; cursor: pointer; display: flex; align-items: center; 
-            justify-content: center; font-size: 14px; user-select: none;
-        }
+        .mode-icon-btn { width: 32px; height: 26px; border: 1px solid #ccc; border-radius: 3px; background: #f0f0f0; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 14px; user-select: none; }
         .mode-icon-btn:hover { background: #e0e0e0; }
         .grid-col-config span { color: #d93025; cursor: pointer; font-size: 16px; padding: 0 4px; }
+        /* v41 New Styles */
+        .temp-col-list { max-height: 200px; overflow-y: auto; border: 1px solid #eee; padding: 5px; border-radius: 4px; background: #fff; }
+        .temp-col-item { display: flex; align-items: center; gap: 6px; padding: 4px; border-bottom: 1px solid #f9f9f9; font-size: 13px; }
+        .temp-col-item:hover { background: #f5f5f5; }
+        .calc-box { background: #f0f4f8; border: 1px solid #dbeafe; padding: 8px; border-radius: 6px; margin-bottom: 8px; position: relative; }
+        .calc-box .del-calc { position: absolute; top: 5px; right: 5px; color: #999; cursor: pointer; }
+        .calc-box .del-calc:hover { color: var(--danger); }
     </style>
 </head>
 <body>
@@ -390,7 +151,7 @@
         <div class="canvas-container">
             <div class="meta-card" id="formMetaCard" onclick="select('form_meta')">
                 <textarea id="mT" class="title-inp no-drag" rows="1" style="font-size:1.8rem; font-weight:bold;" oninput="autoResize(this); syncMeta()" onmousedown="event.stopPropagation()">未命名的表單</textarea>
-                <textarea id="mD" class="title-inp no-drag" rows="1" style="margin-top:10px; font-size:14px; font-weight:normal;" placeholder="輸入表單說明..." oninput="autoResize(this); syncMeta()" onmousedown="event.stopPropagation()"></textarea>
+                <textarea id="mD" class="title-inp no-drag" rows="1" style="margin-top:10px; font-size:14px; font-weight:normal; display:none;" placeholder="輸入表單說明..." oninput="autoResize(this); syncMeta()" onmousedown="event.stopPropagation()"></textarea>
             </div>
             <div id="fList" class="sortable-list"></div>
             <div id="formFooter" class="footer-actions"></div>
@@ -403,6 +164,10 @@
         
         <div id="formSettings" style="display:none;">
             <div class="p-item">
+                <label>表單標題與說明</label>
+                <label class="p-check-row"><input type="checkbox" id="gMetaDescE" onchange="applyGlobal()"> 啟用說明文字</label>
+            </div>
+            <div class="p-item sec-divider">
                 <label>Excel 排版設定</label>
                 <select class="inp-p" id="gLayout" onchange="applyGlobal()">
                     <option value="horizontal">橫式 (標題在列, 內容在下)</option>
@@ -420,11 +185,18 @@
             <div class="p-item sec-divider">
                 <label>送出與暫存設定</label>
                 <label class="p-check-row"><input type="checkbox" id="gEnableTemp" onchange="applyGlobal()"> 啟用暫存紀錄列表</label>
+                
                 <div id="tempConfig" style="display:none; margin-top:8px; background:#fffde7; padding:10px; border-radius:6px;">
-                    <label style="font-size:12px; margin-bottom:5px;">暫存列表欄位 (逗號隔開)</label>
-                    <input type="text" class="inp-p" id="gTempCols" value="日期/班別, 料號/批號, 數量, 檢驗員" oninput="applyGlobal()">
-                    <label style="font-size:12px; margin-bottom:5px; margin-top:8px;">自動清空時段 (逗號隔開)</label>
+                    <label style="font-size:12px; margin-bottom:5px;">基本欄位顯示 (勾選顯示)</label>
+                    <div id="tempColSelector" class="temp-col-list"></div>
+                    
+                    <label style="font-size:12px; margin-bottom:5px; margin-top:10px;">進階統計與合併</label>
+                    <div id="tempCalcList"></div>
+                    <span class="add-link" onclick="addTempCalc()">+ 新增統計欄</span>
+
+                    <label style="font-size:12px; margin-bottom:5px; margin-top:15px;">自動清空時段 (逗號隔開)</label>
                     <input type="text" class="inp-p" id="gClearTimes" placeholder="例如: 08:00, 20:00" oninput="applyGlobal()">
+                    <label class="p-check-row" style="margin-top:8px;"><input type="checkbox" id="gClearOnSubmit" onchange="applyGlobal()"> 當所有紀錄送出後自動清空</label>
                 </div>
             </div>
         </div>
@@ -584,7 +356,13 @@
     <script>
         let fields = [];
         let activeId = null;
-        let formConfig = { layout: 'horizontal', titleIdx: 1, dataIdx: 2, enableTemp: false, clearTimes: '', tempCols: '日期/班別, 料號/批號, 數量, 檢驗員' };
+        let formConfig = { 
+            layout: 'horizontal', titleIdx: 1, dataIdx: 2, 
+            enableTemp: false, clearTimes: '', clearOnSubmit: false, 
+            metaDescE: false,
+            tempColIds: [], // Store IDs of checked columns
+            calcCols: [] // Store custom calculation columns
+        };
         const list = document.getElementById('fList');
 
         try {
@@ -593,6 +371,7 @@
                 onEnd: () => {
                     const order = Array.from(list.children).map(el => el.dataset.id);
                     fields = order.map(id => fields.find(x => x.id === id)).filter(Boolean);
+                    if(activeId === 'form_meta') renderTempSelector();
                 }
             });
         } catch(e) {}
@@ -657,9 +436,13 @@
                 fields.splice(idx+1, 0, f);
             } else fields.push(f);
             render(); setTimeout(() => select(f.id), 50);
+            if(activeId === 'form_meta') renderTempSelector();
         }
 
         function render() {
+            // Update Meta Desc visibility
+            document.getElementById('mD').style.display = formConfig.metaDescE ? 'block' : 'none';
+
             const htmlArr = fields.map(f => {
                 try {
                     sanitizeField(f);
@@ -772,10 +555,22 @@
 
             const footer = document.getElementById('formFooter');
             footer.innerHTML = '';
+            
             if(formConfig.enableTemp) {
-                const tempCols = (formConfig.tempCols || '日期, 批號').split(/,|，/).map(s=>s.trim()).filter(s=>s);
-                const thHtml = tempCols.map(c=>`<th>${c}</th>`).join('');
-                footer.innerHTML += `<button class="btn-temp" onclick="validateAndSubmit('temp')">暫存單筆紀錄 (加入列表)</button><div class="temp-table-view"><div class="temp-table-header">暫存列表預覽 (目前 0 筆)</div><table class="temp-table-mock"><tr><th>#</th>${thHtml}<th>操作</th></tr><tr><td colspan="${tempCols.length+2}">目前暫存區無紀錄</td></tr></table></div><button class="btn-submit" onclick="validateAndSubmit('submit')">🚀 最終送出所有紀錄至 Excel (清空暫存)</button>`;
+                // Build Temp Table Header based on selected IDs and Calcs
+                let ths = [];
+                // 1. Basic Fields
+                (formConfig.tempColIds || []).forEach(fid => {
+                    const field = fields.find(x => x.id === fid);
+                    if(field) ths.push(field.title);
+                });
+                // 2. Calc Columns
+                (formConfig.calcCols || []).forEach(c => ths.push(c.title));
+
+                if(ths.length === 0) ths.push("未選擇顯示欄位");
+                
+                const thHtml = ths.map(c=>`<th>${c}</th>`).join('');
+                footer.innerHTML += `<button class="btn-temp" onclick="validateAndSubmit('temp')">暫存單筆紀錄 (加入列表)</button><div class="temp-table-view"><div class="temp-table-header">暫存列表預覽</div><table class="temp-table-mock"><tr><th>#</th>${thHtml}<th>操作</th></tr><tr><td colspan="${ths.length+2}">目前暫存區無紀錄</td></tr></table></div><button class="btn-submit" onclick="validateAndSubmit('submit')">🚀 最終送出所有紀錄至 Excel (清空暫存)</button>`;
             } else {
                 footer.innerHTML += `<button class="btn-submit" onclick="validateAndSubmit('submit')">🚀 送出資料</button>`;
             }
@@ -794,7 +589,10 @@
                 document.getElementById('gEnableTemp').checked = formConfig.enableTemp;
                 document.getElementById('tempConfig').style.display = formConfig.enableTemp ? 'block' : 'none';
                 document.getElementById('gClearTimes').value = formConfig.clearTimes;
-                document.getElementById('gTempCols').value = formConfig.tempCols || '';
+                document.getElementById('gClearOnSubmit').checked = formConfig.clearOnSubmit;
+                document.getElementById('gMetaDescE').checked = formConfig.metaDescE;
+                renderTempSelector();
+                renderTempCalcs();
                 return;
             }
             document.getElementById('formSettings').style.display='none';
@@ -876,9 +674,73 @@
             formConfig.dataIdx = document.getElementById('gDataIdx').value;
             formConfig.enableTemp = document.getElementById('gEnableTemp').checked;
             formConfig.clearTimes = document.getElementById('gClearTimes').value;
-            formConfig.tempCols = document.getElementById('gTempCols').value;
+            formConfig.clearOnSubmit = document.getElementById('gClearOnSubmit').checked;
+            formConfig.metaDescE = document.getElementById('gMetaDescE').checked;
             document.getElementById('tempConfig').style.display = formConfig.enableTemp ? 'block' : 'none';
             render(); 
+        }
+
+        /* Temp Column Selector Logic */
+        function renderTempSelector() {
+            const container = document.getElementById('tempColSelector');
+            if(!container) return;
+            container.innerHTML = fields.map(f => {
+                const checked = (formConfig.tempColIds || []).includes(f.id) ? 'checked' : '';
+                return `<div class="temp-col-item">
+                    <input type="checkbox" onchange="toggleTempCol('${f.id}')" ${checked}>
+                    <span>${f.title}</span>
+                </div>`;
+            }).join('');
+        }
+        function toggleTempCol(id) {
+            if(!formConfig.tempColIds) formConfig.tempColIds = [];
+            const idx = formConfig.tempColIds.indexOf(id);
+            if(idx > -1) formConfig.tempColIds.splice(idx, 1);
+            else formConfig.tempColIds.push(id);
+            render();
+        }
+
+        /* Temp Calc Logic */
+        function addTempCalc() {
+            if(!formConfig.calcCols) formConfig.calcCols = [];
+            formConfig.calcCols.push({ id: 'c'+Date.now(), title: '新加總', type: 'fields', targets: '', ruleVal: '', ruleOp: '>' });
+            renderTempCalcs(); render();
+        }
+        function delTempCalc(i) {
+            formConfig.calcCols.splice(i, 1);
+            renderTempCalcs(); render();
+        }
+        function updateTempCalc(i, key, val) {
+            formConfig.calcCols[i][key] = val;
+            render();
+        }
+        function renderTempCalcs() {
+            const container = document.getElementById('tempCalcList');
+            if(!container) return;
+            container.innerHTML = (formConfig.calcCols || []).map((c, i) => `
+                <div class="calc-box">
+                    <span class="del-calc" onclick="delTempCalc(${i})">×</span>
+                    <input type="text" class="inp-p" style="margin-bottom:4px; font-weight:bold;" value="${c.title}" placeholder="欄位名稱" oninput="updateTempCalc(${i},'title',this.value)">
+                    <select class="inp-p" style="margin-bottom:4px;" onchange="updateTempCalc(${i},'type',this.value)">
+                        <option value="fields" ${c.type==='fields'?'selected':''}>指定欄位加總</option>
+                        <option value="header" ${c.type==='header'?'selected':''}>章節標題下加總</option>
+                    </select>
+                    ${c.type==='fields' 
+                        ? `<input type="text" class="inp-p" style="margin-bottom:4px;" value="${c.targets}" placeholder="目標欄位名稱 (逗號隔開)" oninput="updateTempCalc(${i},'targets',this.value)">`
+                        : `<select class="inp-p" style="margin-bottom:4px;" onchange="updateTempCalc(${i},'targets',this.value)"><option value="">--選擇章節--</option>${fields.filter(x=>x.type==='header').map(h=>`<option value="${h.id}" ${c.targets===h.id?'selected':''}>${h.title}</option>`).join('')}</select>`
+                    }
+                    <div style="display:flex; align-items:center; gap:4px; font-size:12px;">
+                        <span>警示: 若</span>
+                        <select style="border:1px solid #ccc; border-radius:3px;" onchange="updateTempCalc(${i},'ruleOp',this.value)">
+                            <option value=">" ${c.ruleOp==='>'?'selected':''}>></option>
+                            <option value="<" ${c.ruleOp==='<'?'selected':''}>&lt;</option>
+                            <option value="=" ${c.ruleOp==='='?'selected':''}>=</option>
+                        </select>
+                        <input type="number" style="width:50px; border:1px solid #ccc; border-radius:3px;" value="${c.ruleVal}" placeholder="值" oninput="updateTempCalc(${i},'ruleVal',this.value)">
+                        <span style="color:red; font-weight:bold;">反紅</span>
+                    </div>
+                </div>
+            `).join('');
         }
 
         function apply() {
@@ -975,7 +837,10 @@
             el.value = val.toFixed(f.decPlaces);
         }
         
-        function syncTitle(id, v) { fields.find(x=>x.id===id).title = v; }
+        function syncTitle(id, v) { 
+            fields.find(x=>x.id===id).title = v; 
+            if(activeId === 'form_meta') renderTempSelector(); 
+        }
         function syncDesc(id, v) { fields.find(x=>x.id===id).desc = v; }
         function syncSidebarOpt(i, val) { const f = fields.find(x => x.id === activeId);
             if(val.includes(',')) { let newOpts = val.split(',').map(s => s.trim()).filter(s => s !== ''); f.opts.splice(i, 1, ...newOpts); renderSidebarOpts();
