@@ -8,7 +8,7 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/Sortable/1.15.0/Sortable.min.js"></script>
     <style>
         :root { 
-            --p: #1a73e8; /* Primary Blue */
+            --p: #1a73e8; /* 主要藍色 */
             --bg: #f8f9fa; 
             --border: #dadce0; 
             --radius: 4px; 
@@ -24,151 +24,260 @@
             font-family: 'Noto Sans TC', sans-serif;
             margin: 0; padding: 5px; 
             display: flex; height: 100vh; overflow: hidden; 
-            background: var(--bg); color: #202124; gap: 8px;
+            background: var(--bg); color: #202124; 
+            gap: 8px; /* 全域間距 8px */
         }
 
-        /* Sidebar Left: Toolkit */
+        /* 左側欄 */
         .sidebar-l { 
             width: 240px; background: #fff; border: 1px solid var(--border); 
             display: flex; flex-direction: column; flex-shrink: 0; border-radius: 4px; 
         }
-        
-        /* Sidebar Right: Properties */
+        /* 右側欄 */
         .sidebar-r { 
-            width: 360px; background: #fff; border: 1px solid var(--border); 
-            padding: 10px; overflow-y: auto; flex-shrink: 0; border-radius: 4px;
+            width: 360px; background: #fff;
+            border: 1px solid var(--border); padding: 10px; 
+            overflow-y: auto; flex-shrink: 0; border-radius: 4px;
         }
-
-        /* Canvas: Main Workspace */
+        
+        .scroll-area { flex: 1; overflow-y: auto; padding: 10px; }
+        
+        /* 中間畫布 */
         .canvas-area { 
-            flex: 1; padding: 10px 20px; overflow-y: auto; background: #eef1f4; 
+            flex: 1;
+            padding: 10px 20px; overflow-y: auto; background: #eef1f4; 
             display: flex; flex-direction: column; align-items: center; 
             border: 1px solid var(--border); border-radius: 4px;
         }
         .canvas-container { width: 100%; max-width: 900px; padding-bottom: 50px; }
 
-        /* Utility Classes */
-        .scroll-area { flex: 1; overflow-y: auto; padding: 10px; }
-        h3 { border-bottom: 2px solid #333; margin: 0 0 8px 0; padding-bottom: 5px; font-size: 0.95rem; font-weight: bold; }
-        .cat { font-size: 11px; font-weight: bold; color: #70757a; margin: 10px 0 4px 0; text-transform: uppercase; border-left: 3px solid var(--p); padding-left: 5px; }
+        h3 { 
+            border-bottom: 2px solid #333; margin: 0 0 8px 0;
+            padding-bottom: 5px; font-size: 0.95rem; font-weight: bold; 
+        }
+        .cat { 
+            font-size: 11px; font-weight: bold;
+            color: #70757a; margin: 10px 0 4px 0; text-transform: uppercase; 
+            border-left: 3px solid var(--p); padding-left: 5px;
+        }
 
-        /* Sidebar Buttons */
         .btn-t { 
             width: 100%; padding: 8px; margin-bottom: 4px; background: #fff;
             border: 1px solid var(--border); border-radius: 4px; cursor: pointer; 
-            text-align: left; font-size: 13px; display: flex; align-items: center; gap: 8px; transition: 0.2s;
+            text-align: left; font-size: 13px; display: flex; align-items: center; 
+            gap: 8px; transition: 0.2s;
         }
         .btn-t:hover { background: #f8f9fa; border-color: var(--p); color: var(--p); }
 
-        /* Card Styles */
+        /* Card Styles & Focus Logic */
         .meta-card { 
-            background: #fff; border: 1px solid var(--border); border-radius: var(--radius); 
-            padding: 15px; border-top: 8px solid #333; margin-bottom: 10px; 
-            box-shadow: 0 1px 3px rgba(0,0,0,0.1); cursor: pointer; 
+            background: #fff;
+            border: 1px solid var(--border); border-radius: var(--radius); padding: 15px; 
+            border-top: 8px solid #333; margin-bottom: 10px; 
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            cursor: pointer; 
         }
-        .meta-card.selected { border: 2px solid var(--p); box-shadow: 0 0 8px rgba(26, 115, 232, 0.2); }
+        /* 選取狀態：藍色實線邊框 2px */
+        .meta-card.selected { 
+            border: 2px solid var(--p);
+            box-shadow: 0 0 8px rgba(26, 115, 232, 0.2); 
+        }
 
-        .sortable-list { display: grid; grid-template-columns: repeat(12, 1fr); gap: 10px; min-height: 100px; width: 100%; }
-        
-        .card { 
-            grid-column: span 12; background: #fff; border: 1px solid var(--border); 
-            border-radius: var(--radius); padding: 15px; position: relative; 
-            cursor: default; transition: 0.2s; box-shadow: 0 1px 2px rgba(0,0,0,0.05); 
+        .sortable-list { 
+            display: grid;
+            grid-template-columns: repeat(12, 1fr); gap: 10px; 
+            min-height: 100px; width: 100%; 
         }
-        /* Focus Visual Feedback */
-        .card.selected { border: 2px solid var(--p); box-shadow: 0 0 8px rgba(26, 115, 232, 0.3); z-index: 10; }
+        .card { 
+            grid-column: span 12;
+            background: #fff; border: 1px solid var(--border); 
+            border-radius: var(--radius); padding: 15px; 
+            position: relative; cursor: default; transition: 0.2s;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.05); 
+        }
         
+        /* 🔵 Focus Visual Feedback */
+        .card.selected { 
+            border: 2px solid var(--p) !important;
+            box-shadow: 0 0 8px rgba(26, 115, 232, 0.3); z-index: 10;
+        }
         .w-100 { grid-column: span 12; } 
         .w-50 { grid-column: span 6; } 
         .w-33 { grid-column: span 4; }
 
-        /* Inputs & Typography */
+        /* Inputs & Drag Safety (no-drag) */
         .title-inp { 
-            width: 100%; border: none; border-bottom: 1px solid transparent; outline: none; 
-            background: transparent; transition: 0.2s; padding: 2px; font-weight: bold; 
-            min-width: 0; resize: none; overflow: hidden; font-family: inherit; display: block; height: auto; 
+            width: 100%; border: none; border-bottom: 1px solid transparent; 
+            outline: none; background: transparent; transition: 0.2s; padding: 2px; 
+            font-weight: bold; min-width: 0; resize: none; overflow: hidden; 
+            font-family: inherit; display: block; height: auto; position: relative; z-index: 2;
         }
         .title-inp:hover { border-bottom: 1px dashed #ccc; }
         .title-inp:focus { border-bottom: 2px solid var(--p); background: #fefefe; }
         
         .desc-inp { 
-            width: 100%; border: none; border-bottom: 1px solid #eee; padding: 4px 2px; 
-            font-size: 13px; outline: none; background: transparent; resize: none; overflow: hidden; 
-            font-family: inherit; color: #666; 
+            width: 100%; border: none; border-bottom: 1px solid #eee;
+            padding: 4px 2px; font-size: 13px; outline: none; background: transparent; 
+            resize: none; overflow: hidden; font-family: inherit; color: #666; 
+            position: relative; z-index: 2; 
         }
         .desc-inp:focus { border-bottom: 1px solid var(--p); color: #333; background: #fff; }
 
-        /* Validation & Input Styles */
+        /* 🔴 Validation Styles */
         .style-v27-box { 
-            width: 100%; border: 1px solid #ccc; border-radius: 4px; padding: 4px 6px; 
-            font-size: 12px; height: 28px; outline: none; transition: 0.2s; background: #fff; 
+            width: 100%;
+            border: 1px solid #ccc; border-radius: 4px; padding: 4px 6px; 
+            font-size: 12px; height: 28px; outline: none; transition: 0.2s; background: #fff;
+            position: relative; z-index: 2; 
         }
-        .style-v27-box:focus { border-color: var(--p); box-shadow: 0 0 0 2px rgba(26,115,232,0.1); }
-        .style-v27-box.error { border-color: var(--danger) !important; background-color: #fff5f5 !important; box-shadow: 0 0 0 1px var(--danger) !important; }
-        .batch-input-flex.error { border-color: var(--danger) !important; background-color: #fff5f5 !important; }
+        .style-v27-box:focus { 
+            border-color: var(--p);
+            box-shadow: 0 0 0 2px rgba(26,115,232,0.1); 
+        }
+        .style-v27-box.error { 
+            border-color: var(--danger) !important;
+            background-color: #fff5f5 !important; 
+            box-shadow: 0 0 0 1px var(--danger) !important;
+        }
+        .batch-input-flex.error { 
+            border-color: var(--danger) !important; background-color: #fff5f5 !important;
+        }
 
         /* Icons & Marks */
         .fake-icon { 
-            display: inline-flex; align-items: center; justify-content: center; width: 18px; height: 18px; 
-            border: 2px solid #ccc; background: #fff; cursor: pointer; flex-shrink: 0; font-size: 14px; 
-            color: transparent; font-weight: bold; transition: 0.2s; user-select: none; 
+            display: inline-flex; align-items: center; justify-content: center; 
+            width: 18px; height: 18px; border: 2px solid #ccc; background: #fff; 
+            cursor: pointer; flex-shrink: 0; font-size: 14px; color: transparent; 
+            font-weight: bold; transition: 0.2s; user-select: none; position: relative; z-index: 2;
         }
         .fake-icon:hover { border-color: #999; }
         .fake-icon.radio { border-radius: 50%; }
         .fake-icon.checkbox { border-radius: 4px; }
-        .fake-icon.checked-v { border-color: var(--p); background-color: #f0f7ff; color: var(--p); } 
+        
+        .fake-icon.checked-v { 
+            border-color: var(--p); background-color: #f0f7ff; color: var(--p);
+        } 
         .fake-icon.checked-v::after { content: '✓'; }
-        .fake-icon.checked-x { border-color: var(--danger); background-color: #fff5f5; color: var(--danger); font-size: 12px; } 
+        
+        .fake-icon.checked-x { 
+            border-color: var(--danger); background-color: #fff5f5; color: var(--danger); font-size: 12px;
+        } 
         .fake-icon.checked-x::after { content: '✕'; }
-        .fake-icon.radio.checked-v.standard-mode::after { content: ''; width: 10px; height: 10px; background: var(--p); border-radius: 50%; }
+        
+        .fake-icon.radio.checked-v.standard-mode::after { 
+            content: ''; width: 10px; height: 10px; background: var(--p); border-radius: 50%;
+        }
 
-        /* Grid System */
-        .grid-table { width: 100%; border-collapse: collapse; margin-top: 5px; table-layout: fixed; }
-        .grid-table th, .grid-table td { border: 1px solid #ddd; padding: 4px; text-align: center; vertical-align: middle; position: relative; font-size: 13px; }
-        .grid-inp { border: none; text-align: center; width: 100%; outline: none; font-weight: bold; background: transparent; font-size: 12px; }
+        /* Grid Table */
+        .grid-table { 
+            width: 100%; border-collapse: collapse; margin-top: 5px; table-layout: fixed; 
+        }
+        .grid-table th, .grid-table td { 
+            border: 1px solid #ddd; padding: 4px; text-align: center; 
+            vertical-align: middle; position: relative; font-size: 13px;
+        }
+        .grid-inp { 
+            border: none; text-align: center; width: 100%; outline: none; font-weight: bold;
+            background: transparent; font-size: 12px; position: relative; z-index: 2; 
+        }
         .grid-inp:focus { border-bottom: 2px solid var(--p); }
-        .grid-cell-wrapper { display: flex; align-items: center; justify-content: center; width: 100%; height: 100%; gap: 6px; }
-
-        /* Slash Header */
+        .grid-cell-wrapper { 
+            display: flex; align-items: center; justify-content: center; width: 100%; height: 100%; gap: 6px; 
+        }
+        
+        /* Grid Slash Header */
         .slash-header { 
             position: relative; background-color: #fff; height: 45px; 
             background-image: linear-gradient(to bottom right, transparent calc(50% - 0.5px), #ddd calc(50% - 0.5px), #ddd calc(50% + 0.5px), transparent calc(50% + 0.5px));
         }
-        .slash-top { position: absolute; top: 2px; right: 4px; width: 45%; border: none; background: transparent; text-align: right; font-size: 11px; outline: none; color: #666; font-weight: bold; }
-        .slash-bot { position: absolute; bottom: 2px; left: 4px; width: 45%; border: none; background: transparent; text-align: left; font-size: 11px; outline: none; color: #666; font-weight: bold; }
+        .slash-top { 
+            position: absolute; top: 2px; right: 4px; width: 45%; border: none;
+            background: transparent; text-align: right; font-size: 11px; outline: none; 
+            color: #666; font-weight: bold; z-index: 2;
+        }
+        .slash-bot { 
+            position: absolute; bottom: 2px; left: 4px; width: 45%; border: none;
+            background: transparent; text-align: left; font-size: 11px; outline: none; 
+            color: #666; font-weight: bold; z-index: 2;
+        }
         .slash-top:focus, .slash-bot:focus { border-bottom: 1px solid var(--p); color: #000; }
 
-        /* Grid Controls */
-        .del-col-btn { position: absolute; top: -10px; right: -5px; color: var(--danger); cursor: pointer; font-size: 14px; background: #fff; border-radius: 50%; padding: 0 4px; display: none; border: 1px solid #eee; z-index: 5; }
+        .add-btn-icon { font-size: 16px; color: #ccc; cursor: pointer; vertical-align: middle; }
+        .del-col-btn { 
+            position: absolute; top: -10px; right: -5px; color: var(--danger); cursor: pointer;
+            font-size: 14px; background: #fff; border-radius: 50%; padding: 0 4px; 
+            display: none; border: 1px solid #eee; z-index: 5;
+        }
         .grid-table th:hover .del-col-btn { display: block; }
-        .del-row-btn { font-size: 16px; color: #bbb; cursor: pointer; margin-left: 6px; visibility: hidden; }
+        
+        .del-row-btn { 
+            font-size: 16px; color: #bbb; cursor: pointer; margin-left: 6px; vertical-align: middle;
+            visibility: hidden; padding: 2px; 
+        }
         .del-row-btn:hover { color: var(--danger); }
         .grid-table tr:hover .del-row-btn { visibility: visible; }
         
-        .grid-add-btn { display: flex; align-items: center; justify-content: center; background: #fdfdfd; color: #f9c22e; font-weight: bold; cursor: pointer; transition: 0.2s; text-shadow: 0 0 1px #999; font-size: 20px; }
+        .grid-add-btn { 
+            display: flex; align-items: center; justify-content: center; 
+            background: #fdfdfd; color: #f9c22e; font-weight: bold; cursor: pointer; 
+            transition: 0.2s; text-shadow: 0 0 1px #999; font-size: 20px; position: relative; z-index: 2; 
+        }
         .grid-add-btn:hover { background: #eee; }
         .grid-add-col { width: 40px; height: 100%; border-left: 1px solid #ddd; }
         .grid-add-row { height: 35px; border-top: 1px solid #eee; }
 
         /* Components */
-        .batch-container { display: flex; align-items: center; gap: 8px; padding: 8px 12px; border: 1px solid #e0e0e0; border-radius: 6px; background: #fff; width: 100%; margin-top: 5px; }
-        .batch-label { display: flex; align-items: center; gap: 4px; font-weight: bold; font-size: 13px; margin-right: 8px; white-space: nowrap; }
-        .batch-input-flex { flex: 1; min-width: 0; text-align: center; width: 100%; border: 1px solid #ccc; border-radius: 4px; padding: 4px; outline: none; }
-        .remark-box { width: 100%; border: 1px solid #ccc; border-radius: 6px; padding: 8px; font-size: 13px; resize: vertical; outline: none; transition: 0.2s; background: #fff; min-height: 60px; }
+        .batch-container { 
+            display: flex; align-items: center; gap: 8px; padding: 8px 12px; 
+            border: 1px solid #e0e0e0; border-radius: 6px; background: #fff; width: 100%; margin-top: 5px;
+        }
+        .batch-label { 
+            display: flex; align-items: center; gap: 4px; font-weight: bold; font-size: 13px;
+            margin-right: 8px; white-space: nowrap; 
+        }
+        .batch-input-flex { 
+            flex: 1; min-width: 0; text-align: center; width: 100%; 
+            border: 1px solid #ccc; border-radius: 4px; padding: 4px; 
+            outline: none; position: relative; z-index: 2;
+        }
+        .remark-box { 
+            width: 100%; border: 1px solid #ccc; border-radius: 6px; padding: 8px;
+            font-size: 13px; resize: vertical; outline: none; transition: 0.2s; 
+            background: #fff; min-height: 60px; position: relative; z-index: 2;
+        }
         .remark-box:focus { border-color: var(--p); box-shadow: 0 0 0 2px rgba(26,115,232,0.1); }
-        .opt-item { display: flex; align-items: center; gap: 8px; margin-top: 5px; }
-        .preview-dropdown { display: flex; justify-content: space-between; align-items: center; border: 1px solid #ccc; padding: 10px; border-radius: 8px; background: #fff; color: #666; font-size: 14px; cursor: pointer; }
 
-        /* Property Panel Elements */
+        .opt-item { display: flex; align-items: center; gap: 8px; margin-top: 5px; }
+        .preview-dropdown { 
+            display: flex; justify-content: space-between; align-items: center; 
+            border: 1px solid #ccc; padding: 10px; border-radius: 8px; 
+            background: #fff; color: #666; font-size: 14px; cursor: pointer;
+        }
+
+        /* Sidebar Elements */
         .p-item { margin-bottom: 15px; }
-        .p-item label { display: flex; align-items: center; font-weight: bold; font-size: 13px; margin-bottom: 5px; }
-        .inp-p { width: 100%; padding: 8px; border: 1px solid var(--border); border-radius: 6px; font-size: 13px; }
+        .p-item label { 
+            display: flex; align-items: center; font-weight: bold; font-size: 13px; margin-bottom: 5px; 
+        }
+        .inp-p { 
+            width: 100%; padding: 8px; border: 1px solid var(--border);
+            border-radius: 6px; font-size: 13px; 
+        }
         .p-row-flex { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; flex-wrap: wrap; }
-        .p-check-row { display: flex; align-items: center; gap: 8px; font-size: 13px; margin-bottom: 6px; font-weight: 500; cursor: pointer; }
-        .biu-btn { border: 1px solid #ccc; background: #fff; padding: 6px 12px; border-radius: 4px; cursor: pointer; font-weight: bold; font-size: 12px; }
+        .p-check-row { 
+            display: flex; align-items: center; gap: 8px; font-size: 13px; 
+            margin-bottom: 6px; font-weight: 500; cursor: pointer; 
+        }
+        .biu-btn { 
+            border: 1px solid #ccc; background: #fff; padding: 6px 12px; 
+            border-radius: 4px; cursor: pointer; font-weight: bold; font-size: 12px;
+        }
         .biu-btn.active { background: #333; color: #fff; border-color: #333; }
         
-        .logic-panel { background: #fffde7; border: 1px dashed #fbc02d; padding: 10px; border-radius: 8px; margin-top: 8px; }
+        .logic-panel { 
+            background: #fffde7; border: 1px dashed #fbc02d; padding: 10px; 
+            border-radius: 8px; margin-top: 8px; 
+        }
         .logic-line { display: flex; align-items: center; gap: 4px; margin-bottom: 5px; font-size: 12px; }
         .logic-line input, .logic-line select { padding: 3px; border: 1px solid #ccc; border-radius: 3px; }
         
@@ -176,37 +285,77 @@
         .opt-manage-item input { flex: 1; padding: 6px; border: 1px solid #eee; border-radius: 4px; font-size: 12px; }
         .opt-manage-item span { cursor: pointer; color: #ccc; }
         .opt-manage-item span:hover { color: var(--danger); }
-        .add-link { color: var(--p); font-size: 12px; font-weight: bold; cursor: pointer; margin-top: 8px; display: inline-block; }
+        
+        .add-link { 
+            color: var(--p); font-size: 12px; font-weight: bold; cursor: pointer; 
+            margin-top: 8px; display: inline-block; 
+        }
         .sec-divider { margin-top: 15px; border-top: 1px solid #eee; padding-top: 10px; }
+        .link-icon { 
+            color: var(--p); margin-left: 5px; text-decoration: none; font-size: 14px; cursor: pointer;
+        }
 
         /* Footer & Tooltip */
-        .footer-actions { margin-top: 20px; width: 100%; display: flex; flex-direction: column; gap: 10px; }
-        .btn-temp { width: 100%; background: var(--temp-btn); color: #000; border: 1px solid #e0a800; padding: 12px; border-radius: 6px; font-weight: bold; cursor: pointer; text-align: center; border: none; }
-        .btn-submit { width: 100%; background: var(--submit-btn); color: #fff; border: none; padding: 12px; border-radius: 6px; font-weight: bold; cursor: pointer; text-align: center; }
-        .temp-table-view { background: #fff; border: 1px solid #ddd; border-radius: 6px; padding: 10px; font-size: 12px; margin-top: 5px; }
+        .footer-actions { 
+            margin-top: 20px; width: 100%; display: flex; flex-direction: column; gap: 10px; 
+        }
+        .btn-temp { 
+            width: 100%; background: var(--temp-btn); color: #000; border: 1px solid #e0a800; 
+            padding: 12px; border-radius: 6px; font-weight: bold; cursor: pointer; text-align: center; 
+        }
+        .btn-submit { 
+            width: 100%; background: var(--submit-btn); color: #fff; border: none; 
+            padding: 12px; border-radius: 6px; font-weight: bold; cursor: pointer; text-align: center; 
+        }
+        .temp-table-view { 
+            background: #fff; border: 1px solid #ddd; border-radius: 6px; padding: 10px; 
+            font-size: 12px; margin-top: 5px; 
+        }
+        .temp-table-header { font-weight: bold; margin-bottom: 5px; color: #333; }
         .temp-table-mock { width: 100%; border-collapse: collapse; margin-top: 5px; }
-        .temp-table-mock th, .temp-table-mock td { border: 1px solid #eee; padding: 6px; text-align: center; color: #666; }
+        .temp-table-mock th, .temp-table-mock td { 
+            border: 1px solid #eee; padding: 6px; text-align: center; color: #666; 
+        }
         .temp-table-mock th { background: #f9f9f9; font-weight: bold; }
         
-        .info-icon { display: inline-flex; align-items: center; justify-content: center; width: 14px; height: 14px; background: #ccc; color: #fff; border-radius: 50%; font-size: 10px; margin-left: 6px; cursor: help; font-weight: bold; }
-        .global-tooltip { position: fixed; background: #222; color: #fff; padding: 10px; border-radius: 6px; z-index: 10000; font-weight: normal; font-family: sans-serif; line-height: 1.4; font-size: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.3); pointer-events: none; max-width: 220px; text-align: left; }
+        .info-icon { 
+            display: inline-flex; align-items: center; justify-content: center; 
+            width: 14px; height: 14px; background: #ccc; color: #fff; border-radius: 50%; 
+            font-size: 10px; margin-left: 6px; cursor: help; font-weight: bold; 
+        }
+        .global-tooltip { 
+            position: fixed; background: #222; color: #fff; padding: 10px; 
+            border-radius: 6px; z-index: 10000; font-weight: normal; font-family: sans-serif; 
+            line-height: 1.4; font-size: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.3); 
+            pointer-events: none; max-width: 220px; text-align: left; 
+        }
         
-        .btn-main { width: 100%; padding: 12px; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; font-size: 13px; }
+        .btn-main { 
+            width: 100%; padding: 12px; border: none; border-radius: 8px; 
+            font-weight: bold; cursor: pointer; font-size: 13px;
+        }
         .btn-blue { background: var(--p); color: #fff; }
         
-        .card-tools { display: flex; justify-content: flex-end; gap: 15px; margin-top: 15px; padding-top: 10px; border-top: 1px solid #f0f0f0; }
-        .tool-action { font-size: 12px; color: #666; cursor: pointer; display: flex; align-items: center; gap: 4px; font-weight: 600; }
+        .card-tools { 
+            display: flex; justify-content: flex-end; gap: 15px; margin-top: 15px; 
+            padding-top: 10px; border-top: 1px solid #f0f0f0; 
+        }
+        .tool-action { 
+            font-size: 12px; color: #666; cursor: pointer; display: flex; 
+            align-items: center; gap: 4px; font-weight: 600; 
+        }
         .tool-action:hover { color: var(--p); }
 
         /* Grid Config Icons */
         .grid-col-config { display: flex; gap: 5px; margin-bottom: 5px; align-items: center; }
         .grid-col-config input { flex: 1; padding: 4px; font-size: 12px; border: 1px solid #ccc; border-radius: 3px; }
-        .mode-icon-btn { width: 32px; height: 26px; border: 1px solid #ccc; border-radius: 3px; background: #f0f0f0; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 14px; user-select: none; }
+        .mode-icon-btn { 
+            width: 32px; height: 26px; border: 1px solid #ccc; border-radius: 3px;
+            background: #f0f0f0; cursor: pointer; display: flex; align-items: center; 
+            justify-content: center; font-size: 14px; user-select: none;
+        }
         .mode-icon-btn:hover { background: #e0e0e0; }
         .grid-col-config span { color: #d93025; cursor: pointer; font-size: 16px; padding: 0 4px; }
-        
-        /* Helper to stop dragging on inputs */
-        .no-drag { cursor: auto; user-select: text; }
     </style>
 </head>
 <body>
@@ -438,20 +587,16 @@
         let formConfig = { layout: 'horizontal', titleIdx: 1, dataIdx: 2, enableTemp: false, clearTimes: '', tempCols: '日期/班別, 料號/批號, 數量, 檢驗員' };
         const list = document.getElementById('fList');
 
-        // 初始化拖曳功能
         try {
             new Sortable(list, {
-                animation: 150, handle: '.card', 
-                filter: '.no-drag, input, textarea, button, select, span, .opt-item, .fake-icon, .grid-add-btn', 
-                preventOnFilter: false,
+                animation: 150, handle: '.card', filter: '.no-drag, input, textarea, button, select, span, .opt-item, .fake-icon, .grid-add-btn', preventOnFilter: false,
                 onEnd: () => {
                     const order = Array.from(list.children).map(el => el.dataset.id);
                     fields = order.map(id => fields.find(x => x.id === id)).filter(Boolean);
                 }
             });
-        } catch(e) { console.error("Sortable Load Error", e); }
+        } catch(e) {}
 
-        // Tooltip 邏輯
         document.addEventListener('mouseover', function(e) {
             if (e.target.classList.contains('info-icon')) {
                 const msg = e.target.getAttribute('data-msg');
@@ -470,7 +615,6 @@
             }
         });
 
-        // 資料清理與初始化
         function sanitizeField(f) {
             if(!f.opts) f.opts = ['選項 1'];
             if(!f.cols) f.cols = ['第 1 欄'];
@@ -515,14 +659,13 @@
             render(); setTimeout(() => select(f.id), 50);
         }
 
-        // 核心渲染引擎
         function render() {
             const htmlArr = fields.map(f => {
                 try {
                     sanitizeField(f);
                     const s = `font-size:${f.size}px; color:${f.color}; font-weight:${f.bold?'bold':'normal'}; font-style:${f.italic?'italic':'normal'}; text-decoration:${f.underline?'underline':'none'};`;
                     
-                    const renderInput = (cls, ph) => `<input class="${cls} no-drag" style="width:100%; border:1px solid #ccc; border-radius:4px; padding:4px 6px; font-size:12px; height:28px; outline:none; background:#fff; ${f.upper ? 'text-transform:uppercase;' : ''}" placeholder="${ph}" oninput="validateInput(this, '${f.id}')" onblur="handleBlur(this, '${f.id}')" data-fid="${f.id}" value="${f.defVal || ''}" onmousedown="event.stopPropagation()">`;
+                    const renderInput = (cls, ph) => `<input class="${cls} no-drag" style="width:100%; border:1px solid #ccc; border-radius:4px; padding:4px 6px; font-size:12px; height:28px; outline:none; background:#fff; ${f.upper ? 'text-transform:uppercase;' : ''}" placeholder="${ph}" oninput="validateInput(this, '${f.id}')" onblur="handleBlur(this, '${f.id}')" data-fid="${f.id}" value="${f.defVal || ''}">`;
                     
                     const renderMark = (isRadio, customMarkStyle) => `<div class="fake-icon ${isRadio?'radio':'checkbox'} no-drag" onclick="toggleCheck(this, '${customMarkStyle || f.markStyle}', ${isRadio})" onmousedown="event.stopPropagation()"></div>`;
                     
@@ -555,15 +698,15 @@
                     } else if(f.type === 'datetime') {
                         body = `<div style="display:flex; gap:10px;"><div style="border:1px solid #ccc; padding:6px; flex:1; border-radius:4px; background:#fff;">YYYY/MM/DD 📅</div>${f.showTime?'<div style="border:1px solid #ccc; padding:6px; width:80px; border-radius:4px; background:#fff;">--:-- 🕒</div>':''}</div>`;
                     } else if(f.type === 'remark') {
-                        body = `${autoPrevBadge}<textarea class="remark-box no-drag" placeholder="備註..." onmousedown="event.stopPropagation()">${f.defVal || ''}</textarea>`;
+                        body = `${autoPrevBadge}<textarea class="remark-box no-drag" placeholder="備註...">${f.defVal || ''}</textarea>`;
                     } else if(f.type === 'grid') {
                          let thead = '';
                          if(f.showCol) {
-                            let headerCell = f.corner && f.showRow ? `<th class="slash-header"><input class="slash-top no-drag" value="${f.cornerTop}" placeholder="欄" onmousedown="event.stopPropagation()"><input class="slash-bot no-drag" value="${f.cornerBot}" placeholder="列" onmousedown="event.stopPropagation()"></th>` : (f.showRow ? `<th></th>` : '');
+                            let headerCell = f.corner && f.showRow ? `<th class="slash-header"><input class="slash-top no-drag" value="${f.cornerTop}" placeholder="欄"><input class="slash-bot no-drag" value="${f.cornerBot}" placeholder="列"></th>` : (f.showRow ? `<th></th>` : '');
                             const ths = f.cols.map((c,i) => `<th><div style="display:flex;align-items:center;justify-content:center;position:relative;"><input class="grid-inp no-drag" value="${c}" onchange="syncGridCol('${f.id}',${i},this.value)" onmousedown="event.stopPropagation()"><span class="del-col-btn no-drag" onclick="delCol('${f.id}',${i})">×</span></div></th>`).join('');
                             thead = `<thead><tr>${headerCell}${ths}<th class="grid-add-btn grid-add-col no-drag" onclick="addCol('${f.id}')">+</th></tr></thead>`;
                          }
-                         const trs = f.rows.map((r,i) => `<tr>${f.showRow?`<td><div style="display:flex;align-items:center;justify-content:center;"><input class="grid-inp no-drag" value="${r}" onchange="syncGridRow('${f.id}',${i},this.value)" onmousedown="event.stopPropagation()"><span class="del-row-btn no-drag" onclick="delRow('${f.id}',${i})">🗑</span></div></td>`:''}${f.cols.map((c, colIndex) => {
+                         const trs = f.rows.map((r,i) => `<tr>${f.showRow?`<td><div style="display:flex;align-items:center;justify-content:center;"><input class="grid-inp no-drag" value="${r}" onchange="syncGridRow('${f.id}',${i},this.value)"><span class="del-row-btn no-drag" onclick="delRow('${f.id}',${i})">🗑</span></div></td>`:''}${f.cols.map((c, colIndex) => {
                              const mode = f.colModes[colIndex] || 'text';
                              let inner = '';
                              if(mode === 'text') inner = renderInput('style-v27-box','');
@@ -605,13 +748,15 @@
                         <div class="card ${f.width} ${activeId===f.id?'selected':''}" data-id="${f.id}" onclick="select('${f.id}')">
                             <div style="display:flex; justify-content:space-between; margin-bottom:5px;">
                                 <div style="width:85%; display:flex; align-items:center; gap:4px;">
-                                    <textarea class="title-inp no-drag" rows="1" style="${s} flex:1;" oninput="autoResize(this); syncTitle('${f.id}',this.value)" onmousedown="event.stopPropagation()">${f.title}</textarea>
+                                    <textarea class="title-inp no-drag" rows="1" style="${s} flex:1;" oninput="autoResize(this); syncTitle('${f.id}',this.value)">${f.title}</textarea>
                                     ${f.link ? `<a href="${f.link}" target="_blank" class="no-drag" style="text-decoration:none; margin-left:5px;">🔗</a>` : ''}
                                     ${f.req?'<span style="color:red;">*</span>':''}
                                 </div>
                                 <span style="font-size:10px; color:#aaa; border:1px solid #eee; padding:2px 5px; border-radius:4px;">${f.type.toUpperCase()}</span>
                             </div>
-                            ${f.descE?`<div style="margin-bottom:8px; font-size:12px; color:#666;"><textarea class="desc-inp no-drag" rows="1" placeholder="輸入說明..." oninput="autoResize(this); syncDesc('${f.id}',this.value)" onmousedown="event.stopPropagation()">${f.desc || ''}</textarea></div>`:''}
+                            ${f.descE?`<div style="margin-bottom:8px; font-size:12px; color:#666;">
+                                <textarea class="desc-inp no-drag" rows="1" placeholder="輸入說明..." oninput="autoResize(this); syncDesc('${f.id}',this.value)">${f.desc || ''}</textarea>
+                            </div>`:''}
                             <div>${body}</div>
                             <div class="card-tools">
                                 <span class="tool-action no-drag" onclick="copyF('${f.id}')">📋 複製</span>
@@ -625,7 +770,6 @@
 
             list.innerHTML = htmlArr.join('');
 
-            // Footer Logic
             const footer = document.getElementById('formFooter');
             footer.innerHTML = '';
             if(formConfig.enableTemp) {
@@ -656,11 +800,9 @@
             document.getElementById('formSettings').style.display='none';
             document.getElementById('formMetaCard').classList.remove('selected');
             document.getElementById('editor').style.display='block';
-            
             const f = fields.find(x => x.id === id);
             if(!f) return;
             sanitizeField(f);
-            
             ['pSize','pColor','pWidth','pMode','pUnitB','pLink','pDefVal','pMinLen','pMaxLen','pMinVal','pMaxVal','pDecPlaces','pRoundMode'].forEach(k => {
                 if(document.getElementById(k)) document.getElementById(k).value = f[k.replace('p','').replace(k.charAt(1),k.charAt(1).toLowerCase())] || (k==='pSize'?14:k==='pColor'?'#000000':'');
             });
@@ -670,7 +812,6 @@
             document.getElementById('pManual').checked = f.manual;
             document.getElementById('pDescE').checked = f.descE;
             document.getElementById('pUnitE').checked = f.uEnable;
-            
             const hideContentConfig = ['datetime', 'shift', 'header', 'batch', 'choices', 'dropdown'].includes(f.type);
             document.getElementById('contentSec').style.display = hideContentConfig ? 'none' : 'block';
             document.getElementById('defValRow').style.display = (f.type === 'header' || f.type === 'batch') ? 'none' : 'block';
@@ -719,7 +860,6 @@
             if(m==='mixed-checkbox') return '☑️📝';
             return '📝';
         }
-        
         function toggleGridColMode(id, idx, btn) {
             const f = fields.find(x => x.id === id);
             const modes = ['text', 'radio', 'checkbox', 'mixed-radio', 'mixed-checkbox'];
@@ -837,15 +977,9 @@
         
         function syncTitle(id, v) { fields.find(x=>x.id===id).title = v; }
         function syncDesc(id, v) { fields.find(x=>x.id===id).desc = v; }
-        function syncSidebarOpt(i, val) { 
-            const f = fields.find(x => x.id === activeId);
-            if(val.includes(',')) { 
-                let newOpts = val.split(',').map(s => s.trim()).filter(s => s !== ''); 
-                f.opts.splice(i, 1, ...newOpts); 
-                renderSidebarOpts();
-            } else { f.opts[i] = val; } 
-            render(); 
-        }
+        function syncSidebarOpt(i, val) { const f = fields.find(x => x.id === activeId);
+            if(val.includes(',')) { let newOpts = val.split(',').map(s => s.trim()).filter(s => s !== ''); f.opts.splice(i, 1, ...newOpts); renderSidebarOpts();
+            } else { f.opts[i] = val; } render(); }
         function addSidebarOpt() { fields.find(x => x.id === activeId).opts.push('新選項'); renderSidebarOpts(); render(); }
         function delSidebarOpt(i) { fields.find(x => x.id === activeId).opts.splice(i, 1); renderSidebarOpts(); render(); }
         function renderSidebarOpts() {
@@ -855,17 +989,20 @@
         }
 
         function addAutoPrevRule() { fields.find(x=>x.id===activeId).autoPrevRules.push({start:'08:00', end:'12:00'}); renderAutoPrevRules(); render(); }
-        function renderAutoPrevRules() { const f = fields.find(x=>x.id===activeId); document.getElementById('apRules').innerHTML = (f.autoPrevRules||[]).map((r,i) => `<div class="logic-line"><input type="time" style="width:60px" value="${r.start}" oninput="upAP(${i},'start',this.value)"> ~ <input type="time" style="width:60px" value="${r.end}" oninput="upAP(${i},'end',this.value)"> <span style="cursor:pointer; margin-left:4px;" onclick="delAP(${i})">🗑</span></div>`).join(''); }
+        function renderAutoPrevRules() { const f = fields.find(x=>x.id===activeId);
+            document.getElementById('apRules').innerHTML = (f.autoPrevRules||[]).map((r,i) => `<div class="logic-line"><input type="time" style="width:60px" value="${r.start}" oninput="upAP(${i},'start',this.value)"> ~ <input type="time" style="width:60px" value="${r.end}" oninput="upAP(${i},'end',this.value)"> <span style="cursor:pointer; margin-left:4px;" onclick="delAP(${i})">🗑</span></div>`).join('');
+        }
         window.upAP = (i,k,v) => { fields.find(x=>x.id===activeId).autoPrevRules[i][k]=v; render(); };
         window.delAP = (i) => { fields.find(x=>x.id===activeId).autoPrevRules.splice(i,1); renderAutoPrevRules(); render(); };
-        
         function addCol(id) { const f = fields.find(x=>x.id===id); f.cols.push(getUniqueName('新欄', f.cols)); f.colModes.push('text'); render(); select(id); }
         function delCol(id,i) { const f = fields.find(x=>x.id===id); f.cols.splice(i,1); f.colModes.splice(i,1); render(); select(id); }
         function addRow(id) { const f = fields.find(x=>x.id===id); f.rows.push(getUniqueName('新列', f.rows)); render(); }
         function delRow(id,i) { const f = fields.find(x=>x.id===id); f.rows.splice(i,1); render(); }
         function syncGridCol(id,i,v) { fields.find(x=>x.id===id).cols[i] = v; render(); }
+        function syncGridColMode(id,i,v) { fields.find(x=>x.id===id).colModes[i] = v; render(); }
         function syncGridRow(id,i,v) { fields.find(x=>x.id===id).rows[i] = v; }
-        
+        function syncCornerTop(id,v) { fields.find(x=>x.id===id).cornerTop = v; }
+        function syncCornerBot(id,v) { fields.find(x=>x.id===id).cornerBot = v; }
         function getUniqueName(base, list) { let c=1; while(list.includes(base+' '+c)) c++; return base+' '+c; }
         function toggleStyle(s) { const f=fields.find(x=>x.id===activeId); f[s]=!f[s]; apply(); }
         
@@ -877,61 +1014,45 @@
                  el.classList.add('checked-v');
              } else {
                  if (mode === 'mark-both') {
-                     // Tri-state: Empty -> Check -> Cross -> Empty
-                     if (el.classList.contains('checked-v')) { 
-                         el.classList.remove('checked-v');
-                         el.classList.add('checked-x'); 
-                     } else if (el.classList.contains('checked-x')) { 
-                         el.classList.remove('checked-x');
-                     } else { 
-                         el.classList.add('checked-v');
-                     }
-                 } else if (mode === 'mark-cross') { 
-                     el.classList.toggle('checked-x');
-                 } else { 
-                     el.classList.toggle('checked-v');
-                 }
+                     if (el.classList.contains('checked-v')) { el.classList.remove('checked-v'); el.classList.add('checked-x'); }
+                     else if (el.classList.contains('checked-x')) { el.classList.remove('checked-x'); }
+                     else { el.classList.add('checked-v'); }
+                 } else if (mode === 'mark-cross') { el.classList.toggle('checked-x'); }
+                 else { el.classList.toggle('checked-v'); }
              }
         }
-        
         function autoResize(el) { el.style.height = 'auto'; el.style.height = el.scrollHeight + 'px'; }
         function syncMeta() { }
-        
         function addURule() { fields.find(x=>x.id===activeId).uRules.push({cond:'>', val:'', res:''}); renderRules(); }
-        function renderRules() { const f = fields.find(x=>x.id===activeId); document.getElementById('uRules').innerHTML = (f.uRules||[]).map((r,i)=>`<div class="logic-line">當 <select onchange="upR(${i},'cond',this.value)"><option value=">" ${r.cond==='>'?'selected':''}>></option><option value="<" ${r.cond==='<'?'selected':''}>&lt;</option><option value="=" ${r.cond==='='?'selected':''}>=</option></select> <input style="width:40px" value="${r.val}" oninput="upR(${i},'val',this.value)"> 帶入 <input style="width:40px" value="${r.res}" oninput="upR(${i},'res',this.value)"> <span style="cursor:pointer" onclick="delR(${i})">🗑</span></div>`).join(''); }
+        function renderRules() { const f = fields.find(x=>x.id===activeId);
+            document.getElementById('uRules').innerHTML = (f.uRules||[]).map((r,i)=>`<div class="logic-line">當 <select onchange="upR(${i},'cond',this.value)"><option value=">" ${r.cond==='>'?'selected':''}>></option><option value="<" ${r.cond==='<'?'selected':''}>&lt;</option><option value="=" ${r.cond==='='?'selected':''}>=</option></select> <input style="width:40px" value="${r.val}" oninput="upR(${i},'val',this.value)"> 帶入 <input style="width:40px" value="${r.res}" oninput="upR(${i},'res',this.value)"> <span style="cursor:pointer" onclick="delR(${i})">🗑</span></div>`).join('');
+        }
         window.upR = (i,k,v) => { fields.find(x=>x.id===activeId).uRules[i][k]=v; apply(); };
         window.delR = (i) => { fields.find(x=>x.id===activeId).uRules.splice(i, 1); renderRules(); };
-        
         function addShiftRule() { fields.find(x=>x.id===activeId).shiftRules.push({start:'08:00', end:'12:00', val:'早班'}); renderShiftRules(); render(); }
-        function renderShiftRules() { const f = fields.find(x=>x.id===activeId); document.getElementById('sRules').innerHTML = (f.shiftRules||[]).map((r,i) => `<div class="logic-line"><input type="time" style="width:55px" value="${r.start}" oninput="upS(${i},'start',this.value)"> ~ <input type="time" style="width:55px" value="${r.end}" oninput="upS(${i},'end',this.value)"> <input style="width:40px" placeholder="班別" value="${r.val}" oninput="upS(${i},'val',this.value)"> <span style="cursor:pointer; margin-left:4px;" onclick="delS(${i})">🗑</span></div>`).join(''); }
+        function renderShiftRules() { const f = fields.find(x=>x.id===activeId);
+            document.getElementById('sRules').innerHTML = (f.shiftRules||[]).map((r,i) => `<div class="logic-line"><input type="time" style="width:55px" value="${r.start}" oninput="upS(${i},'start',this.value)"> ~ <input type="time" style="width:55px" value="${r.end}" oninput="upS(${i},'end',this.value)"> <input style="width:40px" placeholder="班別" value="${r.val}" oninput="upS(${i},'val',this.value)"> <span style="cursor:pointer; margin-left:4px;" onclick="delS(${i})">🗑</span></div>`).join('');
+        }
         window.upS = (i,k,v) => { fields.find(x=>x.id===activeId).shiftRules[i][k]=v; render(); };
         window.delS = (i) => { fields.find(x=>x.id===activeId).shiftRules.splice(i,1); renderShiftRules(); render(); };
-        
         function addMachineRule() { fields.find(x=>x.id===activeId).machineRules.push({val:'A4', target:'', targetOpts:'1軸,2軸'}); renderMachineRules(); render(); }
-        function renderMachineRules() { const f = fields.find(x=>x.id===activeId); document.getElementById('mRules').innerHTML = (f.machineRules||[]).map((r,i) => `<div style="background:#fff; border:1px solid #ddd; padding:6px; border-radius:4px; margin-bottom:5px;"><div style="display:flex; align-items:center; gap:4px; margin-bottom:4px;"><span style="font-size:11px; color:#666;">當機台=</span><input style="width:130px; border:1px solid #ccc; padding:2px;" placeholder="機台 (可多選, 逗號隔開)" value="${r.val}" oninput="upM(${i},'val',this.value)"><span style="cursor:pointer; margin-left:auto; color:#999;" onclick="delM(${i})">✕</span></div><div style="display:flex; flex-direction:column; gap:4px;"><input style="width:100%; border:1px solid #ccc; padding:3px; font-size:12px;" placeholder="連動欄位名稱" value="${r.target}" oninput="upM(${i},'target',this.value)"><input style="width:100%; border:1px solid #ccc; padding:3px; font-size:12px;" placeholder="選項 (逗號隔開)" value="${r.targetOpts}" oninput="upM(${i},'targetOpts',this.value)"></div></div>`).join(''); }
+        function renderMachineRules() { const f = fields.find(x=>x.id===activeId);
+            document.getElementById('mRules').innerHTML = (f.machineRules||[]).map((r,i) => `<div style="background:#fff; border:1px solid #ddd; padding:6px; border-radius:4px; margin-bottom:5px;"><div style="display:flex; align-items:center; gap:4px; margin-bottom:4px;"><span style="font-size:11px; color:#666;">當機台=</span><input style="width:130px; border:1px solid #ccc; padding:2px;" placeholder="機台 (可多選, 逗號隔開)" value="${r.val}" oninput="upM(${i},'val',this.value)"><span style="cursor:pointer; margin-left:auto; color:#999;" onclick="delM(${i})">✕</span></div><div style="display:flex; flex-direction:column; gap:4px;"><input style="width:100%; border:1px solid #ccc; padding:3px; font-size:12px;" placeholder="連動欄位名稱" value="${r.target}" oninput="upM(${i},'target',this.value)"><input style="width:100%; border:1px solid #ccc; padding:3px; font-size:12px;" placeholder="選項 (逗號隔開)" value="${r.targetOpts}" oninput="upM(${i},'targetOpts',this.value)"></div></div>`).join('');
+        }
         window.upM = (i,k,v) => { fields.find(x=>x.id===activeId).machineRules[i][k]=v; render(); };
         window.delM = (i) => { fields.find(x=>x.id===activeId).machineRules.splice(i,1); renderMachineRules(); render(); };
-        
-        function copyF(id) { const f=fields.find(x=>x.id===id); const n=JSON.parse(JSON.stringify(f)); n.id='f'+Date.now(); fields.splice(fields.findIndex(x=>x.id===id)+1,0,n); render(); select(n.id); }
-        function delF(id) { fields=fields.filter(x=>x.id!==id); activeId=null; render(); document.getElementById('editor').style.display='none'; document.getElementById('noSel').style.display='block'; }
-        
-        function hExport() { 
-            const clean = fields.map(f => { const { testV, ...cF } = f; return cF; });
-            const d = { title:document.getElementById('mT').value, desc:document.getElementById('mD').value, config: formConfig, fields:clean }; 
-            const blob = new Blob([JSON.stringify(d, null, 2)], {type:'application/json'});
+        function runMachineRule(mId, val) { /* Runtime logic */ }
+        function copyF(id) { const f=fields.find(x=>x.id===id);
+            const n=JSON.parse(JSON.stringify(f)); n.id='f'+Date.now(); fields.splice(fields.findIndex(x=>x.id===id)+1,0,n); render(); select(n.id); }
+        function delF(id) { fields=fields.filter(x=>x.id!==id); activeId=null; render();
+            document.getElementById('editor').style.display='none'; document.getElementById('noSel').style.display='block'; }
+        function hExport() { const clean = fields.map(f => { const { testV, ...cF } = f; return cF; });
+            const d = { title:document.getElementById('mT').value, desc:document.getElementById('mD').value, config: formConfig, fields:clean }; const blob = new Blob([JSON.stringify(d, null, 2)], {type:'application/json'});
             const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'questions.json'; a.click();
         }
-        function hImport(inp) { 
-            const r=new FileReader(); 
-            r.onload=(e)=>{ 
-                const d=JSON.parse(e.target.result); 
-                document.getElementById('mT').value=d.title; document.getElementById('mD').value=d.desc;
-                if(d.config) formConfig = d.config; 
-                fields=d.fields.map(f=>({...f, testV:'', autoPrevRules: f.autoPrevRules || [], machineRules: f.machineRules || [], shiftRules: f.shiftRules || [], uRules: f.uRules || [], opts: f.opts || [], colModes: f.colModes || [] }));
-                render(); 
-            }; 
-            r.readAsText(inp.files[0]); 
-        }
+        function hImport(inp) { const r=new FileReader(); r.onload=(e)=>{ const d=JSON.parse(e.target.result); document.getElementById('mT').value=d.title; document.getElementById('mD').value=d.desc;
+            if(d.config) formConfig = d.config; fields=d.fields.map(f=>({...f, testV:'', autoPrevRules: f.autoPrevRules || [], machineRules: f.machineRules || [], shiftRules: f.shiftRules || [], uRules: f.uRules || [], opts: f.opts || [], colModes: f.colModes || [] }));
+            render(); }; r.readAsText(inp.files[0]); }
     </script>
 </body>
 </html>
