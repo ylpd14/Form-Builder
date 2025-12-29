@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>專業表單規格生成器 v44.00 (Word-Palette & Unified Validation)</title>
+    <title>專業表單規格生成器 v45.00 (Word-UI Palette Fixed)</title>
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&display=swap" rel="stylesheet">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/Sortable/1.15.0/Sortable.min.js"></script>
     <style>
@@ -76,7 +76,7 @@
         .grid-add-col { width: 40px; height: 100%; border-left: 1px solid #ddd; }
         .grid-add-row { height: 35px; border-top: 1px solid #eee; }
 
-        /* Logic & Sidebar Components */
+        /* Icons & Logic */
         .fake-icon { display: inline-flex; align-items: center; justify-content: center; width: 18px; height: 18px; border: 2px solid #ccc; background: #fff; cursor: pointer; flex-shrink: 0; font-size: 14px; color: transparent; font-weight: bold; transition: 0.2s; user-select: none; position: relative; z-index: 2; }
         .fake-icon:hover { border-color: #999; }
         .fake-icon.radio { border-radius: 50%; }
@@ -123,7 +123,7 @@
         .mode-icon-btn:hover { background: #e0e0e0; }
         .grid-col-config span { color: #d93025; cursor: pointer; font-size: 16px; padding: 0 4px; }
         
-        /* Modal */
+        /* Modal & Palette Styles */
         .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 2000; justify-content: center; align-items: center; }
         .modal-content { background: #fff; width: 90%; max-width: 600px; height: 80vh; border-radius: 8px; display: flex; flex-direction: column; box-shadow: 0 5px 15px rgba(0,0,0,0.3); }
         .modal-header { padding: 15px; border-bottom: 1px solid #eee; display: flex; justify-content: space-between; align-items: center; font-weight: bold; font-size: 16px; }
@@ -140,17 +140,21 @@
         .time-row { display: flex; align-items: center; gap: 8px; margin-bottom: 5px; }
         .time-row input { padding: 4px; border: 1px solid #ccc; border-radius: 4px; }
 
-        /* v44 Palette & Validation */
-        .palette-btn { display: flex; align-items: center; justify-content: center; width: 32px; height: 32px; border: 1px solid #ccc; border-radius: 4px; cursor: pointer; position: relative; background: #fff; }
-        .palette-btn:hover { background: #f5f5f5; }
-        .palette-indicator { position: absolute; bottom: 4px; left: 6px; right: 6px; height: 4px; border-radius: 1px; }
-        .palette-popover { display: none; position: absolute; top: 38px; left: 0; background: #fff; border: 1px solid #ccc; box-shadow: 0 4px 10px rgba(0,0,0,0.15); padding: 10px; border-radius: 6px; z-index: 100; width: 220px; }
+        /* v45 Enhanced Word-Style Palette */
+        .palette-btn { display: flex; align-items: center; gap: 2px; padding: 2px 4px; border: 1px solid transparent; border-radius: 3px; cursor: pointer; background: transparent; transition: 0.1s; position: relative; height: 32px; }
+        .palette-btn:hover { background: #e0e0e0; border-color: #ccc; }
+        .palette-icon-wrap { display: flex; flex-direction: column; align-items: center; justify-content: center; width: 20px; }
+        .palette-color-bar { width: 100%; height: 3px; margin-top: 1px; }
+        .palette-arrow { font-size: 10px; color: #666; margin-left: 2px; }
+        
+        .palette-popover { display: none; position: absolute; top: 35px; left: 0; background: #fff; border: 1px solid #bababa; box-shadow: 0 4px 8px rgba(0,0,0,0.2); padding: 6px; border-radius: 2px; z-index: 3000; width: 190px; }
         .palette-popover.active { display: block; }
-        .palette-section-title { font-size: 11px; color: #666; margin: 4px 0; font-weight: bold; }
-        .color-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 4px; margin-bottom: 8px; }
-        .color-cell { width: 32px; height: 32px; border-radius: 4px; cursor: pointer; border: 1px solid #eee; position: relative; }
-        .color-cell:hover { transform: scale(1.1); border-color: #999; z-index: 2; }
-        .color-cell.transparent { background: repeating-linear-gradient(45deg, #ddd 0, #ddd 5px, #fff 5px, #fff 10px); }
+        .palette-title { font-size: 11px; font-weight: bold; color: #555; margin: 6px 0 4px 2px; }
+        
+        .color-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 4px; margin-bottom: 4px; }
+        .color-cell { width: 28px; height: 28px; border: 1px solid #ddd; cursor: pointer; position: relative; }
+        .color-cell:hover { outline: 1px solid #ff9800; z-index: 10; transform: scale(1.1); }
+        .color-cell.transparent { background: linear-gradient(to bottom right, #fff 45%, #f00 50%, #fff 55%); border: 1px solid #ccc; }
         
         .val-rule-item { display: flex; align-items: center; gap: 4px; margin-bottom: 5px; background: #fdfdfd; padding: 4px; border-radius: 4px; border: 1px solid #eee; }
         .val-rule-item select, .val-rule-item input { padding: 4px; border: 1px solid #ccc; border-radius: 3px; font-size: 12px; }
@@ -228,17 +232,8 @@
         <div id="formSettings" style="display:none;">
             <div class="p-item">
                 <label>表單標題與說明</label>
-                <div style="margin-top:10px;">
-                    <label>寬度與排列</label>
-                    <select class="inp-p" id="mWidth" onchange="applyGlobal()">
-                        <option value="w-100">100% 全寬</option>
-                        <option value="w-50">50% 半寬</option>
-                        <option value="w-33">33% 1/3寬</option>
-                    </select>
-                </div>
-                <label class="p-check-row" style="margin-top:8px;"><input type="checkbox" id="gMetaDescE" onchange="applyGlobal()"> 啟用說明文字</label>
-                <div style="margin-top:10px; border-top:1px dashed #eee; padding-top:10px;">
-                    <label>標題樣式</label>
+                <div style="margin-top:5px; border-bottom:1px dashed #eee; padding-bottom:10px; margin-bottom:10px;">
+                    <label style="font-size:12px; color:#666;">標題樣式</label>
                     <div class="p-row-flex">
                         <input type="number" class="inp-p" id="mSize" style="width:60px" value="28" oninput="applyGlobal()">
                         <input type="color" id="mColor" style="height:32px; width:40px; border:none; cursor:pointer;" value="#000000" oninput="applyGlobal()">
@@ -247,6 +242,15 @@
                         <button class="biu-btn" id="mU" onclick="toggleMetaStyle('underline')">U</button>
                     </div>
                 </div>
+                <div>
+                    <label>寬度與排列</label>
+                    <select class="inp-p" id="mWidth" onchange="applyGlobal()">
+                        <option value="w-100">100% 全寬</option>
+                        <option value="w-50">50% 半寬</option>
+                        <option value="w-33">33% 1/3寬</option>
+                    </select>
+                </div>
+                <label class="p-check-row" style="margin-top:10px;"><input type="checkbox" id="gMetaDescE" onchange="applyGlobal()"> 啟用說明文字</label>
             </div>
             <div class="p-item sec-divider">
                 <label>Excel 排版設定</label>
@@ -278,52 +282,84 @@
                 <div class="p-row-flex">
                     <input type="number" class="inp-p" id="pSize" style="width:60px" oninput="apply()">
                     
-                    <div style="position:relative;">
-                        <div class="palette-btn" onclick="togglePalette('textColor')">
-                            <span style="font-weight:bold; font-size:14px; font-family:serif;">A</span>
-                            <div class="palette-indicator" id="indTextColor" style="background:#000;"></div>
+                    <div style="position:relative; z-index:50;">
+                        <div class="palette-btn" onclick="togglePalette('textColor', event)" title="文字顏色">
+                            <div class="palette-icon-wrap">
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#333" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M4 20L12 4l8 16"></path>
+                                    <path d="M4 20h16"></path>
+                                    <path d="M8.5 13h7"></path>
+                                </svg>
+                                <div id="barTextColor" class="palette-color-bar" style="background: #000;"></div>
+                            </div>
+                            <span class="palette-arrow">▼</span>
                         </div>
-                        <div id="palTextColor" class="palette-popover">
-                            <div style="font-weight:bold; font-size:12px; margin-bottom:5px;">文字顏色 (預設:黑色)</div>
-                            <div class="palette-section-title">基本色</div>
+                        <div id="paltextColor" class="palette-popover">
+                            <div class="palette-title">文字顏色</div>
+                            <div class="color-cell" style="width:100%; text-align:center; font-size:11px; line-height:24px; border:1px solid #ddd; margin-bottom:6px;" onclick="setPaletteColor('text','#000000')">自動 (黑色)</div>
+                            <div class="palette-title">基本色</div>
                             <div class="color-grid">
                                 <div class="color-cell" style="background:#000000" onclick="setPaletteColor('text','#000000')"></div>
                                 <div class="color-cell" style="background:#ffffff; border:1px solid #ccc;" onclick="setPaletteColor('text','#ffffff')"></div>
-                                <div class="color-cell" style="background:#434343" onclick="setPaletteColor('text','#434343')"></div>
-                                <div class="color-cell" style="background:#cccccc" onclick="setPaletteColor('text','#cccccc')"></div>
-                                <div class="color-cell" style="background:#980000" onclick="setPaletteColor('text','#980000')"></div>
+                                <div class="color-cell" style="background:#eeece1" onclick="setPaletteColor('text','#eeece1')"></div>
+                                <div class="color-cell" style="background:#1f497d" onclick="setPaletteColor('text','#1f497d')"></div>
+                                <div class="color-cell" style="background:#4f81bd" onclick="setPaletteColor('text','#4f81bd')"></div>
+                                <div class="color-cell" style="background:#c0504d" onclick="setPaletteColor('text','#c0504d')"></div>
+                                <div class="color-cell" style="background:#9bbb59" onclick="setPaletteColor('text','#9bbb59')"></div>
+                                <div class="color-cell" style="background:#8064a2" onclick="setPaletteColor('text','#8064a2')"></div>
+                                <div class="color-cell" style="background:#4bacc6" onclick="setPaletteColor('text','#4bacc6')"></div>
+                                <div class="color-cell" style="background:#f79646" onclick="setPaletteColor('text','#f79646')"></div>
                             </div>
-                            <div class="palette-section-title">常用色</div>
+                            <div class="palette-title">常用色</div>
                             <div class="color-grid">
+                                <div class="color-cell" style="background:#c00000" onclick="setPaletteColor('text','#c00000')"></div>
                                 <div class="color-cell" style="background:#ff0000" onclick="setPaletteColor('text','#ff0000')"></div>
-                                <div class="color-cell" style="background:#ff9900" onclick="setPaletteColor('text','#ff9900')"></div>
+                                <div class="color-cell" style="background:#ffc000" onclick="setPaletteColor('text','#ffc000')"></div>
                                 <div class="color-cell" style="background:#ffff00" onclick="setPaletteColor('text','#ffff00')"></div>
-                                <div class="color-cell" style="background:#00ff00" onclick="setPaletteColor('text','#00ff00')"></div>
-                                <div class="color-cell" style="background:#00ffff" onclick="setPaletteColor('text','#00ffff')"></div>
-                                <div class="color-cell" style="background:#0000ff" onclick="setPaletteColor('text','#0000ff')"></div>
-                                <div class="color-cell" style="background:#9900ff" onclick="setPaletteColor('text','#9900ff')"></div>
+                                <div class="color-cell" style="background:#92d050" onclick="setPaletteColor('text','#92d050')"></div>
+                                <div class="color-cell" style="background:#00b050" onclick="setPaletteColor('text','#00b050')"></div>
+                                <div class="color-cell" style="background:#00b0f0" onclick="setPaletteColor('text','#00b0f0')"></div>
+                                <div class="color-cell" style="background:#0070c0" onclick="setPaletteColor('text','#0070c0')"></div>
+                                <div class="color-cell" style="background:#002060" onclick="setPaletteColor('text','#002060')"></div>
+                                <div class="color-cell" style="background:#7030a0" onclick="setPaletteColor('text','#7030a0')"></div>
                             </div>
                         </div>
                     </div>
 
-                    <div style="position:relative;">
-                        <div class="palette-btn" onclick="togglePalette('bgColor')">
-                            <span style="font-size:14px;">🖊️</span>
-                            <div class="palette-indicator" id="indBgColor" style="background:transparent;"></div>
-                        </div>
-                        <div id="palBgColor" class="palette-popover">
-                            <div style="font-weight:bold; font-size:12px; margin-bottom:5px;">文字背景 (預設:無)</div>
-                            <div class="palette-section-title">無背景</div>
-                            <div class="color-grid" style="grid-template-columns:1fr;">
-                                <div class="color-cell transparent" style="width:100%;" onclick="setPaletteColor('bg','transparent')"></div>
+                    <div style="position:relative; z-index:50;">
+                        <div class="palette-btn" onclick="togglePalette('bgColor', event)" title="文字背景 (螢光筆)">
+                            <div class="palette-icon-wrap">
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="#555">
+                                    <path d="M16.56 8.94L7.62 0 6.21 1.41l2.38 2.38-5.15 5.15c-.59.59-.59 1.54 0 2.12l5.5 5.5c.29.29.68.44 1.06.44s.77-.15 1.06-.44l5.5-5.5c.59-.58.59-1.53 0-2.12zM5.21 10L10 5.21 14.79 10H5.21zM19 11.5s-2 2.17-2 3.5c0 1.1.9 2 2 2s2-.9 2-2c0-1.33-2-3.5-2-3.5z"/>
+                                    <path fill-opacity=".36" d="M0 20h24v4H0z"/>
+                                </svg>
+                                <div id="barBgColor" class="palette-color-bar" style="background: transparent;"></div>
                             </div>
-                            <div class="palette-section-title">螢光筆色</div>
+                            <span class="palette-arrow">▼</span>
+                        </div>
+                        <div id="palbgColor" class="palette-popover">
+                            <div class="palette-title">文字背景</div>
+                            <div class="color-cell transparent" style="width:100%; text-align:center; font-size:11px; line-height:24px; border:1px solid #ddd; margin-bottom:6px;" onclick="setPaletteColor('bg','transparent')">無填滿</div>
+                            <div class="palette-title">基本色</div>
+                            <div class="color-grid">
+                                <div class="color-cell" style="background:#000000" onclick="setPaletteColor('bg','#000000')"></div>
+                                <div class="color-cell" style="background:#ffffff; border:1px solid #ccc;" onclick="setPaletteColor('bg','#ffffff')"></div>
+                                <div class="color-cell" style="background:#eeece1" onclick="setPaletteColor('bg','#eeece1')"></div>
+                                <div class="color-cell" style="background:#1f497d" onclick="setPaletteColor('bg','#1f497d')"></div>
+                                <div class="color-cell" style="background:#4f81bd" onclick="setPaletteColor('bg','#4f81bd')"></div>
+                            </div>
+                            <div class="palette-title">常用色</div>
                             <div class="color-grid">
                                 <div class="color-cell" style="background:#ffff00" onclick="setPaletteColor('bg','#ffff00')"></div>
                                 <div class="color-cell" style="background:#00ff00" onclick="setPaletteColor('bg','#00ff00')"></div>
                                 <div class="color-cell" style="background:#00ffff" onclick="setPaletteColor('bg','#00ffff')"></div>
                                 <div class="color-cell" style="background:#ff00ff" onclick="setPaletteColor('bg','#ff00ff')"></div>
-                                <div class="color-cell" style="background:#e0e0e0" onclick="setPaletteColor('bg','#e0e0e0')"></div>
+                                <div class="color-cell" style="background:#0000ff" onclick="setPaletteColor('bg','#0000ff')"></div>
+                                <div class="color-cell" style="background:#ff0000" onclick="setPaletteColor('bg','#ff0000')"></div>
+                                <div class="color-cell" style="background:#000080" onclick="setPaletteColor('bg','#000080')"></div>
+                                <div class="color-cell" style="background:#008080" onclick="setPaletteColor('bg','#008080')"></div>
+                                <div class="color-cell" style="background:#800080" onclick="setPaletteColor('bg','#800080')"></div>
+                                <div class="color-cell" style="background:#808080" onclick="setPaletteColor('bg','#808080')"></div>
                             </div>
                         </div>
                     </div>
@@ -481,21 +517,24 @@
             });
         } catch(e) {}
 
-        /* Palette Logic */
+        /* Palette Logic Fixed */
         document.addEventListener('click', function(e) {
             if(!e.target.closest('.palette-btn') && !e.target.closest('.palette-popover')) {
                 document.querySelectorAll('.palette-popover').forEach(p => p.classList.remove('active'));
             }
         });
-        function togglePalette(id) {
+        function togglePalette(id, event) {
+            if(event) event.stopPropagation();
+            const pop = document.getElementById('pal'+id);
+            // Close others
             document.querySelectorAll('.palette-popover').forEach(p => { if(p.id!=='pal'+id) p.classList.remove('active'); });
-            document.getElementById('pal'+id).classList.toggle('active');
+            pop.classList.toggle('active');
         }
         function setPaletteColor(type, color) {
             const f = fields.find(x => x.id === activeId);
             if(!f) return;
-            if(type === 'text') { f.color = color; document.getElementById('indTextColor').style.backgroundColor = color; }
-            if(type === 'bg') { f.bgColor = color; document.getElementById('indBgColor').style.backgroundColor = color; }
+            if(type === 'text') { f.color = color; document.getElementById('barTextColor').style.backgroundColor = color; }
+            if(type === 'bg') { f.bgColor = color; document.getElementById('barBgColor').style.backgroundColor = color; }
             apply();
             document.querySelectorAll('.palette-popover').forEach(p => p.classList.remove('active'));
         }
@@ -689,8 +728,8 @@
             ['pSize','pWidth','pMode','pUnitB','pLink','pDefVal'].forEach(k => { if(document.getElementById(k)) document.getElementById(k).value = f[k.replace('p','').replace(k.charAt(1),k.charAt(1).toLowerCase())] || (k==='pSize'?14:''); });
             
             // Palette Indicators
-            document.getElementById('indTextColor').style.backgroundColor = f.color;
-            document.getElementById('indBgColor').style.backgroundColor = f.bgColor;
+            document.getElementById('barTextColor').style.backgroundColor = f.color;
+            document.getElementById('barBgColor').style.backgroundColor = f.bgColor;
 
             document.getElementById('pUpperCase').checked = f.upper;
             document.getElementById('pMode').value = f.mode;
@@ -848,13 +887,12 @@
         function toggleStyle(s) { const f=fields.find(x=>x.id===activeId); f[s]=!f[s]; apply(); }
         
         function toggleCheck(el, mode, isRadio) { 
-             // Fix: if radio style but mode is cross/both, clicking behaves like checkbox-like toggle but ensures visual update
              if(isRadio) {
                  const card = el.closest('.card');
                  const allRadios = card.querySelectorAll('.fake-icon.radio');
                  allRadios.forEach(r => { r.classList.remove('checked-v'); r.classList.remove('checked-x'); });
                  if(mode === 'mark-cross') el.classList.add('checked-x');
-                 else if(mode === 'mark-both') el.classList.add('checked-v'); // Default first click
+                 else if(mode === 'mark-both') el.classList.add('checked-v');
                  else el.classList.add('checked-v');
              } else {
                  if (mode === 'mark-both') {
@@ -875,7 +913,7 @@
         window.delR = (i) => { fields.find(x=>x.id===activeId).uRules.splice(i, 1); renderRules(); };
         function addShiftRule() { fields.find(x=>x.id===activeId).shiftRules.push({start:'08:00', end:'12:00', val:'早班'}); renderShiftRules(); render(); }
         function renderShiftRules() { const f = fields.find(x=>x.id===activeId);
-            document.getElementById('sRules').innerHTML = (f.shiftRules||[]).map((r,i) => `<div class="logic-line"><input type="time" style="flex:1;" value="${r.start}" oninput="upS(${i},'start',this.value)"> ~ <input type="time" style="flex:1;" value="${r.end}" oninput="upS(${i},'end',this.value)"> <input style="width:40px" placeholder="班別" value="${r.val}" oninput="upS(${i},'val',this.value)"> <span style="cursor:pointer; margin-left:4px;" onclick="delS(${i})">🗑</span></div>`).join('');
+            document.getElementById('sRules').innerHTML = (f.shiftRules||[]).map((r,i) => `<div class="logic-line"><input type="time" style="width:55px" value="${r.start}" oninput="upS(${i},'start',this.value)"> ~ <input type="time" style="width:55px" value="${r.end}" oninput="upS(${i},'end',this.value)"> <input style="width:40px" placeholder="班別" value="${r.val}" oninput="upS(${i},'val',this.value)"> <span style="cursor:pointer; margin-left:4px;" onclick="delS(${i})">🗑</span></div>`).join('');
         }
         window.upS = (i,k,v) => { fields.find(x=>x.id===activeId).shiftRules[i][k]=v; render(); };
         window.delS = (i) => { fields.find(x=>x.id===activeId).shiftRules.splice(i,1); renderShiftRules(); render(); };
