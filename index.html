@@ -113,7 +113,7 @@
         .temp-table-mock th, .temp-table-mock td { border: 1px solid #eee; padding: 6px; text-align: center; color: #666; }
         .temp-table-mock th { background: #f9f9f9; font-weight: bold; }
         .info-icon { display: inline-flex; align-items: center; justify-content: center; width: 14px; height: 14px; background: #ccc; color: #fff; border-radius: 50%; font-size: 10px; margin-left: 6px; cursor: help; font-weight: bold; }
-        .global-tooltip { position: fixed; background: #222; color: #fff; padding: 10px; border-radius: 6px; z-index: 10000; font-weight: normal; font-family: sans-serif; line-height: 1.4; font-size: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.3); pointer-events: none; max-width: 220px; text-align: left; }
+        .global-tooltip { position: fixed; background: #222; color: #fff; padding: 10px; border-radius: 6px; z-index: 10000; font-weight: normal; font-family: sans-serif; line-height: 1.4; font-size: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.3); pointer-events: none; max-width: 250px; text-align: left; }
         .card-tools { display: flex; justify-content: flex-end; gap: 15px; margin-top: 15px; padding-top: 10px; border-top: 1px solid #f0f0f0; }
         .tool-action { font-size: 12px; color: #666; cursor: pointer; display: flex; align-items: center; gap: 4px; font-weight: 600; }
         .tool-action:hover { color: var(--p); }
@@ -174,10 +174,6 @@
         .vis-grid.vertical { grid-template-columns: 1fr 2fr; }
         .vis-header { background: #ddd; display: flex; align-items: center; justify-content: center; color: #555; font-size: 8px; font-weight: bold; }
         .vis-data { display: flex; align-items: center; justify-content: center; color: #ccc; font-size: 8px; }
-
-        /* v48 Instructions */
-        .instruction-box { font-size: 11px; color: #555; background: #f1f3f4; padding: 8px; border-radius: 4px; margin-bottom: 8px; line-height: 1.4; border-left: 3px solid #ccc; }
-        .instruction-title { font-weight: bold; margin-bottom: 4px; color: #333; }
     </style>
 </head>
 <body>
@@ -251,7 +247,7 @@
         
         <div id="formSettings" style="display:none;">
             <div class="p-item">
-                <label>標題與文字樣式</label>
+                <label>表單標題與說明</label>
                 <div class="p-row-flex">
                     <input type="number" class="inp-p" id="mSize" style="width:60px" value="28" oninput="applyGlobal()">
                     <div id="metaPaletteContainer"></div> 
@@ -339,13 +335,10 @@
             </div>
 
             <div id="autoPrevSec" class="p-item sec-divider">
-                <label>自動帶入規則</label>
-                <div class="instruction-box">
-                    <div class="instruction-title">ℹ️ 設計目的與邏輯</div>
-                    設定「開始~結束」時間。在此區間內填寫新表單時，系統會自動抓取您<b>上一筆成功送出的資料</b>填入。<br>
-                    <span style="color:#e65100">適用：</span>工單、批號等重複資訊。<br>
-                    <span style="color:#d93025">注意：</span>非此時段則留空，避免跨班錯誤。
-                </div>
+                <label>
+                    自動帶入規則 
+                    <span class="info-icon" data-msg="<b>設計目的：</b><br>減少重複輸入(如工單/批號)。<br><br><b>運作邏輯：</b><br>在設定時段內，自動填入上一筆資料。<br>若非此時段(跨班)則留空。">?</span>
+                </label>
                 <div style="background:#f0f9ff; padding:10px; border-radius:6px; font-size:12px; color:#444; margin-top:5px;">
                     <div id="apRules"></div>
                     <span class="add-link" onclick="addAutoPrevRule()">+ 新增自動帶入區段</span>
@@ -370,17 +363,11 @@
                     <option value="radio">單選</option>
                     <option value="checkbox">多選</option>
                 </select>
-                <div class="instruction-box" style="margin-top:10px;">
-                    <div class="instruction-title">ℹ️ 機台連動邏輯</div>
-                    當選擇特定機台時，可動態變更指定<b>「綜合格點 (Grid)」</b>的列內容。<br>
-                    <span style="color:#1a73e8">情境：</span>機台A驗3軸、機台B驗2軸。<br>
-                    <b>設定方式：</b><br>
-                    1. 機台 = 填入選項值 (如: CNC-01)<br>
-                    2. 目標 = Grid標題 (如: 尺寸檢查)<br>
-                    3. 選項 = 新的列名 (如: X軸,Y軸)
-                </div>
                 <div style="background:#f0f9ff; padding:10px; border-radius:6px; font-size:12px; color:#444; margin-top:5px;">
-                    <label style="margin:0 0 5px 0;">智慧連動規則</label>
+                    <label style="margin:0 0 5px 0;">
+                        智慧連動規則
+                        <span class="info-icon" data-msg="<b>設計目的：</b><br>不同機台對應不同檢查項目。<br><br><b>運作邏輯：</b><br>當選中特定機台時，自動更換目標格點(Grid)的列內容。">?</span>
+                    </label>
                     <div id="mRules"></div>
                     <span class="add-link" onclick="addMachineRule()">+ 新增連動規則</span>
                 </div>
@@ -538,11 +525,13 @@
             pop.classList.toggle('active');
         }
         function setPaletteColor(idPrefix, type, color) {
+            // Check if it's Modal Rule Color
             if(idPrefix.startsWith('rule')) {
                 const index = parseInt(idPrefix.replace('rule',''));
                 updateModalCalc(index, 'ruleColor', color);
                 document.getElementById('ind'+idPrefix).style.backgroundColor = color;
             } 
+            // Check if it's Meta
             else if(activeId === 'form_meta') {
                 if(!formConfig.metaStyle) formConfig.metaStyle = {};
                 if(type === 'text') formConfig.metaStyle.color = color;
@@ -550,6 +539,7 @@
                 document.getElementById('ind'+idPrefix).style.backgroundColor = color;
                 applyGlobal();
             }
+            // Field
             else {
                 const f = fields.find(x => x.id === activeId);
                 if(f) {
@@ -561,6 +551,25 @@
             }
             document.querySelectorAll('.palette-popover').forEach(p => p.classList.remove('active'));
         }
+
+        /* Tooltip Enhanced */
+        document.addEventListener('mouseover', function(e) {
+            if (e.target.classList.contains('info-icon')) {
+                const msg = e.target.getAttribute('data-msg');
+                const tip = document.createElement('div');
+                tip.className = 'global-tooltip';
+                tip.innerHTML = msg; // Changed to innerHTML to support <br> and <b>
+                document.body.appendChild(tip);
+                const rect = e.target.getBoundingClientRect();
+                tip.style.top = (rect.bottom + 5) + 'px';
+                tip.style.right = (window.innerWidth - rect.left + 5) + 'px'; 
+            }
+        });
+        document.addEventListener('mouseout', function(e) {
+            if (e.target.classList.contains('info-icon')) {
+                document.querySelectorAll('.global-tooltip').forEach(t => t.remove());
+            }
+        });
 
         function sanitizeField(f) {
             if(!f.opts) f.opts = ['選項 1'];
