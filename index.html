@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>專業表單規格生成器 v42.00 (Modal & Logic Enhanced)</title>
+    <title>專業表單規格生成器 v43.00 (UI & Logic Enhanced)</title>
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&display=swap" rel="stylesheet">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/Sortable/1.15.0/Sortable.min.js"></script>
     <style>
@@ -81,9 +81,16 @@
         .fake-icon:hover { border-color: #999; }
         .fake-icon.radio { border-radius: 50%; }
         .fake-icon.checkbox { border-radius: 4px; }
-        .fake-icon.checked-v { border-color: var(--p); background-color: #f0f7ff; color: var(--p); } .fake-icon.checked-v::after { content: '✓'; }
-        .fake-icon.checked-x { border-color: var(--danger); background-color: #fff5f5; color: var(--danger); font-size: 12px; } .fake-icon.checked-x::after { content: '✕'; }
-        .fake-icon.radio.checked-v.standard-mode::after { content: ''; width: 10px; height: 10px; background: var(--p); border-radius: 50%; }
+        
+        .fake-icon.checked-v { border-color: var(--p); background-color: #f0f7ff; color: var(--p); } 
+        .fake-icon.checked-v::after { content: '✓'; }
+        
+        .fake-icon.checked-x { border-color: var(--danger); background-color: #fff5f5; color: var(--danger); font-size: 12px; } 
+        .fake-icon.checked-x::after { content: '✕'; }
+        
+        /* Fix for Radio + X: If radio shape but X mark */
+        .fake-icon.radio.checked-x::after { content: '✕'; }
+        
         .opt-item { display: flex; align-items: center; gap: 8px; margin-top: 5px; }
         .preview-dropdown { display: flex; justify-content: space-between; align-items: center; border: 1px solid #ccc; padding: 10px; border-radius: 8px; background: #fff; color: #666; font-size: 14px; cursor: pointer; }
         .p-item { margin-bottom: 15px; }
@@ -140,6 +147,15 @@
         .target-field-select { max-height: 100px; overflow-y: auto; border: 1px solid #eee; padding: 4px; border-radius: 4px; margin-top: 4px; background: #fff; }
         .time-row { display: flex; align-items: center; gap: 8px; margin-bottom: 5px; }
         .time-row input { padding: 4px; border: 1px solid #ccc; border-radius: 4px; }
+
+        /* v43 New Styles */
+        .color-swatch-row { display: flex; gap: 6px; margin-top: 4px; flex-wrap: wrap; }
+        .color-swatch { width: 20px; height: 20px; border-radius: 4px; cursor: pointer; border: 1px solid #ccc; position: relative; }
+        .color-swatch:hover { border-color: #000; transform: scale(1.1); }
+        .color-swatch.transparent { background: repeating-linear-gradient(45deg, #eee 0, #eee 5px, #fff 5px, #fff 10px); }
+        
+        .val-rule-item { display: flex; align-items: center; gap: 4px; margin-bottom: 5px; background: #f9f9f9; padding: 4px; border-radius: 4px; border: 1px solid #eee; }
+        .val-rule-item select, .val-rule-item input { padding: 4px; border: 1px solid #ccc; border-radius: 3px; font-size: 12px; }
     </style>
 </head>
 <body>
@@ -269,13 +285,32 @@
 
         <div id="editor" style="display:none;">
             <div class="p-item">
-                <label>標題樣式</label>
+                <label>標題與文字樣式</label>
                 <div class="p-row-flex">
                     <input type="number" class="inp-p" id="pSize" style="width:60px" oninput="apply()">
-                    <input type="color" id="pColor" style="height:32px; width:40px; border:none; cursor:pointer;" oninput="apply()">
+                    <div style="display:flex; flex-direction:column; gap:2px;">
+                         <div style="display:flex; gap:2px;">
+                             <input type="color" id="pColor" style="height:25px; width:25px; border:none; cursor:pointer;" oninput="apply()" title="文字顏色">
+                             <input type="color" id="pBgColor" style="height:25px; width:25px; border:none; cursor:pointer;" oninput="apply()" title="螢光筆 (背景色)">
+                         </div>
+                    </div>
                     <button class="biu-btn" id="bB" onclick="toggleStyle('bold')">B</button>
                     <button class="biu-btn" id="bI" onclick="toggleStyle('italic')">I</button>
                     <button class="biu-btn" id="bU" onclick="toggleStyle('underline')">U</button>
+                </div>
+                <div class="color-swatch-row">
+                    <div class="color-swatch" style="background:#000000" onclick="setColor('#000000')"></div>
+                    <div class="color-swatch" style="background:#434343" onclick="setColor('#434343')"></div>
+                    <div class="color-swatch" style="background:#d93025" onclick="setColor('#d93025')"></div>
+                    <div class="color-swatch" style="background:#1a73e8" onclick="setColor('#1a73e8')"></div>
+                    <div class="color-swatch" style="background:#188038" onclick="setColor('#188038')"></div>
+                </div>
+                <div class="color-swatch-row" style="margin-top:6px;">
+                    <div class="color-swatch transparent" onclick="setBgColor('transparent')" title="無背景"></div>
+                    <div class="color-swatch" style="background:#fef08a" onclick="setBgColor('#fef08a')"></div>
+                    <div class="color-swatch" style="background:#a7f3d0" onclick="setBgColor('#a7f3d0')"></div>
+                    <div class="color-swatch" style="background:#bae6fd" onclick="setBgColor('#bae6fd')"></div>
+                    <div class="color-swatch" style="background:#fbcfe8" onclick="setBgColor('#fbcfe8')"></div>
                 </div>
             </div>
 
@@ -290,7 +325,9 @@
                 </div>
             </div>
 
-            <label class="p-check-row"><input type="checkbox" id="pReq" onchange="apply()"> 必填項目 (*)</label>
+            <label class="p-check-row"><input type="checkbox" id="pDescE" onchange="apply()"> 啟用說明文字</label>
+
+            <label class="p-check-row sec-divider"><input type="checkbox" id="pReq" onchange="apply()"> 必填項目 (*)</label>
             <label class="p-check-row"><input type="checkbox" id="pManual" onchange="apply()"> 允許手動變更</label>
             
             <div id="autoPrevSec" class="p-item sec-divider">
@@ -329,7 +366,6 @@
             <div id="markStyleSec" class="p-item sec-divider" style="display:none;">
                 <label>標記樣式</label>
                 <select class="inp-p" id="pMarkStyle" onchange="apply()">
-                    <option value="standard">標準</option>
                     <option value="mark-check">打勾</option>
                     <option value="mark-cross">打叉</option>
                     <option value="mark-both">打勾或打叉 (三態)</option>
@@ -367,11 +403,13 @@
                         <input type="number" class="inp-p" id="pMinLen" placeholder="Min Len" style="flex:1" oninput="apply()">
                         <input type="number" class="inp-p" id="pMaxLen" placeholder="Max Len" style="flex:1" oninput="apply()">
                     </div>
-                    <div class="p-row-flex">
-                        <input type="number" class="inp-p" id="pMinVal" placeholder="Min Val" style="flex:1" oninput="apply()">
-                        <input type="number" class="inp-p" id="pMaxVal" placeholder="Max Val" style="flex:1" oninput="apply()">
+                    <div style="margin-top:5px; background:#fff3e0; padding:8px; border-radius:4px; border:1px solid #ffe0b2;">
+                        <label style="margin-bottom:4px; color:#e65100;">數值驗證規則</label>
+                        <div id="valRulesList"></div>
+                        <span class="add-link" onclick="addValRule()">+ 新增規則</span>
                     </div>
-                    <div class="p-row-flex">
+                    
+                    <div class="p-row-flex" style="margin-top:8px;">
                         <input type="number" class="inp-p" id="pDecPlaces" placeholder="小數位" style="flex:1" oninput="apply()">
                         <select class="inp-p" id="pRoundMode" style="flex:1" onchange="apply()">
                             <option value="round">四捨五入</option>
@@ -414,8 +452,6 @@
                 <label class="p-check-row"><input type="checkbox" id="pAutoTime" onchange="apply()"> 自動帶入當前時間</label>
                 <label class="p-check-row"><input type="checkbox" id="pDateOffset" onchange="apply()"> 跨日設定 (日期-1)</label>
             </div>
-
-            <label class="p-check-row sec-divider"><input type="checkbox" id="pDescE" onchange="apply()"> 啟用說明文字</label>
         </div>
     </div>
 
@@ -428,11 +464,9 @@
             metaStyle: { size: 28, color: '#000000', bold: true, italic: false, underline: false, width: 'w-100' },
             tempColIds: [], 
             calcCols: [],
-            clearTimes: [] // Array of time strings
+            clearTimes: [] 
         };
         const list = document.getElementById('fList');
-
-        // Modal Variables
         let tempModalState = { tempColIds: [], calcCols: [], clearTimes: [], clearOnSubmit: false };
 
         try {
@@ -472,6 +506,8 @@
             if(!f.shiftRules) f.shiftRules = [];
             if(!f.autoPrevRules) f.autoPrevRules = [];
             if(!f.uRules) f.uRules = [];
+            if(!f.valRules) f.valRules = []; 
+            if(!f.bgColor) f.bgColor = 'transparent';
             while(f.colModes.length < f.cols.length) f.colModes.push('text');
             return f;
         }
@@ -482,15 +518,17 @@
              if(type==='header') title='章節標題';
 
              const f = {
-                id, type, title, width:'w-100', size:14, color:'#000000', bold:false, italic:false, underline:false,
+                id, type, title, width:'w-100', size:14, color:'#000000', bgColor: 'transparent', bold:false, italic:false, underline:false,
                 req:false, descE:false, desc:'', unitB:'', uEnable:false, uRules: [], 
                 mode:'text', manual:true,
                 rows:['第 1 列'], cols:['第 1 欄'], colModes: ['text'],
                 corner:true, cornerTop:'欄名', cornerBot:'列名', showCol:true, showRow:true,
-                opts:['選項 1'], testV:'', link:'', upper:false, defVal:'', minLen:'', maxLen:'', minVal:'', maxVal:'', decPlaces:'', roundMode:'round',
+                opts:['選項 1'], testV:'', link:'', upper:false, defVal:'', 
+                valRules: [], // Enhanced validation
+                minLen:'', maxLen:'', decPlaces:'', roundMode:'round',
                 shiftStyle: 'dropdown', shiftLogicE: false, shiftRules: [], 
                 autoPrevRules: [], showTime: false, autoDate: false, autoTime: false, dateOffset: false,
-                markStyle: 'standard', machineStyle: 'dropdown', machineRules: [] 
+                markStyle: 'mark-check', machineStyle: 'dropdown', machineRules: [] 
              };
              if(type === 'choices') f.mode = 'radio';
              if(type === 'shift') f.opts = ['早班', '晚班'];
@@ -508,7 +546,6 @@
         }
 
         function render() {
-            // Meta Style Render
             const mS = formConfig.metaStyle || { size: 28, color: '#000000', bold: true, width: 'w-100' };
             const mCard = document.getElementById('formMetaCard');
             if(mCard) {
@@ -525,7 +562,7 @@
             const htmlArr = fields.map(f => {
                 try {
                     sanitizeField(f);
-                    const s = `font-size:${f.size}px; color:${f.color}; font-weight:${f.bold?'bold':'normal'}; font-style:${f.italic?'italic':'normal'}; text-decoration:${f.underline?'underline':'none'};`;
+                    const s = `font-size:${f.size}px; color:${f.color}; background-color:${f.bgColor}; font-weight:${f.bold?'bold':'normal'}; font-style:${f.italic?'italic':'normal'}; text-decoration:${f.underline?'underline':'none'};`;
                     
                     const renderInput = (cls, ph) => `<input class="${cls} no-drag" style="width:100%; border:1px solid #ccc; border-radius:4px; padding:4px 6px; font-size:12px; height:28px; outline:none; background:#fff; ${f.upper ? 'text-transform:uppercase;' : ''}" placeholder="${ph}" oninput="validateInput(this, '${f.id}')" onblur="handleBlur(this, '${f.id}')" data-fid="${f.id}" value="${f.defVal || ''}">`;
                     
@@ -546,17 +583,12 @@
                         } else {
                             body = `${autoPrevBadge}<div style="display:flex; gap:10px; flex-wrap:wrap;">${(f.opts||[]).map(o=>`<label style="display:flex;align-items:center;gap:4px;font-size:13px;">${renderMark(f.machineStyle==='radio')} ${o}</label>`).join('')}</div>`;
                         }
-                        if((f.machineRules||[]).length > 0) {
-                            const ruleText = f.machineRules.map(r=> `<span style="font-size:10px; background:#eee; padding:1px 3px;">${r.val}→${r.target}</span>`).join(' ');
-                            body = `<div style="font-size:11px; color:#888; margin-bottom:4px;">連動: ${ruleText}</div>` + body;
-                        }
                     } else if(f.type === 'shift') {
                         if(f.shiftStyle === 'radio') {
                              body = `${autoPrevBadge}<div style="display:flex; gap:10px; flex-wrap:wrap;">${(f.opts||[]).map(o=>`<label style="display:flex;align-items:center;gap:4px;font-size:13px;">${renderMark(true, 'standard')} ${o}</label>`).join('')}</div>`;
                         } else {
                             body = `${autoPrevBadge}<div class="preview-dropdown"><select class="no-drag" style="width:100%; border:none; background:transparent;"><option>-- 請選擇班別 --</option>${(f.opts||[]).map(o=>`<option>${o}</option>`).join('')}</select></div>`;
                         }
-                        if(f.shiftLogicE) body = `<span style="font-size:11px; color:#1a73e8; background:#e8f0fe; padding:2px;">⚡ 智慧帶入</span> ` + body;
                     } else if(f.type === 'datetime') {
                         body = `<div style="display:flex; gap:10px;"><div style="border:1px solid #ccc; padding:6px; flex:1; border-radius:4px; background:#fff;">YYYY/MM/DD 📅</div>${f.showTime?'<div style="border:1px solid #ccc; padding:6px; width:80px; border-radius:4px; background:#fff;">--:-- 🕒</div>':''}</div>`;
                     } else if(f.type === 'remark') {
@@ -583,12 +615,7 @@
                     } else if(f.type === 'text') {
                          let unitHtml = '';
                          if(f.uEnable) {
-                            if(f.manual) {
-                                const unitOpts = [f.unitB, ...(f.uRules||[]).map(r=>r.res)].filter((v,i,a)=>a.indexOf(v)===i).map(u => `<option>${u}</option>`).join('');
-                                unitHtml = `<select class="unit-select no-drag" style="background:#f0f0f0; border:none; border-left:1px solid #ccc; font-size:12px; color:#555; padding:0 4px; cursor:pointer; outline:none;" onmousedown="event.stopPropagation()">${unitOpts}</select>`;
-                            } else {
-                                unitHtml = `<div class="unit-label" style="background:#f0f0f0; padding:0 8px; display:flex; align-items:center; border-left:1px solid #ccc; font-size:12px; color:#555;">${f.unitB}</div>`;
-                            }
+                             unitHtml = `<div class="unit-label" style="background:#f0f0f0; padding:0 8px; display:flex; align-items:center; border-left:1px solid #ccc; font-size:12px; color:#555;">${f.unitB}</div>`;
                          }
                          body = `${autoPrevBadge}<div style="display:flex; border:1px solid #ccc; border-radius:4px; overflow:hidden;">${renderInput('style-v27-box','請輸入...')}${unitHtml}</div>`;
                     } else if(['choices','dropdown'].includes(f.type)) {
@@ -636,14 +663,11 @@
             footer.innerHTML = '';
             
             if(formConfig.enableTemp) {
-                // Build Temp Table Header
                 let ths = [];
-                // 1. Basic Fields
                 (formConfig.tempColIds || []).forEach(fid => {
                     const field = fields.find(x => x.id === fid);
                     if(field) ths.push(field.title);
                 });
-                // 2. Calc Columns
                 (formConfig.calcCols || []).forEach(c => ths.push(c.title));
 
                 if(ths.length === 0) ths.push("未選擇顯示欄位");
@@ -662,7 +686,7 @@
                 document.getElementById('editor').style.display='none'; document.getElementById('formSettings').style.display='block';
                 document.getElementById('formMetaCard').classList.add('selected');
                 Array.from(list.children).forEach(c => c.classList.remove('selected'));
-                // Setup Meta Controls
+                
                 const mS = formConfig.metaStyle || { size: 28, color: '#000000', bold: true };
                 document.getElementById('mSize').value = mS.size;
                 document.getElementById('mColor').value = mS.color;
@@ -686,15 +710,20 @@
             const f = fields.find(x => x.id === id);
             if(!f) return;
             sanitizeField(f);
-            ['pSize','pColor','pWidth','pMode','pUnitB','pLink','pDefVal','pMinLen','pMaxLen','pMinVal','pMaxVal','pDecPlaces','pRoundMode'].forEach(k => {
+            ['pSize','pColor','pWidth','pMode','pUnitB','pLink','pDefVal','pMinLen','pMaxLen','pDecPlaces','pRoundMode'].forEach(k => {
                 if(document.getElementById(k)) document.getElementById(k).value = f[k.replace('p','').replace(k.charAt(1),k.charAt(1).toLowerCase())] || (k==='pSize'?14:k==='pColor'?'#000000':'');
             });
+            document.getElementById('pBgColor').value = f.bgColor || '#ffffff'; // Highlighter
             document.getElementById('pUpperCase').checked = f.upper;
             document.getElementById('pMode').value = f.mode;
             document.getElementById('pReq').checked = f.req;
             document.getElementById('pManual').checked = f.manual;
             document.getElementById('pDescE').checked = f.descE;
             document.getElementById('pUnitE').checked = f.uEnable;
+            
+            // Mark Style Selection Logic
+            if(document.getElementById('pMarkStyle')) document.getElementById('pMarkStyle').value = f.markStyle;
+
             const hideContentConfig = ['datetime', 'shift', 'header', 'batch', 'choices', 'dropdown'].includes(f.type);
             document.getElementById('contentSec').style.display = hideContentConfig ? 'none' : 'block';
             document.getElementById('defValRow').style.display = (f.type === 'header' || f.type === 'batch') ? 'none' : 'block';
@@ -703,6 +732,7 @@
             document.getElementById('unitSec').style.display = f.type==='text'?'block':'none'; 
             document.getElementById('autoPrevSec').style.display = 'block';
             renderAutoPrevRules();
+            renderValRules(); // New Validation
             document.getElementById('shiftSec').style.display = f.type==='shift'?'block':'none';
             document.getElementById('machineSec').style.display = f.type==='machine'?'block':'none';
             document.getElementById('dateSec').style.display = f.type==='datetime'?'block':'none';
@@ -760,7 +790,6 @@
             formConfig.enableTemp = document.getElementById('gEnableTemp').checked;
             formConfig.metaDescE = document.getElementById('gMetaDescE').checked;
             
-            // Meta Style Apply
             if(!formConfig.metaStyle) formConfig.metaStyle = {};
             formConfig.metaStyle.size = document.getElementById('mSize').value;
             formConfig.metaStyle.color = document.getElementById('mColor').value;
@@ -774,29 +803,23 @@
             if(!formConfig.metaStyle) formConfig.metaStyle = {};
             formConfig.metaStyle[s] = !formConfig.metaStyle[s];
             applyGlobal();
-            // Update buttons
             if(s==='bold') document.getElementById('mB').classList.toggle('active');
             if(s==='italic') document.getElementById('mI').classList.toggle('active');
             if(s==='underline') document.getElementById('mU').classList.toggle('active');
         }
 
-        /* --- MODAL LOGIC --- */
         function openTempModal() {
-            // Load current config to temp state
             tempModalState.tempColIds = [...(formConfig.tempColIds || [])];
             tempModalState.calcCols = JSON.parse(JSON.stringify(formConfig.calcCols || []));
             tempModalState.clearTimes = [...(formConfig.clearTimes || [])];
             tempModalState.clearOnSubmit = formConfig.clearOnSubmit || false;
-
             document.getElementById('mClearOnSubmit').checked = tempModalState.clearOnSubmit;
             renderModalFields();
             renderModalCalcs();
             renderModalTimes();
             document.getElementById('tempConfigModal').style.display = 'flex';
         }
-        function closeTempModal() {
-            document.getElementById('tempConfigModal').style.display = 'none';
-        }
+        function closeTempModal() { document.getElementById('tempConfigModal').style.display = 'none'; }
         function saveTempModal() {
             formConfig.tempColIds = [...tempModalState.tempColIds];
             formConfig.calcCols = JSON.parse(JSON.stringify(tempModalState.calcCols));
@@ -805,54 +828,36 @@
             render();
             closeTempModal();
         }
-
-        /* Modal: Basic Fields */
         function renderModalFields() {
             const container = document.getElementById('modalFieldList');
             container.innerHTML = fields.filter(f => f.type !== 'header').map(f => {
                 const checked = tempModalState.tempColIds.includes(f.id) ? 'checked' : '';
-                return `<label class="field-chk-item">
-                    <input type="checkbox" onchange="toggleModalField('${f.id}')" ${checked}>
-                    ${f.title}
-                </label>`;
+                return `<label class="field-chk-item"><input type="checkbox" onchange="toggleModalField('${f.id}')" ${checked}>${f.title}</label>`;
             }).join('');
         }
         function toggleModalField(id) {
             const idx = tempModalState.tempColIds.indexOf(id);
-            if(idx > -1) tempModalState.tempColIds.splice(idx, 1);
-            else tempModalState.tempColIds.push(id);
+            if(idx > -1) tempModalState.tempColIds.splice(idx, 1); else tempModalState.tempColIds.push(id);
         }
         function toggleAllTempFields(select) {
-            if(select) tempModalState.tempColIds = fields.filter(f => f.type !== 'header').map(f => f.id);
-            else tempModalState.tempColIds = [];
+            if(select) tempModalState.tempColIds = fields.filter(f => f.type !== 'header').map(f => f.id); else tempModalState.tempColIds = [];
             renderModalFields();
         }
-
-        /* Modal: Calcs */
         function addTempCalc() {
             tempModalState.calcCols.push({ id: 'c'+Date.now(), title: '新統計', type: 'sum_fields', targets: [], ruleVal: '', ruleOp: '>', ruleColor: '#d93025' });
             renderModalCalcs();
         }
-        function delModalCalc(i) {
-            tempModalState.calcCols.splice(i, 1);
-            renderModalCalcs();
-        }
-        function updateModalCalc(i, key, val) {
-            tempModalState.calcCols[i][key] = val;
-            renderModalCalcs();
-        }
+        function delModalCalc(i) { tempModalState.calcCols.splice(i, 1); renderModalCalcs(); }
+        function updateModalCalc(i, key, val) { tempModalState.calcCols[i][key] = val; renderModalCalcs(); }
         function toggleCalcTarget(i, fid) {
             const targets = tempModalState.calcCols[i].targets;
             const idx = targets.indexOf(fid);
-            if(idx > -1) targets.splice(idx, 1);
-            else targets.push(fid);
+            if(idx > -1) targets.splice(idx, 1); else targets.push(fid);
         }
         function renderModalCalcs() {
             const container = document.getElementById('modalCalcList');
             container.innerHTML = tempModalState.calcCols.map((c, i) => {
                 const isFieldMode = c.type === 'sum_fields';
-                
-                // Target Select HTML
                 let targetHtml = '';
                 if(isFieldMode) {
                     const validFields = fields.filter(f => ['text','batch'].includes(f.type)); 
@@ -864,48 +869,14 @@
                 } else {
                     targetHtml = `<select class="inp-p" style="margin-top:4px;" onchange="updateModalCalc(${i},'targets',[this.value])"><option value="">--選擇章節標題--</option>${fields.filter(x=>x.type==='header').map(h=>`<option value="${h.id}" ${c.targets[0]===h.id?'selected':''}>${h.title}</option>`).join('')}</select>`;
                 }
-
-                return `
-                <div class="calc-box">
-                    <span class="del-calc" onclick="delModalCalc(${i})">×</span>
-                    <div style="display:flex; gap:8px; margin-bottom:6px;">
-                        <input type="text" class="inp-p" style="font-weight:bold; flex:1;" value="${c.title}" placeholder="統計欄位名稱" oninput="updateModalCalc(${i},'title',this.value)">
-                        <select class="inp-p" style="flex:1;" onchange="updateModalCalc(${i},'type',this.value)">
-                            <option value="sum_fields" ${isFieldMode?'selected':''}>指定欄位加總</option>
-                            <option value="sum_header" ${c.type==='sum_header'?'selected':''}>章節標題下加總</option>
-                        </select>
-                    </div>
-                    <label style="font-size:12px; color:#666;">選擇加總目標:</label>
-                    ${targetHtml}
-                    <div style="display:flex; align-items:center; gap:4px; font-size:12px; margin-top:8px; background:#f9f9f9; padding:5px; border-radius:4px;">
-                        <span>警示規則: 若數值</span>
-                        <select style="border:1px solid #ccc; border-radius:3px;" onchange="updateModalCalc(${i},'ruleOp',this.value)">
-                            <option value=">" ${c.ruleOp==='>'?'selected':''}>></option>
-                            <option value="<" ${c.ruleOp==='<'?'selected':''}>&lt;</option>
-                            <option value="=" ${c.ruleOp==='='?'selected':''}>=</option>
-                            <option value=">=" ${c.ruleOp==='>='?'selected':''}>≥</option>
-                            <option value="<=" ${c.ruleOp==='<='?'selected':''}>≤</option>
-                        </select>
-                        <input type="number" style="width:50px; border:1px solid #ccc; border-radius:3px;" value="${c.ruleVal}" placeholder="值" oninput="updateModalCalc(${i},'ruleVal',this.value)">
-                        <span>顯示顏色</span>
-                        <input type="color" style="width:25px; height:20px; border:none; padding:0;" value="${c.ruleColor}" oninput="updateModalCalc(${i},'ruleColor',this.value)">
-                    </div>
-                </div>`;
+                return `<div class="calc-box"><span class="del-calc" onclick="delModalCalc(${i})">×</span><div style="display:flex; gap:8px; margin-bottom:6px;"><input type="text" class="inp-p" style="font-weight:bold; flex:1;" value="${c.title}" placeholder="統計欄位名稱" oninput="updateModalCalc(${i},'title',this.value)"><select class="inp-p" style="flex:1;" onchange="updateModalCalc(${i},'type',this.value)"><option value="sum_fields" ${isFieldMode?'selected':''}>指定欄位加總</option><option value="sum_header" ${c.type==='sum_header'?'selected':''}>章節標題下加總</option></select></div><label style="font-size:12px; color:#666;">選擇加總目標:</label>${targetHtml}<div style="display:flex; align-items:center; gap:4px; font-size:12px; margin-top:8px; background:#f9f9f9; padding:5px; border-radius:4px;"><span>警示規則: 若數值</span><select style="border:1px solid #ccc; border-radius:3px;" onchange="updateModalCalc(${i},'ruleOp',this.value)"><option value=">" ${c.ruleOp==='>'?'selected':''}>></option><option value="<" ${c.ruleOp==='<'?'selected':''}>&lt;</option><option value="=" ${c.ruleOp==='='?'selected':''}>=</option><option value=">=" ${c.ruleOp==='>='?'selected':''}>≥</option><option value="<=" ${c.ruleOp==='<='?'selected':''}>≤</option></select><input type="number" style="width:50px; border:1px solid #ccc; border-radius:3px;" value="${c.ruleVal}" placeholder="值" oninput="updateModalCalc(${i},'ruleVal',this.value)"><span>顯示顏色</span><input type="color" style="width:25px; height:20px; border:none; padding:0;" value="${c.ruleColor}" oninput="updateModalCalc(${i},'ruleColor',this.value)"></div></div>`;
             }).join('');
         }
-
-        /* Modal: Times */
         function addClearTime() { tempModalState.clearTimes.push('12:00'); renderModalTimes(); }
         function delClearTime(i) { tempModalState.clearTimes.splice(i, 1); renderModalTimes(); }
         function updateClearTime(i, v) { tempModalState.clearTimes[i] = v; }
         function renderModalTimes() {
-            const container = document.getElementById('modalTimeList');
-            container.innerHTML = tempModalState.clearTimes.map((t, i) => `
-                <div class="time-row">
-                    <input type="time" value="${t}" oninput="updateClearTime(${i}, this.value)">
-                    <span style="cursor:pointer; color:#999;" onclick="delClearTime(${i})">×</span>
-                </div>
-            `).join('');
+            document.getElementById('modalTimeList').innerHTML = tempModalState.clearTimes.map((t, i) => `<div class="time-row"><input type="time" value="${t}" oninput="updateClearTime(${i}, this.value)"><span style="cursor:pointer; color:#999;" onclick="delClearTime(${i})">×</span></div>`).join('');
         }
 
         function apply() {
@@ -923,11 +894,12 @@
              f.defVal = document.getElementById('pDefVal').value;
              f.minLen = document.getElementById('pMinLen').value;
              f.maxLen = document.getElementById('pMaxLen').value;
-             f.minVal = document.getElementById('pMinVal').value;
-             f.maxVal = document.getElementById('pMaxVal').value;
              f.decPlaces = document.getElementById('pDecPlaces').value;
              f.roundMode = document.getElementById('pRoundMode').value;
              f.mode = document.getElementById('pMode').value;
+             f.color = document.getElementById('pColor').value;
+             f.bgColor = document.getElementById('pBgColor').value;
+
              if(['choices','grid','machine'].includes(f.type)) f.markStyle = document.getElementById('pMarkStyle').value;
              if(f.type === 'grid') { f.corner = document.getElementById('pCorner').checked; f.showCol = document.getElementById('pShowCol').checked; f.showRow = document.getElementById('pShowRow').checked; }
              if(f.type === 'shift') { f.shiftStyle = document.getElementById('pShiftStyle').value; f.shiftLogicE = document.getElementById('pShiftLogicE').checked; }
@@ -937,6 +909,9 @@
              render();
              document.getElementById('uLogic').style.display = (f.uEnable && f.type === 'text') ? 'block' : 'none';
         }
+
+        function setColor(c) { document.getElementById('pColor').value = c; apply(); }
+        function setBgColor(c) { document.getElementById('pBgColor').value = (c==='transparent'?'#ffffff':c); apply(); }
         
         function handleBlur(el, fId) {
             const f = fields.find(x => x.id === fId);
@@ -955,8 +930,18 @@
             if (val !== '') {
                 const num = parseFloat(val);
                 if(!isNaN(num)) {
-                    if(f.minVal && num < parseFloat(f.minVal)) err = true;
-                    if(f.maxVal && num > parseFloat(f.maxVal)) err = true;
+                    // New Validation Logic
+                    if(f.valRules && f.valRules.length > 0) {
+                        f.valRules.forEach(r => {
+                            const rVal = parseFloat(r.val);
+                            if(r.op === '>' && !(num > rVal)) err = true;
+                            if(r.op === '<' && !(num < rVal)) err = true;
+                            if(r.op === '=' && !(num === rVal)) err = true;
+                            if(r.op === '>=' && !(num >= rVal)) err = true;
+                            if(r.op === '<=' && !(num <= rVal)) err = true;
+                        });
+                    }
+
                     if(f.type === 'text' && f.uEnable && f.uRules.length > 0) {
                         let matchedUnit = f.unitB;
                         f.uRules.forEach(r => {
@@ -1017,10 +1002,32 @@
 
         function addAutoPrevRule() { fields.find(x=>x.id===activeId).autoPrevRules.push({start:'08:00', end:'12:00'}); renderAutoPrevRules(); render(); }
         function renderAutoPrevRules() { const f = fields.find(x=>x.id===activeId);
-            document.getElementById('apRules').innerHTML = (f.autoPrevRules||[]).map((r,i) => `<div class="logic-line"><input type="time" style="width:60px" value="${r.start}" oninput="upAP(${i},'start',this.value)"> ~ <input type="time" style="width:60px" value="${r.end}" oninput="upAP(${i},'end',this.value)"> <span style="cursor:pointer; margin-left:4px;" onclick="delAP(${i})">🗑</span></div>`).join('');
+            document.getElementById('apRules').innerHTML = (f.autoPrevRules||[]).map((r,i) => `<div class="logic-line"><input type="time" style="flex:1;" value="${r.start}" oninput="upAP(${i},'start',this.value)"> ~ <input type="time" style="flex:1;" value="${r.end}" oninput="upAP(${i},'end',this.value)"> <span style="cursor:pointer; margin-left:4px;" onclick="delAP(${i})">🗑</span></div>`).join('');
         }
         window.upAP = (i,k,v) => { fields.find(x=>x.id===activeId).autoPrevRules[i][k]=v; render(); };
         window.delAP = (i) => { fields.find(x=>x.id===activeId).autoPrevRules.splice(i,1); renderAutoPrevRules(); render(); };
+        
+        // New Validation Rule Logic
+        function addValRule() { fields.find(x=>x.id===activeId).valRules.push({op: '>', val: ''}); renderValRules(); }
+        function delValRule(i) { fields.find(x=>x.id===activeId).valRules.splice(i, 1); renderValRules(); apply(); }
+        function upValRule(i, k, v) { fields.find(x=>x.id===activeId).valRules[i][k] = v; apply(); }
+        function renderValRules() {
+            const f = fields.find(x=>x.id===activeId);
+            document.getElementById('valRulesList').innerHTML = (f.valRules||[]).map((r,i) => `
+                <div class="val-rule-item">
+                    <select onchange="upValRule(${i},'op',this.value)">
+                        <option value=">" ${r.op==='>'?'selected':''}>大於</option>
+                        <option value="<" ${r.op==='<'?'selected':''}>小於</option>
+                        <option value="=" ${r.op==='='?'selected':''}>等於</option>
+                        <option value=">=" ${r.op==='>='?'selected':''}>大於等於</option>
+                        <option value="<=" ${r.op==='<='?'selected':''}>小於等於</option>
+                    </select>
+                    <input type="number" style="flex:1" value="${r.val}" oninput="upValRule(${i},'val',this.value)">
+                    <span style="cursor:pointer; color:#999;" onclick="delValRule(${i})">×</span>
+                </div>
+            `).join('');
+        }
+
         function addCol(id) { const f = fields.find(x=>x.id===id); f.cols.push(getUniqueName('新欄', f.cols)); f.colModes.push('text'); render(); select(id); }
         function delCol(id,i) { const f = fields.find(x=>x.id===id); f.cols.splice(i,1); f.colModes.splice(i,1); render(); select(id); }
         function addRow(id) { const f = fields.find(x=>x.id===id); f.rows.push(getUniqueName('新列', f.rows)); render(); }
@@ -1037,8 +1044,11 @@
              if(isRadio) {
                  const card = el.closest('.card');
                  const allRadios = card.querySelectorAll('.fake-icon.radio');
-                 allRadios.forEach(r => r.classList.remove('checked-v'));
-                 el.classList.add('checked-v');
+                 allRadios.forEach(r => { r.classList.remove('checked-v'); r.classList.remove('checked-x'); });
+                 
+                 // If radio but cross style, use checked-x logic visually
+                 if(mode === 'mark-cross' || mode === 'mark-both') el.classList.add('checked-x');
+                 else el.classList.add('checked-v');
              } else {
                  if (mode === 'mark-both') {
                      if (el.classList.contains('checked-v')) { el.classList.remove('checked-v'); el.classList.add('checked-x'); }
@@ -1078,7 +1088,7 @@
             const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'questions.json'; a.click();
         }
         function hImport(inp) { const r=new FileReader(); r.onload=(e)=>{ const d=JSON.parse(e.target.result); document.getElementById('mT').value=d.title; document.getElementById('mD').value=d.desc;
-            if(d.config) formConfig = d.config; fields=d.fields.map(f=>({...f, testV:'', autoPrevRules: f.autoPrevRules || [], machineRules: f.machineRules || [], shiftRules: f.shiftRules || [], uRules: f.uRules || [], opts: f.opts || [], colModes: f.colModes || [] }));
+            if(d.config) formConfig = d.config; fields=d.fields.map(f=>({...f, testV:'', autoPrevRules: f.autoPrevRules || [], machineRules: f.machineRules || [], shiftRules: f.shiftRules || [], uRules: f.uRules || [], opts: f.opts || [], colModes: f.colModes || [], valRules: f.valRules || [] }));
             render(); }; r.readAsText(inp.files[0]); }
     </script>
 </body>
