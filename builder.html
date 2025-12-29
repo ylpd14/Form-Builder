@@ -1,0 +1,829 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>專業表單規格生成器 v39.00 (Final Master)</title>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&display=swap" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Sortable/1.15.0/Sortable.min.js"></script>
+    <style>
+        :root { 
+            --p: #1a73e8; --bg: #f8f9fa; --border: #dadce0; --radius: 4px; 
+            --danger: #d93025; --highlight: #fef08a; --temp-btn: #fbc02d; --submit-btn: #34a853; 
+        }
+        * { box-sizing: border-box; }
+        
+        /* 1. Layout: Zero Gap & Compact */
+        body { 
+            font-family: 'Noto Sans TC', sans-serif; margin: 0; padding: 5px; 
+            display: flex; height: 100vh; overflow: hidden; background: var(--bg); color: #202124; gap: 8px; 
+        }
+
+        .sidebar-l { width: 240px; background: #fff; border: 1px solid var(--border); display: flex; flex-direction: column; flex-shrink: 0; border-radius: 4px; }
+        .sidebar-r { width: 360px; background: #fff; border: 1px solid var(--border); padding: 10px; overflow-y: auto; flex-shrink: 0; border-radius: 4px; }
+        .scroll-area { flex: 1; overflow-y: auto; padding: 10px; }
+        
+        .canvas-area { 
+            flex: 1; padding: 10px 20px; overflow-y: auto; background: #eef1f4; 
+            display: flex; flex-direction: column; align-items: center; 
+            border: 1px solid var(--border); border-radius: 4px; 
+        }
+        .canvas-container { width: 100%; max-width: 900px; padding-bottom: 50px; }
+
+        h3 { border-bottom: 2px solid #333; margin: 0 0 8px 0; padding-bottom: 5px; font-size: 0.95rem; font-weight: bold; }
+        .cat { font-size: 11px; font-weight: bold; color: #70757a; margin: 10px 0 4px 0; text-transform: uppercase; border-left: 3px solid var(--p); padding-left: 5px; }
+
+        .btn-t { width: 100%; padding: 8px; margin-bottom: 4px; background: #fff; border: 1px solid var(--border); border-radius: 4px; cursor: pointer; text-align: left; font-size: 13px; display: flex; align-items: center; gap: 8px; transition: 0.2s; }
+        .btn-t:hover { background: #f8f9fa; border-color: var(--p); color: var(--p); }
+
+        /* Card Styles & Focus Logic */
+        .meta-card { background: #fff; border: 1px solid var(--border); border-radius: var(--radius); padding: 15px; border-top: 8px solid #333; margin-bottom: 10px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); cursor: pointer; }
+        .meta-card.selected { border: 2px solid var(--p); box-shadow: 0 0 8px rgba(26, 115, 232, 0.2); }
+
+        .sortable-list { display: grid; grid-template-columns: repeat(12, 1fr); gap: 10px; min-height: 100px; width: 100%; }
+        .card { grid-column: span 12; background: #fff; border: 1px solid var(--border); border-radius: var(--radius); padding: 15px; position: relative; cursor: default; transition: 0.2s; box-shadow: 0 1px 2px rgba(0,0,0,0.05); }
+        
+        /* 🔵 Focus Visual Feedback */
+        .card.selected { border: 2px solid var(--p); box-shadow: 0 0 8px rgba(26, 115, 232, 0.3); z-index: 10; }
+        .w-100 { grid-column: span 12; } .w-50 { grid-column: span 6; } .w-33 { grid-column: span 4; }
+
+        /* Inputs & Drag Safety */
+        .title-inp { width: 100%; border: none; border-bottom: 1px solid transparent; outline: none; background: transparent; transition: 0.2s; padding: 2px; font-weight: bold; min-width: 0; resize: none; overflow: hidden; font-family: inherit; display: block; height: auto; position: relative; z-index: 2; }
+        .title-inp:hover { border-bottom: 1px dashed #ccc; }
+        .title-inp:focus { border-bottom: 2px solid var(--p); background: #fefefe; }
+        .desc-inp { width: 100%; border: none; border-bottom: 1px solid #eee; padding: 4px 2px; font-size: 13px; outline: none; background: transparent; resize: none; overflow: hidden; font-family: inherit; color: #666; position: relative; z-index: 2; }
+        .desc-inp:focus { border-bottom: 1px solid var(--p); color: #333; background: #fff; }
+
+        /* 🔴 Validation Styles */
+        .style-v27-box { width: 100%; border: 1px solid #ccc; border-radius: 4px; padding: 4px 6px; font-size: 12px; height: 28px; outline: none; transition: 0.2s; background: #fff; position: relative; z-index: 2; }
+        .style-v27-box:focus { border-color: var(--p); box-shadow: 0 0 0 2px rgba(26,115,232,0.1); }
+        .style-v27-box.error { border-color: var(--danger) !important; background-color: #fff5f5 !important; box-shadow: 0 0 0 1px var(--danger) !important; }
+        .batch-input-flex.error { border-color: var(--danger) !important; background-color: #fff5f5 !important; }
+
+        /* Icons & Marks */
+        .fake-icon { display: inline-flex; align-items: center; justify-content: center; width: 18px; height: 18px; border: 2px solid #ccc; background: #fff; cursor: pointer; flex-shrink: 0; font-size: 14px; color: transparent; font-weight: bold; transition: 0.2s; user-select: none; position: relative; z-index: 2; }
+        .fake-icon:hover { border-color: #999; }
+        .fake-icon.radio { border-radius: 50%; }
+        .fake-icon.checkbox { border-radius: 4px; }
+        .fake-icon.checked-v { border-color: var(--p); background-color: #f0f7ff; color: var(--p); } 
+        .fake-icon.checked-v::after { content: '✓'; }
+        .fake-icon.checked-x { border-color: var(--danger); background-color: #fff5f5; color: var(--danger); font-size: 12px; } 
+        .fake-icon.checked-x::after { content: '✕'; }
+        .fake-icon.radio.checked-v.standard-mode::after { content: ''; width: 10px; height: 10px; background: var(--p); border-radius: 50%; }
+
+        /* Grid */
+        .grid-table { width: 100%; border-collapse: collapse; margin-top: 5px; table-layout: fixed; }
+        .grid-table th, .grid-table td { border: 1px solid #ddd; padding: 4px; text-align: center; vertical-align: middle; position: relative; font-size: 13px; }
+        .grid-inp { border: none; text-align: center; width: 100%; outline: none; font-weight: bold; background: transparent; font-size: 12px; position: relative; z-index: 2; }
+        .grid-inp:focus { border-bottom: 2px solid var(--p); }
+        .grid-cell-wrapper { display: flex; align-items: center; justify-content: center; width: 100%; height: 100%; gap: 6px; }
+        
+        .slash-header { position: relative; background-color: #fff; height: 45px; background-image: linear-gradient(to bottom right, transparent calc(50% - 0.5px), #ddd calc(50% - 0.5px), #ddd calc(50% + 0.5px), transparent calc(50% + 0.5px)); }
+        .slash-top { position: absolute; top: 2px; right: 4px; width: 45%; border: none; background: transparent; text-align: right; font-size: 11px; outline: none; color: #666; font-weight: bold; z-index: 2; }
+        .slash-bot { position: absolute; bottom: 2px; left: 4px; width: 45%; border: none; background: transparent; text-align: left; font-size: 11px; outline: none; color: #666; font-weight: bold; z-index: 2; }
+        .slash-top:focus, .slash-bot:focus { border-bottom: 1px solid var(--p); color: #000; }
+
+        .add-btn-icon { font-size: 16px; color: #ccc; cursor: pointer; vertical-align: middle; }
+        .del-col-btn { position: absolute; top: -10px; right: -5px; color: var(--danger); cursor: pointer; font-size: 14px; background: #fff; border-radius: 50%; padding: 0 4px; display: none; border: 1px solid #eee; z-index: 5; }
+        .grid-table th:hover .del-col-btn { display: block; }
+        .del-row-btn { font-size: 16px; color: #bbb; cursor: pointer; margin-left: 6px; vertical-align: middle; visibility: hidden; padding: 2px; }
+        .del-row-btn:hover { color: var(--danger); }
+        .grid-table tr:hover .del-row-btn { visibility: visible; }
+        
+        .grid-add-btn { display: flex; align-items: center; justify-content: center; background: #fdfdfd; color: #f9c22e; font-weight: bold; cursor: pointer; transition: 0.2s; text-shadow: 0 0 1px #999; font-size: 20px; position: relative; z-index: 2; }
+        .grid-add-btn:hover { background: #eee; }
+        .grid-add-col { width: 40px; height: 100%; border-left: 1px solid #ddd; }
+        .grid-add-row { height: 35px; border-top: 1px solid #eee; }
+
+        /* Components */
+        .batch-container { display: flex; align-items: center; gap: 8px; padding: 8px 12px; border: 1px solid #e0e0e0; border-radius: 6px; background: #fff; width: 100%; margin-top: 5px; }
+        .batch-label { display: flex; align-items: center; gap: 4px; font-weight: bold; font-size: 13px; margin-right: 8px; white-space: nowrap; }
+        .batch-input-flex { flex: 1; min-width: 0; text-align: center; width: 100%; border: 1px solid #ccc; border-radius: 4px; padding: 4px; outline: none; position: relative; z-index: 2; }
+        .remark-box { width: 100%; border: 1px solid #ccc; border-radius: 6px; padding: 8px; font-size: 13px; resize: vertical; outline: none; transition: 0.2s; background: #fff; min-height: 60px; position: relative; z-index: 2; }
+        .remark-box:focus { border-color: var(--p); box-shadow: 0 0 0 2px rgba(26,115,232,0.1); }
+
+        .opt-item { display: flex; align-items: center; gap: 8px; margin-top: 5px; }
+        .preview-dropdown { display: flex; justify-content: space-between; align-items: center; border: 1px solid #ccc; padding: 10px; border-radius: 8px; background: #fff; color: #666; font-size: 14px; cursor: pointer; }
+
+        /* Sidebar Elements */
+        .p-item { margin-bottom: 15px; }
+        .p-item label { display: flex; align-items: center; font-weight: bold; font-size: 13px; margin-bottom: 5px; }
+        .inp-p { width: 100%; padding: 8px; border: 1px solid var(--border); border-radius: 6px; font-size: 13px; }
+        .p-row-flex { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; flex-wrap: wrap; }
+        .p-check-row { display: flex; align-items: center; gap: 8px; font-size: 13px; margin-bottom: 6px; font-weight: 500; cursor: pointer; }
+        .biu-btn { border: 1px solid #ccc; background: #fff; padding: 6px 12px; border-radius: 4px; cursor: pointer; font-weight: bold; font-size: 12px; }
+        .biu-btn.active { background: #333; color: #fff; border-color: #333; }
+        .logic-panel { background: #fffde7; border: 1px dashed #fbc02d; padding: 10px; border-radius: 8px; margin-top: 8px; }
+        .logic-line { display: flex; align-items: center; gap: 4px; margin-bottom: 5px; font-size: 12px; }
+        .logic-line input, .logic-line select { padding: 3px; border: 1px solid #ccc; border-radius: 3px; }
+        .opt-manage-item { display: flex; align-items: center; gap: 5px; margin-bottom: 6px; }
+        .opt-manage-item input { flex: 1; padding: 6px; border: 1px solid #eee; border-radius: 4px; font-size: 12px; }
+        .opt-manage-item span { cursor: pointer; color: #ccc; }
+        .opt-manage-item span:hover { color: var(--danger); }
+        .add-link { color: var(--p); font-size: 12px; font-weight: bold; cursor: pointer; margin-top: 8px; display: inline-block; }
+        .sec-divider { margin-top: 15px; border-top: 1px solid #eee; padding-top: 10px; }
+        .link-icon { color: var(--p); margin-left: 5px; text-decoration: none; font-size: 14px; cursor: pointer; }
+
+        /* Footer & Tooltip */
+        .footer-actions { margin-top: 20px; width: 100%; display: flex; flex-direction: column; gap: 10px; }
+        .btn-temp { width: 100%; background: var(--temp-btn); color: #000; border: 1px solid #e0a800; padding: 12px; border-radius: 6px; font-weight: bold; cursor: pointer; text-align: center; border: none; }
+        .btn-submit { width: 100%; background: var(--submit-btn); color: #fff; border: none; padding: 12px; border-radius: 6px; font-weight: bold; cursor: pointer; text-align: center; }
+        .temp-table-view { background: #fff; border: 1px solid #ddd; border-radius: 6px; padding: 10px; font-size: 12px; margin-top: 5px; }
+        .temp-table-mock { width: 100%; border-collapse: collapse; margin-top: 5px; }
+        .temp-table-mock th, .temp-table-mock td { border: 1px solid #eee; padding: 6px; text-align: center; color: #666; }
+        .temp-table-mock th { background: #f9f9f9; font-weight: bold; }
+        
+        .info-icon { display: inline-flex; align-items: center; justify-content: center; width: 14px; height: 14px; background: #ccc; color: #fff; border-radius: 50%; font-size: 10px; margin-left: 6px; cursor: help; font-weight: bold; }
+        .global-tooltip { position: fixed; background: #222; color: #fff; padding: 10px; border-radius: 6px; z-index: 10000; font-weight: normal; font-family: sans-serif; line-height: 1.4; font-size: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.3); pointer-events: none; max-width: 220px; text-align: left; }
+        
+        .btn-main { width: 100%; padding: 12px; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; font-size: 13px; }
+        .btn-blue { background: var(--p); color: #fff; }
+        .card-tools { display: flex; justify-content: flex-end; gap: 15px; margin-top: 15px; padding-top: 10px; border-top: 1px solid #f0f0f0; }
+        .tool-action { font-size: 12px; color: #666; cursor: pointer; display: flex; align-items: center; gap: 4px; font-weight: 600; }
+        .tool-action:hover { color: var(--p); }
+
+        /* Grid Config Icons */
+        .grid-col-config { display: flex; gap: 5px; margin-bottom: 5px; align-items: center; }
+        .grid-col-config input { flex: 1; padding: 4px; font-size: 12px; border: 1px solid #ccc; border-radius: 3px; }
+        .mode-icon-btn { width: 32px; height: 26px; border: 1px solid #ccc; border-radius: 3px; background: #f0f0f0; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 14px; user-select: none; }
+        .mode-icon-btn:hover { background: #e0e0e0; }
+        .grid-col-config span { color: #d93025; cursor: pointer; font-size: 16px; padding: 0 4px; }
+    </style>
+</head>
+<body>
+
+    <div class="sidebar-l">
+        <div class="scroll-area">
+            <h3>欄位類型</h3>
+            <div class="cat">輸入與工業</div>
+            <button class="btn-t" onclick="hAdd('text')">📝 文字框</button>
+            <button class="btn-t" onclick="hAdd('batch')">🔢 批號</button>
+            <button class="btn-t" onclick="hAdd('machine')">🤖 機台</button>
+            <button class="btn-t" onclick="hAdd('remark')">🗨️ 備註</button>
+            
+            <div class="cat">選擇與格點</div>
+            <button class="btn-t" onclick="hAdd('choices')">🔘 單選 / 多選</button>
+            <button class="btn-t" onclick="hAdd('dropdown')">🔽 下拉選單</button>
+            <button class="btn-t" onclick="hAdd('grid')">▦ 綜合格點</button>
+            
+            <div class="cat">特殊功能</div>
+            <button class="btn-t" onclick="hAdd('datetime')">📅 日期 & 時間</button>
+            <button class="btn-t" onclick="hAdd('shift')">🕒 班別</button>
+            <button class="btn-t" onclick="hAdd('header')">🚩 章節標題</button>
+        </div>
+        <div style="padding:15px; border-top:1px solid var(--border)">
+            <input type="file" id="jsonUp" style="display:none;" onchange="hImport(this)">
+            <button class="btn-main" style="background:#fff; border:1px solid #ccc; margin-bottom:8px;" onclick="document.getElementById('jsonUp').click()">📂 匯入 JSON</button>
+            <button class="btn-main btn-blue" onclick="hExport()">🚀 匯出 JSON</button>
+        </div>
+    </div>
+
+    <div class="canvas-area">
+        <div class="canvas-container">
+            <div class="meta-card" id="formMetaCard" onclick="select('form_meta')">
+                <textarea id="mT" class="title-inp no-drag" rows="1" style="font-size:1.8rem; font-weight:bold;" oninput="autoResize(this); syncMeta()" onmousedown="event.stopPropagation()">未命名的表單</textarea>
+                <textarea id="mD" class="title-inp no-drag" rows="1" style="margin-top:10px; font-size:14px; font-weight:normal;" placeholder="輸入表單說明..." oninput="autoResize(this); syncMeta()" onmousedown="event.stopPropagation()"></textarea>
+            </div>
+            <div id="fList" class="sortable-list"></div>
+            <div id="formFooter" class="footer-actions"></div>
+        </div>
+    </div>
+
+    <div class="sidebar-r">
+        <h3>屬性設定</h3>
+        <div id="noSel" style="text-align:center; color:#999; margin-top:50px;">點選欄位或標題開始編輯</div>
+        
+        <div id="formSettings" style="display:none;">
+            <div class="p-item">
+                <label>Excel 排版設定</label>
+                <select class="inp-p" id="gLayout" onchange="applyGlobal()">
+                    <option value="horizontal">橫式 (標題在列, 內容在下)</option>
+                    <option value="vertical">直式 (標題在欄, 內容在右)</option>
+                </select>
+                <div class="p-row-flex" style="margin-top:8px;">
+                    <label style="font-size:12px; flex:1;">標題起始 (Row/Col)</label>
+                    <input type="number" class="inp-p" style="flex:1;" id="gTitleIdx" value="1" oninput="applyGlobal()">
+                </div>
+                <div class="p-row-flex">
+                    <label style="font-size:12px; flex:1;">資料起始 (Row/Col)</label>
+                    <input type="number" class="inp-p" style="flex:1;" id="gDataIdx" value="2" oninput="applyGlobal()">
+                </div>
+            </div>
+            <div class="p-item sec-divider">
+                <label>送出與暫存設定</label>
+                <label class="p-check-row"><input type="checkbox" id="gEnableTemp" onchange="applyGlobal()"> 啟用暫存紀錄列表</label>
+                <div id="tempConfig" style="display:none; margin-top:8px; background:#fffde7; padding:10px; border-radius:6px;">
+                    <label style="font-size:12px; margin-bottom:5px;">暫存列表欄位 (逗號隔開)</label>
+                    <input type="text" class="inp-p" id="gTempCols" value="日期/班別, 料號/批號, 數量, 檢驗員" oninput="applyGlobal()">
+                    <label style="font-size:12px; margin-bottom:5px; margin-top:8px;">自動清空時段 (逗號隔開)</label>
+                    <input type="text" class="inp-p" id="gClearTimes" placeholder="例如: 08:00, 20:00" oninput="applyGlobal()">
+                </div>
+            </div>
+        </div>
+
+        <div id="editor" style="display:none;">
+            <div class="p-item">
+                <label>標題樣式</label>
+                <div class="p-row-flex">
+                    <input type="number" class="inp-p" id="pSize" style="width:60px" oninput="apply()">
+                    <input type="color" id="pColor" style="height:32px; width:40px; border:none; cursor:pointer;" oninput="apply()">
+                    <button class="biu-btn" id="bB" onclick="toggleStyle('bold')">B</button>
+                    <button class="biu-btn" id="bI" onclick="toggleStyle('italic')">I</button>
+                    <button class="biu-btn" id="bU" onclick="toggleStyle('underline')">U</button>
+                </div>
+            </div>
+
+            <div class="p-item">
+                <label>寬度與排列</label>
+                <div class="p-row-flex">
+                    <select class="inp-p" id="pWidth" style="width:100%" onchange="apply()">
+                        <option value="w-100">100% 全寬</option>
+                        <option value="w-50">50% 半寬</option>
+                        <option value="w-33">33% 1/3寬</option>
+                    </select>
+                </div>
+            </div>
+
+            <label class="p-check-row"><input type="checkbox" id="pReq" onchange="apply()"> 必填項目 (*)</label>
+            <label class="p-check-row"><input type="checkbox" id="pManual" onchange="apply()"> 允許手動變更</label>
+            
+            <div id="autoPrevSec" class="p-item sec-divider">
+                <label>自動帶入規則 <span class="info-icon" data-msg="設定時段區間（如 08:00~16:00），在此區間內新資料會自動帶入上一筆。">?</span></label>
+                <div style="background:#f0f9ff; padding:10px; border-radius:6px; font-size:12px; color:#444; margin-top:5px;">
+                    <div id="apRules"></div>
+                    <span class="add-link" onclick="addAutoPrevRule()">+ 新增自動帶入區段</span>
+                </div>
+            </div>
+
+            <div id="modeSec" class="p-item sec-divider">
+                <label>選擇模式</label>
+                <select class="inp-p" id="pMode" onchange="apply()">
+                    <option value="radio">單選模式</option>
+                    <option value="checkbox">多選模式</option>
+                    <option value="text">文字框</option>
+                    <option value="mixed-radio">混合單選 (圓鈕+文字)</option>
+                    <option value="mixed-checkbox">混合多選 (方框+文字)</option>
+                </select>
+            </div>
+
+            <div id="machineSec" class="p-item sec-divider" style="display:none;">
+                <label>機台顯示樣式</label>
+                <select class="inp-p" id="pMachineStyle" onchange="apply()">
+                    <option value="dropdown">下拉式選單</option>
+                    <option value="radio">單選</option>
+                    <option value="checkbox">多選</option>
+                </select>
+                <div style="background:#f0f9ff; padding:10px; border-radius:6px; font-size:12px; color:#444; margin-top:10px;">
+                    <label style="margin:0 0 5px 0;">智慧連動規則 <span class="info-icon" data-msg="當機台選擇特定值時，指定的格點欄位選項會自動變更。">?</span></label>
+                    <div id="mRules"></div>
+                    <span class="add-link" onclick="addMachineRule()">+ 新增連動規則</span>
+                </div>
+            </div>
+
+            <div id="markStyleSec" class="p-item sec-divider" style="display:none;">
+                <label>標記樣式</label>
+                <select class="inp-p" id="pMarkStyle" onchange="apply()">
+                    <option value="standard">標準</option>
+                    <option value="mark-check">打勾</option>
+                    <option value="mark-cross">打叉</option>
+                    <option value="mark-both">打勾或打叉 (三態)</option>
+                </select>
+            </div>
+
+            <div id="optSec" class="p-item sec-divider" style="display:none;">
+                <label>選項管理 <span class="info-icon" data-msg="支援批量新增：直接貼上如 'A,B,C' 的文字。">?</span></label>
+                <div id="optList"></div>
+                <span class="add-link" onclick="addSidebarOpt()">+ 新增選項</span>
+            </div>
+
+            <div id="gridSec" class="p-item sec-divider" style="display:none;">
+                <label style="margin-bottom:5px;">格點設定</label>
+                <label class="p-check-row"><input type="checkbox" id="pCorner" onchange="apply()"> 顯示斜線表頭</label>
+                <label class="p-check-row"><input type="checkbox" id="pShowCol" onchange="apply()"> 顯示欄標題</label>
+                <label class="p-check-row"><input type="checkbox" id="pShowRow" onchange="apply()"> 顯示列標題</label>
+                
+                <div style="margin-top:10px; border-top:1px dashed #ddd; padding-top:5px;">
+                    <label style="font-size:12px; color:#666;">欄位模式設定 (每欄獨立)</label>
+                    <div id="gridColSettings"></div>
+                </div>
+            </div>
+
+            <div id="contentSec" class="p-item sec-divider">
+                <label>內容限制與格式</label>
+                <label class="p-check-row"><input type="checkbox" id="pUpperCase" onchange="apply()"> 顯示大寫</label>
+                <div id="defValRow">
+                    <input type="text" class="inp-p" id="pLink" placeholder="插入連結 (URL)" oninput="apply()" style="margin-bottom:6px;">
+                    <input type="text" class="inp-p" id="pDefVal" placeholder="預設值" oninput="apply()" style="margin-bottom:6px;">
+                </div>
+                <div style="margin-top:8px; border-top:1px dashed #eee; padding-top:6px;">
+                    <label style="font-size:12px; color:#666;">字數限制 / 數值範圍 / 小數點</label>
+                    <div class="p-row-flex" style="margin-top:4px;">
+                        <input type="number" class="inp-p" id="pMinLen" placeholder="Min Len" style="flex:1" oninput="apply()">
+                        <input type="number" class="inp-p" id="pMaxLen" placeholder="Max Len" style="flex:1" oninput="apply()">
+                    </div>
+                    <div class="p-row-flex">
+                        <input type="number" class="inp-p" id="pMinVal" placeholder="Min Val" style="flex:1" oninput="apply()">
+                        <input type="number" class="inp-p" id="pMaxVal" placeholder="Max Val" style="flex:1" oninput="apply()">
+                    </div>
+                    <div class="p-row-flex">
+                        <input type="number" class="inp-p" id="pDecPlaces" placeholder="小數位" style="flex:1" oninput="apply()">
+                        <select class="inp-p" id="pRoundMode" style="flex:1" onchange="apply()">
+                            <option value="round">四捨五入</option>
+                            <option value="ceil">無條件進位</option>
+                            <option value="floor">無條件捨去</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <div id="unitSec" class="p-item sec-divider" style="display:none;">
+                <label>單位判定與權限 <span class="info-icon" data-msg="數值符合規則時自動帶入單位。若勾選允許手動變更，填表者可點選下拉選單修改。">?</span></label>
+                <label class="p-check-row"><input type="checkbox" id="pUnitE" onchange="apply()"> 啟用判定</label>
+                <input type="text" class="inp-p" id="pUnitB" placeholder="預設單位 (如: pcs)" oninput="apply()">
+                <div id="uLogic" class="logic-panel" style="display:none;">
+                    <div id="uRules"></div>
+                    <span class="add-link" onclick="addURule()">+ 新增條件規則</span>
+                </div>
+            </div>
+
+            <div id="shiftSec" class="p-item sec-divider" style="display:none;">
+                <label>顯示樣式</label>
+                <select class="inp-p" id="pShiftStyle" onchange="apply()">
+                    <option value="dropdown">下拉式選單</option>
+                    <option value="radio">單選</option>
+                </select>
+                <label style="margin-top:10px; font-weight:bold; font-size:13px;">智慧化帶入</label>
+                <label class="p-check-row"><input type="checkbox" id="pShiftLogicE" onchange="apply()"> 啟用智慧帶入</label>
+                <div style="background:#f0f9ff; padding:10px; border-radius:6px; font-size:12px; color:#444; margin-top:5px;">
+                    <div id="sRules"></div>
+                    <span class="add-link" onclick="addShiftRule()">+ 新增時間區段</span>
+                </div>
+                <label class="p-check-row" style="margin-top:10px;"><input type="checkbox" id="pAutoPrev" onchange="apply()"> 自動帶入前一筆資料</label>
+            </div>
+
+            <div id="dateSec" class="p-item sec-divider" style="display:none;">
+                <label>日期與時間設定</label>
+                <label class="p-check-row"><input type="checkbox" id="pShowTime" onchange="apply()"> 顯示時間選擇</label>
+                <label class="p-check-row"><input type="checkbox" id="pAutoDate" onchange="apply()"> 自動帶入當前日期</label>
+                <label class="p-check-row"><input type="checkbox" id="pAutoTime" onchange="apply()"> 自動帶入當前時間</label>
+                <label class="p-check-row"><input type="checkbox" id="pDateOffset" onchange="apply()"> 跨日設定 (日期-1)</label>
+            </div>
+
+            <label class="p-check-row sec-divider"><input type="checkbox" id="pDescE" onchange="apply()"> 啟用說明文字</label>
+        </div>
+    </div>
+
+    <script>
+        let fields = []; let activeId = null;
+        let formConfig = { layout: 'horizontal', titleIdx: 1, dataIdx: 2, enableTemp: false, clearTimes: '', tempCols: '日期/班別, 料號/批號, 數量, 檢驗員' };
+        const list = document.getElementById('fList');
+
+        try {
+            new Sortable(list, {
+                animation: 150, handle: '.card', filter: '.no-drag, input, textarea, button, select, span, .opt-item, .fake-icon, .grid-add-btn', preventOnFilter: false,
+                onEnd: () => {
+                    const order = Array.from(list.children).map(el => el.dataset.id);
+                    fields = order.map(id => fields.find(x => x.id === id)).filter(Boolean);
+                }
+            });
+        } catch(e) {}
+
+        document.addEventListener('mouseover', function(e) {
+            if (e.target.classList.contains('info-icon')) {
+                const msg = e.target.getAttribute('data-msg');
+                const tip = document.createElement('div');
+                tip.className = 'global-tooltip';
+                tip.textContent = msg;
+                document.body.appendChild(tip);
+                const rect = e.target.getBoundingClientRect();
+                tip.style.top = (rect.bottom + 5) + 'px';
+                tip.style.right = (window.innerWidth - rect.left + 5) + 'px'; 
+            }
+        });
+        document.addEventListener('mouseout', function(e) {
+            if (e.target.classList.contains('info-icon')) {
+                document.querySelectorAll('.global-tooltip').forEach(t => t.remove());
+            }
+        });
+
+        function sanitizeField(f) {
+            if(!f.opts) f.opts = ['選項 1'];
+            if(!f.cols) f.cols = ['第 1 欄'];
+            if(!f.rows) f.rows = ['第 1 列'];
+            if(!f.colModes) f.colModes = ['text']; 
+            if(!f.machineRules) f.machineRules = [];
+            if(!f.shiftRules) f.shiftRules = [];
+            if(!f.autoPrevRules) f.autoPrevRules = [];
+            if(!f.uRules) f.uRules = [];
+            while(f.colModes.length < f.cols.length) f.colModes.push('text');
+            return f;
+        }
+
+        function createFieldModel(type) {
+             const id = 'f' + Date.now();
+             let title = (type==='batch')?'批號':(type==='shift')?'班別':(type==='datetime')?'日期':(type==='machine')?'機台':(type==='remark')?'備註':'未命名的問題';
+             if(type==='header') title='章節標題';
+
+             const f = {
+                id, type, title, width:'w-100', size:14, color:'#000000', bold:false, italic:false, underline:false,
+                req:false, descE:false, desc:'', unitB:'', uEnable:false, uRules: [], 
+                mode:'text', manual:true,
+                rows:['第 1 列'], cols:['第 1 欄'], colModes: ['text'],
+                corner:true, cornerTop:'欄名', cornerBot:'列名', showCol:true, showRow:true,
+                opts:['選項 1'], testV:'', link:'', upper:false, defVal:'', minLen:'', maxLen:'', minVal:'', maxVal:'', decPlaces:'', roundMode:'round',
+                shiftStyle: 'dropdown', shiftLogicE: false, shiftRules: [], 
+                autoPrevRules: [], showTime: false, autoDate: false, autoTime: false, dateOffset: false,
+                markStyle: 'standard', machineStyle: 'dropdown', machineRules: [] 
+             };
+             if(type === 'choices') f.mode = 'radio';
+             if(type === 'shift') f.opts = ['早班', '晚班'];
+             if(type === 'machine') f.opts = ['機台 1']; 
+             return f;
+        }
+
+        function hAdd(type) {
+            const f = createFieldModel(type);
+            if(activeId && activeId !== 'form_meta') {
+                const idx = fields.findIndex(x => x.id === activeId);
+                fields.splice(idx+1, 0, f);
+            } else fields.push(f);
+            render(); setTimeout(() => select(f.id), 50);
+        }
+
+        function render() {
+            const htmlArr = fields.map(f => {
+                try {
+                    sanitizeField(f);
+                    const s = `font-size:${f.size}px; color:${f.color}; font-weight:${f.bold?'bold':'normal'}; font-style:${f.italic?'italic':'normal'}; text-decoration:${f.underline?'underline':'none'};`;
+                    
+                    const renderInput = (cls, ph) => `<input class="${cls} no-drag" style="width:100%; border:1px solid #ccc; border-radius:4px; padding:4px 6px; font-size:12px; height:28px; outline:none; background:#fff; ${f.upper ? 'text-transform:uppercase;' : ''}" placeholder="${ph}" oninput="validateInput(this, '${f.id}')" onblur="handleBlur(this, '${f.id}')" data-fid="${f.id}" value="${f.defVal || ''}">`;
+                    
+                    const renderMark = (isRadio, customMarkStyle) => `<div class="fake-icon ${isRadio?'radio':'checkbox'} no-drag" onclick="toggleCheck(this, '${customMarkStyle || f.markStyle}', ${isRadio})" onmousedown="event.stopPropagation()"></div>`;
+
+                    let autoPrevBadge = '';
+                    if((f.autoPrevRules || []).length > 0) {
+                        const times = f.autoPrevRules.map(r => `${r.start}~${r.end}`).join(', ');
+                        autoPrevBadge = `<div style="font-size:11px; color:#0284c7; background:#e0f2fe; padding:2px 6px; border-radius:4px; margin-bottom:4px; width:fit-content;">🔄 自動帶入前筆: ${times}</div>`;
+                    }
+
+                    let body = '';
+                    if(f.type === 'batch') {
+                        body = `<div class="batch-container"><label class="batch-label"><div class="fake-icon checkbox no-drag" onclick="toggleCheck(this, 'standard')"></div> FA</label>${renderInput('batch-input-flex', '主批號(3)')}<span>-</span>${renderInput('batch-input-flex', '子批號(2)')}</div>`;
+                    } else if(f.type === 'machine') {
+                        if(f.machineStyle === 'dropdown') {
+                            body = `${autoPrevBadge}<div class="preview-dropdown"><select class="no-drag" style="width:100%; border:none; background:transparent;"><option>-- 請選擇機台 --</option>${(f.opts||[]).map(o=>`<option>${o}</option>`).join('')}</select></div>`;
+                        } else {
+                            body = `${autoPrevBadge}<div style="display:flex; gap:10px; flex-wrap:wrap;">${(f.opts||[]).map(o=>`<label style="display:flex;align-items:center;gap:4px;font-size:13px;">${renderMark(f.machineStyle==='radio')} ${o}</label>`).join('')}</div>`;
+                        }
+                        if((f.machineRules||[]).length > 0) {
+                            const ruleText = f.machineRules.map(r=> `<span style="font-size:10px; background:#eee; padding:1px 3px;">${r.val}→${r.target}</span>`).join(' ');
+                            body = `<div style="font-size:11px; color:#888; margin-bottom:4px;">連動: ${ruleText}</div>` + body;
+                        }
+                    } else if(f.type === 'shift') {
+                        if(f.shiftStyle === 'radio') {
+                             body = `${autoPrevBadge}<div style="display:flex; gap:10px; flex-wrap:wrap;">${(f.opts||[]).map(o=>`<label style="display:flex;align-items:center;gap:4px;font-size:13px;">${renderMark(true, 'standard')} ${o}</label>`).join('')}</div>`;
+                        } else {
+                            body = `${autoPrevBadge}<div class="preview-dropdown"><select class="no-drag" style="width:100%; border:none; background:transparent;"><option>-- 請選擇班別 --</option>${(f.opts||[]).map(o=>`<option>${o}</option>`).join('')}</select></div>`;
+                        }
+                        if(f.shiftLogicE) body = `<span style="font-size:11px; color:#1a73e8; background:#e8f0fe; padding:2px;">⚡ 智慧帶入</span> ` + body;
+                    } else if(f.type === 'datetime') {
+                        body = `<div style="display:flex; gap:10px;"><div style="border:1px solid #ccc; padding:6px; flex:1; border-radius:4px; background:#fff;">YYYY/MM/DD 📅</div>${f.showTime?'<div style="border:1px solid #ccc; padding:6px; width:80px; border-radius:4px; background:#fff;">--:-- 🕒</div>':''}</div>`;
+                    } else if(f.type === 'remark') {
+                        body = `${autoPrevBadge}<textarea class="remark-box no-drag" placeholder="備註...">${f.defVal || ''}</textarea>`;
+                    } else if(f.type === 'grid') {
+                         let thead = '';
+                         if(f.showCol) {
+                            let headerCell = f.corner && f.showRow ? `<th class="slash-header"><input class="slash-top no-drag" value="${f.cornerTop}" placeholder="欄"><input class="slash-bot no-drag" value="${f.cornerBot}" placeholder="列"></th>` : (f.showRow ? `<th></th>` : '');
+                            const ths = f.cols.map((c,i) => `<th><div style="display:flex;align-items:center;justify-content:center;position:relative;"><input class="grid-inp no-drag" value="${c}" onchange="syncGridCol('${f.id}',${i},this.value)" onmousedown="event.stopPropagation()"><span class="del-col-btn no-drag" onclick="delCol('${f.id}',${i})">×</span></div></th>`).join('');
+                            thead = `<thead><tr>${headerCell}${ths}<th class="grid-add-btn grid-add-col no-drag" onclick="addCol('${f.id}')">+</th></tr></thead>`;
+                         }
+                         const trs = f.rows.map((r,i) => `<tr>${f.showRow?`<td><div style="display:flex;align-items:center;justify-content:center;"><input class="grid-inp no-drag" value="${r}" onchange="syncGridRow('${f.id}',${i},this.value)"><span class="del-row-btn no-drag" onclick="delRow('${f.id}',${i})">🗑</span></div></td>`:''}${f.cols.map((c, colIndex) => {
+                             const mode = f.colModes[colIndex] || 'text';
+                             let inner = '';
+                             if(mode === 'text') inner = renderInput('style-v27-box','');
+                             else if(mode === 'radio') inner = `<div class="grid-cell-wrapper">${renderMark(true)}</div>`;
+                             else if(mode === 'checkbox') inner = `<div class="grid-cell-wrapper">${renderMark(false)}</div>`;
+                             else if(mode === 'mixed-radio') inner = `<div class="grid-cell-wrapper">${renderMark(true)}${renderInput('style-v27-box','')}</div>`;
+                             else if(mode === 'mixed-checkbox') inner = `<div class="grid-cell-wrapper">${renderMark(false)}${renderInput('style-v27-box','')}</div>`;
+                             return `<td>${inner}</td>`;
+                         }).join('')}</tr>`).join('');
+                         const footerRow = `<tr><td colspan="${f.cols.length + (f.showRow?1:0) + 1}" class="grid-add-btn grid-add-row no-drag" onclick="addRow('${f.id}')">+</td></tr>`;
+                         body = `${autoPrevBadge}<table class="grid-table">${thead}<tbody>${trs}${footerRow}</tbody></table>`;
+                    } else if(f.type === 'text') {
+                         let unitHtml = '';
+                         if(f.uEnable) {
+                            if(f.manual) {
+                                const unitOpts = [f.unitB, ...(f.uRules||[]).map(r=>r.res)].filter((v,i,a)=>a.indexOf(v)===i).map(u => `<option>${u}</option>`).join('');
+                                unitHtml = `<select class="unit-select no-drag" style="background:#f0f0f0; border:none; border-left:1px solid #ccc; font-size:12px; color:#555; padding:0 4px; cursor:pointer; outline:none;" onmousedown="event.stopPropagation()">${unitOpts}</select>`;
+                            } else {
+                                unitHtml = `<div class="unit-label" style="background:#f0f0f0; padding:0 8px; display:flex; align-items:center; border-left:1px solid #ccc; font-size:12px; color:#555;">${f.unitB}</div>`;
+                            }
+                         }
+                         body = `${autoPrevBadge}<div style="display:flex; border:1px solid #ccc; border-radius:4px; overflow:hidden;">${renderInput('style-v27-box','請輸入...')}${unitHtml}</div>`;
+                    } else if(['choices','dropdown'].includes(f.type)) {
+                         const isDrop = f.type==='dropdown';
+                         if(isDrop) {
+                            body = `${autoPrevBadge}<div class="preview-dropdown"><select class="no-drag" style="width:100%; border:none; background:transparent;"><option>-- 請選擇 --</option>${(f.opts||[]).map(o=>`<option>${o}</option>`).join('')}</select></div>`;
+                         } else {
+                            body = `${autoPrevBadge}<div style="display:flex; flex-direction:column; gap:8px;">${(f.opts||[]).map(o=> {
+                                const mark = renderMark(f.mode==='radio' || f.mode==='mixed-radio');
+                                const input = (f.mode==='mixed-radio'||f.mode==='mixed-checkbox') ? renderInput('style-v27-box','') : '';
+                                return `<div class="opt-item">${mark} ${o} ${input}</div>`;
+                            }).join('')}</div>`;
+                         }
+                    } else if(f.type === 'header') {
+                         body = `<div style="border-bottom:2px solid #ddd; padding:5px; color:#666;">(章節標題)</div>`;
+                    }
+
+                    return `
+                        <div class="card ${f.width} ${activeId===f.id?'selected':''}" data-id="${f.id}" onclick="select('${f.id}')">
+                            <div style="display:flex; justify-content:space-between; margin-bottom:5px;">
+                                <div style="width:85%; display:flex; align-items:center; gap:4px;">
+                                    <textarea class="title-inp no-drag" rows="1" style="${s} flex:1;" oninput="autoResize(this); syncTitle('${f.id}',this.value)">${f.title}</textarea>
+                                    ${f.link ? `<a href="${f.link}" target="_blank" class="no-drag" style="text-decoration:none; margin-left:5px;">🔗</a>` : ''}
+                                    ${f.req?'<span style="color:red;">*</span>':''}
+                                </div>
+                                <span style="font-size:10px; color:#aaa; border:1px solid #eee; padding:2px 5px; border-radius:4px;">${f.type.toUpperCase()}</span>
+                            </div>
+                            ${f.descE?`<div style="margin-bottom:8px; font-size:12px; color:#666;">
+                                <textarea class="desc-inp no-drag" rows="1" placeholder="輸入說明..." oninput="autoResize(this); syncDesc('${f.id}',this.value)">${f.desc || ''}</textarea>
+                            </div>`:''}
+                            <div>${body}</div>
+                            <div class="card-tools">
+                                <span class="tool-action no-drag" onclick="copyF('${f.id}')">📋 複製</span>
+                                <span class="tool-action no-drag" style="color:#d93025;" onclick="delF('${f.id}')">🗑 刪除</span>
+                            </div>
+                        </div>`;
+                } catch (err) {
+                    return `<div class="card w-100 error" data-id="${f.id}">⚠️ 渲染錯誤</div>`;
+                }
+            });
+
+            list.innerHTML = htmlArr.join('');
+
+            const footer = document.getElementById('formFooter');
+            footer.innerHTML = '';
+            if(formConfig.enableTemp) {
+                const tempCols = (formConfig.tempCols || '日期, 批號').split(/,|，/).map(s=>s.trim()).filter(s=>s);
+                const thHtml = tempCols.map(c=>`<th>${c}</th>`).join('');
+                footer.innerHTML += `<button class="btn-temp" onclick="validateAndSubmit('temp')">暫存單筆紀錄 (加入列表)</button><div class="temp-table-view"><div class="temp-table-header">暫存列表預覽 (目前 0 筆)</div><table class="temp-table-mock"><tr><th>#</th>${thHtml}<th>操作</th></tr><tr><td colspan="${tempCols.length+2}">目前暫存區無紀錄</td></tr></table></div><button class="btn-submit" onclick="validateAndSubmit('submit')">🚀 最終送出所有紀錄至 Excel (清空暫存)</button>`;
+            } else {
+                footer.innerHTML += `<button class="btn-submit" onclick="validateAndSubmit('submit')">🚀 送出資料</button>`;
+            }
+        }
+
+        function select(id) {
+            activeId = id; document.getElementById('noSel').style.display='none';
+            if(id==='form_meta') {
+                document.getElementById('editor').style.display='none'; document.getElementById('formSettings').style.display='block';
+                document.getElementById('formMetaCard').classList.add('selected');
+                Array.from(list.children).forEach(c => c.classList.remove('selected'));
+                document.getElementById('gLayout').value = formConfig.layout;
+                document.getElementById('gTitleIdx').value = formConfig.titleIdx;
+                document.getElementById('gDataIdx').value = formConfig.dataIdx;
+                document.getElementById('gEnableTemp').checked = formConfig.enableTemp;
+                document.getElementById('tempConfig').style.display = formConfig.enableTemp ? 'block' : 'none';
+                document.getElementById('gClearTimes').value = formConfig.clearTimes;
+                document.getElementById('gTempCols').value = formConfig.tempCols || '';
+                return;
+            }
+            document.getElementById('formSettings').style.display='none';
+            document.getElementById('formMetaCard').classList.remove('selected');
+            document.getElementById('editor').style.display='block';
+            const f = fields.find(x => x.id === id);
+            if(!f) return;
+            sanitizeField(f);
+
+            ['pSize','pColor','pWidth','pMode','pUnitB','pLink','pDefVal','pMinLen','pMaxLen','pMinVal','pMaxVal','pDecPlaces','pRoundMode'].forEach(k => {
+                if(document.getElementById(k)) document.getElementById(k).value = f[k.replace('p','').replace(k.charAt(1),k.charAt(1).toLowerCase())] || (k==='pSize'?14:k==='pColor'?'#000000':'');
+            });
+            document.getElementById('pUpperCase').checked = f.upper;
+            document.getElementById('pMode').value = f.mode;
+            document.getElementById('pReq').checked = f.req;
+            document.getElementById('pManual').checked = f.manual;
+            document.getElementById('pDescE').checked = f.descE;
+            document.getElementById('pUnitE').checked = f.uEnable;
+
+            const hideContentConfig = ['datetime', 'shift', 'header', 'batch', 'choices', 'dropdown'].includes(f.type);
+            document.getElementById('contentSec').style.display = hideContentConfig ? 'none' : 'block';
+            document.getElementById('defValRow').style.display = (f.type === 'header' || f.type === 'batch') ? 'none' : 'block';
+            
+            document.getElementById('uLogic').style.display = (f.uEnable && f.type === 'text') ? 'block' : 'none';
+            document.getElementById('gridSec').style.display = f.type==='grid'?'block':'none';
+            document.getElementById('unitSec').style.display = f.type==='text'?'block':'none'; 
+            document.getElementById('autoPrevSec').style.display = 'block'; 
+            renderAutoPrevRules();
+            document.getElementById('shiftSec').style.display = f.type==='shift'?'block':'none';
+            document.getElementById('machineSec').style.display = f.type==='machine'?'block':'none';
+            document.getElementById('dateSec').style.display = f.type==='datetime'?'block':'none';
+            document.getElementById('markStyleSec').style.display = ['choices','grid','machine'].includes(f.type)?'block':'none';
+            document.getElementById('optSec').style.display = ['dropdown','shift','machine','choices'].includes(f.type) ? 'block' : 'none';
+            if(['dropdown','shift','machine','choices'].includes(f.type)) renderSidebarOpts();
+
+            document.getElementById('modeSec').style.display = ['choices'].includes(f.type)?'block':'none';
+            
+            if(f.type === 'grid') {
+                const colContainer = document.getElementById('gridColSettings');
+                colContainer.innerHTML = f.cols.map((c, i) => `
+                    <div class="grid-col-config">
+                        <input value="${c}" onchange="syncGridCol('${f.id}',${i},this.value)">
+                        <div class="mode-icon-btn" onclick="toggleGridColMode('${f.id}', ${i}, this)" title="切換模式">
+                            ${getIconForMode(f.colModes[i])}
+                        </div>
+                        <span onclick="delCol('${f.id}',${i})">×</span>
+                    </div>`).join('');
+            }
+
+            ['bB','bI','bU'].forEach(b => document.getElementById(b).classList.remove('active'));
+            if(f.bold) document.getElementById('bB').classList.add('active');
+            if(f.italic) document.getElementById('bI').classList.add('active');
+            if(f.underline) document.getElementById('bU').classList.add('active');
+            
+            Array.from(list.children).forEach(c => {
+                if(c.dataset.id === id) c.classList.add('selected');
+                else c.classList.remove('selected');
+            });
+        }
+        
+        function getIconForMode(m) {
+            if(m==='text') return '📝';
+            if(m==='radio') return '🔘';
+            if(m==='checkbox') return '☑️';
+            if(m==='mixed-radio') return '🔘📝';
+            if(m==='mixed-checkbox') return '☑️📝';
+            return '📝';
+        }
+        function toggleGridColMode(id, idx, btn) {
+            const f = fields.find(x => x.id === id);
+            const modes = ['text', 'radio', 'checkbox', 'mixed-radio', 'mixed-checkbox'];
+            let current = f.colModes[idx];
+            let next = modes[(modes.indexOf(current) + 1) % modes.length];
+            f.colModes[idx] = next;
+            btn.innerHTML = getIconForMode(next);
+            render();
+        }
+
+        function applyGlobal() {
+            formConfig.layout = document.getElementById('gLayout').value;
+            formConfig.titleIdx = document.getElementById('gTitleIdx').value;
+            formConfig.dataIdx = document.getElementById('gDataIdx').value;
+            formConfig.enableTemp = document.getElementById('gEnableTemp').checked;
+            formConfig.clearTimes = document.getElementById('gClearTimes').value;
+            formConfig.tempCols = document.getElementById('gTempCols').value;
+            document.getElementById('tempConfig').style.display = formConfig.enableTemp ? 'block' : 'none';
+            render(); 
+        }
+
+        function apply() {
+             const f = fields.find(x => x.id === activeId); if(!f) return;
+             f.width = document.getElementById('pWidth').value;
+             f.size = document.getElementById('pSize').value;
+             f.req = document.getElementById('pReq').checked;
+             f.manual = document.getElementById('pManual').checked;
+             f.descE = document.getElementById('pDescE').checked;
+             f.uEnable = document.getElementById('pUnitE').checked;
+             f.unitB = document.getElementById('pUnitB').value;
+             f.link = document.getElementById('pLink').value;
+             f.upper = document.getElementById('pUpperCase').checked;
+             f.defVal = document.getElementById('pDefVal').value;
+             f.minLen = document.getElementById('pMinLen').value;
+             f.maxLen = document.getElementById('pMaxLen').value;
+             f.minVal = document.getElementById('pMinVal').value;
+             f.maxVal = document.getElementById('pMaxVal').value;
+             f.decPlaces = document.getElementById('pDecPlaces').value;
+             f.roundMode = document.getElementById('pRoundMode').value;
+             f.mode = document.getElementById('pMode').value;
+             if(['choices','grid','machine'].includes(f.type)) f.markStyle = document.getElementById('pMarkStyle').value;
+
+             if(f.type === 'grid') { f.corner = document.getElementById('pCorner').checked; f.showCol = document.getElementById('pShowCol').checked; f.showRow = document.getElementById('pShowRow').checked; }
+             if(f.type === 'shift') { f.shiftStyle = document.getElementById('pShiftStyle').value; f.shiftLogicE = document.getElementById('pShiftLogicE').checked; }
+             if(f.type === 'machine') { f.machineStyle = document.getElementById('pMachineStyle').value; }
+             if(f.type === 'datetime') { f.showTime = document.getElementById('pShowTime').checked; f.autoDate = document.getElementById('pAutoDate').checked; f.autoTime = document.getElementById('pAutoTime').checked; f.dateOffset = document.getElementById('pDateOffset').checked; }
+             
+             render();
+             document.getElementById('uLogic').style.display = (f.uEnable && f.type === 'text') ? 'block' : 'none';
+        }
+        
+        function handleBlur(el, fId) {
+            const f = fields.find(x => x.id === fId); if(!f) return;
+            if(el.value.trim() === '' && f.defVal) el.value = f.defVal;
+            if(f.decPlaces && el.value !== '') formatNumber(el, fId);
+            validateInput(el, fId);
+        }
+
+        function validateInput(el, fId) { 
+            const f = fields.find(x => x.id === fId); if(!f) return;
+            let val = el.value; let err = false;
+            if(f.minLen && val.length < parseInt(f.minLen)) err = true;
+            if(f.maxLen && val.length > parseInt(f.maxLen)) err = true;
+            if (val !== '') {
+                const num = parseFloat(val);
+                if(!isNaN(num)) {
+                    if(f.minVal && num < parseFloat(f.minVal)) err = true;
+                    if(f.maxVal && num > parseFloat(f.maxVal)) err = true;
+                    if(f.type === 'text' && f.uEnable && f.uRules.length > 0) {
+                        let matchedUnit = f.unitB;
+                        f.uRules.forEach(r => {
+                            const rVal = parseFloat(r.val);
+                            if((r.cond === '>' && num > rVal) || (r.cond === '<' && num < rVal) || (r.cond === '=' && num === rVal)) matchedUnit = r.res;
+                        });
+                        const container = el.parentElement;
+                        if(f.manual) { const sel = container.querySelector('.unit-select'); if(sel) sel.value = matchedUnit; } else { const lbl = container.querySelector('.unit-label'); if(lbl) lbl.textContent = matchedUnit; }
+                    }
+                }
+            }
+            if(err) el.classList.add('error'); else el.classList.remove('error');
+        }
+
+        function validateAndSubmit(type) {
+            let hasError = false; let firstErrorId = null;
+            document.querySelectorAll('.card input, .card select, .card textarea').forEach(el => {
+                const fId = el.getAttribute('data-fid'); if(!fId) return;
+                const f = fields.find(x => x.id === fId);
+                if(!el.value.trim() && f.defVal) el.value = f.defVal;
+                if(f && f.req && !el.value.trim()) { el.classList.add('error'); hasError = true; if(!firstErrorId) firstErrorId = f.id; }
+                validateInput(el, fId);
+                if(el.classList.contains('error')) { hasError = true; if(!firstErrorId) firstErrorId = f.id; }
+            });
+            if(hasError) {
+                alert('⚠️ 資料有誤或必填未填，請修正後再送出！');
+                if(firstErrorId) { document.querySelector(`.card[data-id="${firstErrorId}"]`).scrollIntoView({ behavior: 'smooth', block: 'center' }); }
+            } else {
+                alert(type === 'temp' ? '✅ 已暫存資料！' : '🚀 資料已送出至總檔！');
+            }
+        }
+        
+        function formatNumber(el, fId) { 
+            const f = fields.find(x => x.id === fId); if(!f || !f.decPlaces) return;
+            let val = parseFloat(el.value); if(isNaN(val)) return;
+            const factor = Math.pow(10, f.decPlaces);
+            if(f.roundMode === 'round') val = Math.round(val * factor) / factor;
+            else if(f.roundMode === 'ceil') val = Math.ceil(val * factor) / factor;
+            else if(f.roundMode === 'floor') val = Math.floor(val * factor) / factor;
+            el.value = val.toFixed(f.decPlaces);
+        }
+        
+        function syncTitle(id, v) { fields.find(x=>x.id===id).title = v; }
+        function syncDesc(id, v) { fields.find(x=>x.id===id).desc = v; }
+        function syncSidebarOpt(i, val) { const f = fields.find(x => x.id === activeId); if(val.includes(',')) { let newOpts = val.split(',').map(s => s.trim()).filter(s => s !== ''); f.opts.splice(i, 1, ...newOpts); renderSidebarOpts(); } else { f.opts[i] = val; } render(); }
+        function addSidebarOpt() { fields.find(x => x.id === activeId).opts.push('新選項'); renderSidebarOpts(); render(); }
+        function delSidebarOpt(i) { fields.find(x => x.id === activeId).opts.splice(i, 1); renderSidebarOpts(); render(); }
+        function renderSidebarOpts() {
+            const f = fields.find(x => x.id === activeId);
+            const container = document.getElementById('optList');
+            container.innerHTML = (f.opts || []).map((o, i) => `<div class="opt-manage-item"><input value="${o}" onchange="syncSidebarOpt(${i}, this.value)"><span onclick="delSidebarOpt(${i})">×</span></div>`).join('');
+        }
+
+        function addAutoPrevRule() { fields.find(x=>x.id===activeId).autoPrevRules.push({start:'08:00', end:'12:00'}); renderAutoPrevRules(); render(); }
+        function renderAutoPrevRules() { const f = fields.find(x=>x.id===activeId); document.getElementById('apRules').innerHTML = (f.autoPrevRules||[]).map((r,i) => `<div class="logic-line"><input type="time" style="width:60px" value="${r.start}" oninput="upAP(${i},'start',this.value)"> ~ <input type="time" style="width:60px" value="${r.end}" oninput="upAP(${i},'end',this.value)"> <span style="cursor:pointer; margin-left:4px;" onclick="delAP(${i})">🗑</span></div>`).join(''); }
+        window.upAP = (i,k,v) => { fields.find(x=>x.id===activeId).autoPrevRules[i][k]=v; render(); };
+        window.delAP = (i) => { fields.find(x=>x.id===activeId).autoPrevRules.splice(i,1); renderAutoPrevRules(); render(); };
+        function addCol(id) { const f = fields.find(x=>x.id===id); f.cols.push(getUniqueName('新欄', f.cols)); f.colModes.push('text'); render(); select(id); }
+        function delCol(id,i) { const f = fields.find(x=>x.id===id); f.cols.splice(i,1); f.colModes.splice(i,1); render(); select(id); }
+        function addRow(id) { const f = fields.find(x=>x.id===id); f.rows.push(getUniqueName('新列', f.rows)); render(); }
+        function delRow(id,i) { const f = fields.find(x=>x.id===id); f.rows.splice(i,1); render(); }
+        function syncGridCol(id,i,v) { fields.find(x=>x.id===id).cols[i] = v; render(); }
+        function syncGridColMode(id,i,v) { fields.find(x=>x.id===id).colModes[i] = v; render(); }
+        function syncGridRow(id,i,v) { fields.find(x=>x.id===id).rows[i] = v; }
+        function syncCornerTop(id,v) { fields.find(x=>x.id===id).cornerTop = v; }
+        function syncCornerBot(id,v) { fields.find(x=>x.id===id).cornerBot = v; }
+        function getUniqueName(base, list) { let c=1; while(list.includes(base+' '+c)) c++; return base+' '+c; }
+        function toggleStyle(s) { const f=fields.find(x=>x.id===activeId); f[s]=!f[s]; apply(); }
+        
+        function toggleCheck(el, mode, isRadio) { 
+             if(isRadio) {
+                 const card = el.closest('.card');
+                 const allRadios = card.querySelectorAll('.fake-icon.radio');
+                 allRadios.forEach(r => r.classList.remove('checked-v'));
+                 el.classList.add('checked-v');
+             } else {
+                 if (mode === 'mark-both') {
+                     if (el.classList.contains('checked-v')) { el.classList.remove('checked-v'); el.classList.add('checked-x'); }
+                     else if (el.classList.contains('checked-x')) { el.classList.remove('checked-x'); }
+                     else { el.classList.add('checked-v'); }
+                 } else if (mode === 'mark-cross') { el.classList.toggle('checked-x'); }
+                 else { el.classList.toggle('checked-v'); }
+             }
+        }
+        function autoResize(el) { el.style.height = 'auto'; el.style.height = el.scrollHeight + 'px'; }
+        function syncMeta() { }
+        function addURule() { fields.find(x=>x.id===activeId).uRules.push({cond:'>', val:'', res:''}); renderRules(); }
+        function renderRules() { const f = fields.find(x=>x.id===activeId); document.getElementById('uRules').innerHTML = (f.uRules||[]).map((r,i)=>`<div class="logic-line">當 <select onchange="upR(${i},'cond',this.value)"><option value=">" ${r.cond==='>'?'selected':''}>></option><option value="<" ${r.cond==='<'?'selected':''}>&lt;</option><option value="=" ${r.cond==='='?'selected':''}>=</option></select> <input style="width:40px" value="${r.val}" oninput="upR(${i},'val',this.value)"> 帶入 <input style="width:40px" value="${r.res}" oninput="upR(${i},'res',this.value)"> <span style="cursor:pointer" onclick="delR(${i})">🗑</span></div>`).join(''); }
+        window.upR = (i,k,v) => { fields.find(x=>x.id===activeId).uRules[i][k]=v; apply(); }; 
+        window.delR = (i) => { fields.find(x=>x.id===activeId).uRules.splice(i, 1); renderRules(); };
+        function addShiftRule() { fields.find(x=>x.id===activeId).shiftRules.push({start:'08:00', end:'12:00', val:'早班'}); renderShiftRules(); render(); }
+        function renderShiftRules() { const f = fields.find(x=>x.id===activeId); document.getElementById('sRules').innerHTML = (f.shiftRules||[]).map((r,i) => `<div class="logic-line"><input type="time" style="width:55px" value="${r.start}" oninput="upS(${i},'start',this.value)"> ~ <input type="time" style="width:55px" value="${r.end}" oninput="upS(${i},'end',this.value)"> <input style="width:40px" placeholder="班別" value="${r.val}" oninput="upS(${i},'val',this.value)"> <span style="cursor:pointer; margin-left:4px;" onclick="delS(${i})">🗑</span></div>`).join(''); }
+        window.upS = (i,k,v) => { fields.find(x=>x.id===activeId).shiftRules[i][k]=v; render(); };
+        window.delS = (i) => { fields.find(x=>x.id===activeId).shiftRules.splice(i,1); renderShiftRules(); render(); };
+        function addMachineRule() { fields.find(x=>x.id===activeId).machineRules.push({val:'A4', target:'', targetOpts:'1軸,2軸'}); renderMachineRules(); render(); }
+        function renderMachineRules() { const f = fields.find(x=>x.id===activeId); document.getElementById('mRules').innerHTML = (f.machineRules||[]).map((r,i) => `<div style="background:#fff; border:1px solid #ddd; padding:6px; border-radius:4px; margin-bottom:5px;"><div style="display:flex; align-items:center; gap:4px; margin-bottom:4px;"><span style="font-size:11px; color:#666;">當機台=</span><input style="width:130px; border:1px solid #ccc; padding:2px;" placeholder="機台 (可多選, 逗號隔開)" value="${r.val}" oninput="upM(${i},'val',this.value)"><span style="cursor:pointer; margin-left:auto; color:#999;" onclick="delM(${i})">✕</span></div><div style="display:flex; flex-direction:column; gap:4px;"><input style="width:100%; border:1px solid #ccc; padding:3px; font-size:12px;" placeholder="連動欄位名稱" value="${r.target}" oninput="upM(${i},'target',this.value)"><input style="width:100%; border:1px solid #ccc; padding:3px; font-size:12px;" placeholder="選項 (逗號隔開)" value="${r.targetOpts}" oninput="upM(${i},'targetOpts',this.value)"></div></div>`).join(''); }
+        window.upM = (i,k,v) => { fields.find(x=>x.id===activeId).machineRules[i][k]=v; render(); };
+        window.delM = (i) => { fields.find(x=>x.id===activeId).machineRules.splice(i,1); renderMachineRules(); render(); };
+        function runMachineRule(mId, val) { /* Runtime logic */ }
+        function copyF(id) { const f=fields.find(x=>x.id===id); const n=JSON.parse(JSON.stringify(f)); n.id='f'+Date.now(); fields.splice(fields.findIndex(x=>x.id===id)+1,0,n); render(); select(n.id); }
+        function delF(id) { fields=fields.filter(x=>x.id!==id); activeId=null; render(); document.getElementById('editor').style.display='none'; document.getElementById('noSel').style.display='block'; }
+        function hExport() { const clean = fields.map(f => { const { testV, ...cF } = f; return cF; }); const d = { title:document.getElementById('mT').value, desc:document.getElementById('mD').value, config: formConfig, fields:clean }; const blob = new Blob([JSON.stringify(d, null, 2)], {type:'application/json'}); const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'questions.json'; a.click(); }
+        function hImport(inp) { const r=new FileReader(); r.onload=(e)=>{ const d=JSON.parse(e.target.result); document.getElementById('mT').value=d.title; document.getElementById('mD').value=d.desc; if(d.config) formConfig = d.config; fields=d.fields.map(f=>({...f, testV:'', autoPrevRules: f.autoPrevRules || [], machineRules: f.machineRules || [], shiftRules: f.shiftRules || [], uRules: f.uRules || [], opts: f.opts || [], colModes: f.colModes || [] })); render(); }; r.readAsText(inp.files[0]); }
+    </script>
+</body>
+</html>
