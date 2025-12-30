@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>專業表單規格生成器 v61.00 (Style & Validation Fix)</title>
+    <title>專業表單規格生成器 v61.00 (Safe Apply & Validation)</title>
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&display=swap" rel="stylesheet">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/Sortable/1.15.0/Sortable.min.js"></script>
     <style>
@@ -260,26 +260,26 @@
         
         <div id="formSettings" style="display:none;">
             <div class="p-item">
-                <div style="margin-top:5px; border-bottom:1px dashed #eee; padding-bottom:10px; margin-bottom:10px;">
-                    <label style="font-size:12px; color:#666;">標題與文字樣式</label>
-                    <div class="p-row-flex">
-                        <input type="number" class="inp-p" id="mSize" style="width:50px" value="28" oninput="applyGlobal()">
-                        <div id="metaPaletteContainer" style="display:flex; gap:2px;"></div> 
-                        <button class="biu-btn" id="mB" onclick="toggleMetaStyle('bold')">B</button>
-                        <button class="biu-btn" id="mI" onclick="toggleMetaStyle('italic')">I</button>
-                        <button class="biu-btn" id="mU" onclick="toggleMetaStyle('underline')">U</button>
-                    </div>
+                <label>標題與文字樣式</label>
+                <div class="p-row-flex">
+                    <input type="number" class="inp-p" id="mSize" style="width:60px" value="28" oninput="applyGlobal()">
+                    <div id="metaPaletteContainer" style="display:flex; gap:2px;"></div> 
+                    <button class="biu-btn" id="mB" onclick="toggleMetaStyle('bold')">B</button>
+                    <button class="biu-btn" id="mI" onclick="toggleMetaStyle('italic')">I</button>
+                    <button class="biu-btn" id="mU" onclick="toggleMetaStyle('underline')">U</button>
                 </div>
-                
-                <div style="margin-top:10px;">
-                    <label>寬度與排列</label>
+            </div>
+            
+            <div class="p-item">
+                <label>寬度與排列</label>
+                <div class="p-row-flex">
                     <select class="inp-p" id="mWidth" onchange="applyGlobal()" style="width:100%">
                         <option value="w-100">100% 全寬</option>
                         <option value="w-50">50% 半寬</option>
                         <option value="w-33">33% 1/3寬</option>
                     </select>
                 </div>
-                <label class="p-check-row" style="margin-top:10px;"><input type="checkbox" id="gMetaDescE" onchange="applyGlobal()"> 啟用說明文字</label>
+                <label class="p-check-row" style="margin-top:5px;"><input type="checkbox" id="gMetaDescE" onchange="applyGlobal()"> 啟用說明文字</label>
             </div>
 
             <div class="p-item sec-divider">
@@ -465,13 +465,15 @@
         let formConfig = { 
             layout: 'horizontal', titleIdx: 1, dataIdx: 2, 
             enableTemp: false, clearOnSubmit: false, metaDescE: false,
-            metaStyle: { size: 28, color: '#000000', bgColor: 'transparent', bold: true, width: 'w-100' }
+            metaStyle: { size: 28, color: '#000000', bgColor: 'transparent', bold: true, width: 'w-100' },
+            tempColIds: [], calcCols: [], clearTimes: [] 
         };
-        // Removed explicit initialization of tempColIds etc to avoid overwriting imported config
-        // Default values will be handled when accessing them or in init logic
-        
-        let tempModalState = { tempColIds: [], calcCols: [], clearTimes: [], clearOnSubmit: false };
         const list = document.getElementById('fList');
+        let tempModalState = { tempColIds: [], calcCols: [], clearTimes: [], clearOnSubmit: false };
+
+        /* --- Safe Apply Helpers --- */
+        const getVal = (id) => document.getElementById(id) ? document.getElementById(id).value : '';
+        const getChk = (id) => document.getElementById(id) ? document.getElementById(id).checked : false;
 
         /* --- Reusable Palette HTML Generator --- */
         const getPaletteHTML = (idPrefix, targetType, currentColor, indicatorId) => `
@@ -534,9 +536,7 @@
             document.querySelectorAll('.palette-popover').forEach(p => { if(p.id!=='pal'+id) p.classList.remove('active'); });
             pop.classList.toggle('active');
         }
-        
         function updateColor(type, color, idPrefix) {
-            // Update indicator
             document.getElementById('ind'+idPrefix).style.backgroundColor = color;
             
             if (idPrefix.startsWith('rule')) {
@@ -546,13 +546,13 @@
                 if(!formConfig.metaStyle) formConfig.metaStyle = {};
                 if(type === 'text') formConfig.metaStyle.color = color;
                 if(type === 'bg') formConfig.metaStyle.bgColor = color;
-                render(); // Force render to see changes immediately
+                render(); 
             } else {
                 const f = fields.find(x => x.id === activeId);
                 if(f) {
                     if(type === 'text') f.color = color;
                     if(type === 'bg') f.bgColor = color;
-                    render(); // Force render
+                    render(); 
                 }
             }
             document.querySelectorAll('.palette-popover').forEach(p => p.classList.remove('active'));
@@ -919,7 +919,9 @@
                     const validFields = fields.filter(f => ['text','batch'].includes(f.type)); 
                     const msId = `msCalc${i}`;
                     targetHtml = `<div id="${msId}" class="ms-container" style="margin-top:4px;"></div>`;
-                    setTimeout(() => { renderMultiSelectHTML(msId, validFields, c.targets, `calc:${i}`); }, 0);
+                    setTimeout(() => {
+                        renderMultiSelectHTML(msId, validFields, c.targets, `calc:${i}`);
+                    }, 0);
                 } else {
                     targetHtml = `<select class="inp-p" style="margin-top:4px;" onchange="updateModalCalc(${i},'targets',[this.value])"><option value="">--選擇章節標題--</option>${fields.filter(x=>x.type==='header').map(h=>`<option value="${h.id}" ${c.targets[0]===h.id?'selected':''}>${h.title}</option>`).join('')}</select>`;
                 }
@@ -981,8 +983,8 @@
                         return `
                         <div class="val-rule-item">
                             <span style="font-size:12px; margin-right:4px;">小數位</span>
-                            <input type="number" style="flex:1; min-width:0;" value="${r.val1}" placeholder="位數" oninput="upValRule(${i},'val1',this.value)">
-                            <select style="flex:1; min-width:0;" onchange="upValRule(${i},'op1',this.value)">
+                            <input type="number" style="flex:1; min-width:50px;" value="${r.val1}" placeholder="位數" oninput="upValRule(${i},'val1',this.value)">
+                            <select style="flex:1; min-width:80px;" onchange="upValRule(${i},'op1',this.value)">
                                 <option value="round" ${r.op1==='round'?'selected':''}>四捨五入</option>
                                 <option value="ceil" ${r.op1==='ceil'?'selected':''}>無條件進位</option>
                                 <option value="floor" ${r.op1==='floor'?'selected':''}>無條件捨去</option>
