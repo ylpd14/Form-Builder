@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>專業表單規格生成器 v56.00 (Global Linkage & Meta Layout)</title>
+    <title>專業表單規格生成器 v57.00 (Layout & Dropdown Fix)</title>
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&display=swap" rel="stylesheet">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/Sortable/1.15.0/Sortable.min.js"></script>
     <style>
@@ -268,8 +268,8 @@
                 <div style="margin-top:5px; border-bottom:1px dashed #eee; padding-bottom:10px; margin-bottom:10px;">
                     <label style="font-size:12px; color:#666;">標題與文字樣式</label>
                     <div class="p-row-flex">
-                        <input type="number" class="inp-p" id="mSize" style="width:60px" value="28" oninput="applyGlobal()">
-                        <div id="metaPaletteContainer"></div> 
+                        <input type="number" class="inp-p" id="mSize" style="width:50px" value="28" oninput="applyGlobal()">
+                        <div id="metaPaletteContainer" style="display:flex; gap:2px;"></div> 
                         <button class="biu-btn" id="mB" onclick="toggleMetaStyle('bold')">B</button>
                         <button class="biu-btn" id="mI" onclick="toggleMetaStyle('italic')">I</button>
                         <button class="biu-btn" id="mU" onclick="toggleMetaStyle('underline')">U</button>
@@ -296,6 +296,7 @@
                     <option value="horizontal">橫式 (標題在列, 內容在下)</option>
                     <option value="vertical">直式 (標題在欄, 內容在右)</option>
                 </select>
+                
                 <div class="p-row-flex" style="margin-top:8px;">
                     <label style="font-size:12px; flex:1;">標題起始 (Row/Col)</label>
                     <input type="number" class="inp-p" style="flex:1;" id="gTitleIdx" value="1" oninput="applyGlobal()">
@@ -954,8 +955,10 @@
             const selected = [];
             dd.querySelectorAll('.ms-list input[type="checkbox"]:checked').forEach(chk => selected.push(chk.value));
             
+            // Update State based on context
             if(contextStr === 'basic') {
                 tempModalState.tempColIds = selected;
+                // Re-render the specific MS to update trigger text
                 renderMultiSelectHTML(id, fields.filter(f => f.type !== 'header'), tempModalState.tempColIds, 'basic');
             } else if(contextStr.startsWith('calc:')) {
                 const idx = parseInt(contextStr.split(':')[1]);
@@ -972,7 +975,6 @@
                 const idx = parseInt(contextStr.split(':')[1]);
                 const f = fields.find(x=>x.id===activeId);
                 if(f && f.machineRules[idx]) {
-                     // Store Grid Titles as CSV
                      const titles = selected.map(sid => {
                          const ff = fields.find(x=>x.id===sid);
                          return ff ? ff.title : sid;
@@ -994,6 +996,7 @@
                 const isFieldMode = c.type === 'sum_fields';
                 let targetHtml = '';
                 if(isFieldMode) {
+                    // Use new MS for Calc Target
                     const validFields = fields.filter(f => ['text','batch'].includes(f.type)); 
                     const msId = `msCalc${i}`;
                     targetHtml = `<div id="${msId}" class="ms-container" style="margin-top:4px;"></div>`;
@@ -1021,7 +1024,7 @@
                 if(!f.autoPrevRules) f.autoPrevRules = [];
                 f.autoPrevRules.push({start:'08:00', end:'12:00'}); 
                 renderAutoPrevRules(); 
-                // render(); 
+                render(); 
             }
         }
         function renderAutoPrevRules() { 
@@ -1078,7 +1081,7 @@
                 if(!f.machineRules) f.machineRules = [];
                 f.machineRules.push({val:'', target:'', targetOpts:'1軸,2軸'}); 
                 renderMachineRules(); 
-                // render();
+                render();
             }
         }
         function renderMachineRules() { 
@@ -1093,13 +1096,11 @@
                     const machOpts = (f.opts || []).map(o => ({id: o, title: o}));
                     const selectedVals = r.val ? r.val.split(',') : [];
 
-                    // Options for Target (All Grid/Field Titles, supporting global linkage)
-                    // Requirement: Any field can be target.
+                    // Options for Target (All field Titles to be flexible)
                     const allFieldOpts = fields.map(ff => ({id: ff.id, title: `${ff.title} (${ff.type})`}));
                     
                     const selectedTargets = [];
                     if(r.target) {
-                        // r.target stores comma separated titles. We need to match back to IDs for the dropdown.
                         const targetTitles = r.target.split(',');
                         targetTitles.forEach(tTitle => {
                             const found = fields.find(ff => ff.title === tTitle.trim());
@@ -1121,7 +1122,7 @@
                         <div style="display:flex; flex-direction:column; gap:4px;">
                              <label style="font-size:11px; color:#666;">連動目標欄位</label>
                              <div id="${msIdTarget}" class="ms-container"></div>
-                             <input style="width:100%; border:1px solid #ccc; padding:3px; font-size:12px; margin-top:4px;" placeholder="新選項/列名 (逗號隔開)" value="${r.targetOpts}" oninput="upM(${i},'targetOpts',this.value)">
+                             <input style="width:100%; border:1px solid #ccc; padding:3px; font-size:12px; margin-top:4px;" placeholder="新選項/列名/預設值 (逗號隔開)" value="${r.targetOpts}" oninput="upM(${i},'targetOpts',this.value)">
                         </div>
                     </div>`;
                 }).join('');
