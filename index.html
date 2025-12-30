@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>專業表單規格生成器 v59.00 (Style Fix & Layout Polish)</title>
+    <title>專業表單規格生成器 v60.00 (Style Sync & Layout Final)</title>
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&display=swap" rel="stylesheet">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/Sortable/1.15.0/Sortable.min.js"></script>
     <style>
@@ -262,7 +262,7 @@
             <div class="p-item">
                 <label>標題與文字樣式</label>
                 <div class="p-row-flex">
-                    <input type="number" class="inp-p" id="mSize" style="width:60px" value="28" oninput="applyGlobal()">
+                    <input type="number" class="inp-p" id="mSize" style="width:50px" value="28" oninput="applyGlobal()">
                     <div id="metaPaletteContainer" style="display:flex; gap:2px;"></div> 
                     <button class="biu-btn" id="mB" onclick="toggleMetaStyle('bold')">B</button>
                     <button class="biu-btn" id="mI" onclick="toggleMetaStyle('italic')">I</button>
@@ -411,7 +411,13 @@
                 <div style="margin-top:10px; background:#fff3e0; padding:8px; border-radius:4px; border:1px solid #ffe0b2;">
                     <label style="margin-bottom:4px; color:#e65100;">內容驗證規則</label>
                     <div id="valRulesList"></div>
-                    <span class="add-link" onclick="addValRule()">+ 新增規則</span>
+                    <div style="display:flex; gap:5px; margin-top:5px;">
+                         <select id="newRuleType" style="font-size:12px; padding:4px; border:1px solid #e65100; border-radius:4px; background:#fff;">
+                             <option value="val">數值範圍</option>
+                             <option value="dec">小數位數</option>
+                         </select>
+                         <span class="add-link" style="margin-top:2px;" onclick="addValRule()">+ 新增規則</span>
+                    </div>
                 </div>
             </div>
 
@@ -545,7 +551,7 @@
                     if(type === 'text') f.color = color;
                     if(type === 'bg') f.bgColor = color;
                     document.getElementById('ind'+idPrefix).style.backgroundColor = color;
-                    apply(); // This triggers render which updates the UI
+                    apply();
                 }
             }
             document.querySelectorAll('.palette-popover').forEach(p => p.classList.remove('active'));
@@ -665,11 +671,11 @@
                     else if(f.type === 'grid') {
                          let thead = '';
                          if(f.showCol) {
-                            let headerCell = f.corner && f.showRow ? `<th class="slash-header"><input class="slash-top no-drag" value="${f.cornerTop}" placeholder="欄" onfocus="select('${f.id}')"><input class="slash-bot no-drag" value="${f.cornerBot}" placeholder="列" onfocus="select('${f.id}')"></th>` : (f.showRow ? `<th></th>` : '');
-                            const ths = f.cols.map((c,i) => `<th><div style="display:flex;align-items:center;justify-content:center;position:relative;"><input class="grid-inp no-drag" value="${c}" onchange="syncGridCol('${f.id}',${i},this.value)" onfocus="select('${f.id}')"><span class="del-col-btn no-drag" onclick="delCol('${f.id}',${i})">×</span></div></th>`).join('');
-                            thead = `<thead><tr>${headerCell}${ths}<th class="grid-add-btn grid-add-col no-drag" onclick="addCol('${f.id}')">+</th></tr></thead>`;
+                            let headerCell = f.corner && f.showRow ? `<th class="slash-header"><input class="slash-top" value="${f.cornerTop}" placeholder="欄" onfocus="select('${f.id}')"><input class="slash-bot" value="${f.cornerBot}" placeholder="列" onfocus="select('${f.id}')"></th>` : (f.showRow ? `<th></th>` : '');
+                            const ths = f.cols.map((c,i) => `<th><div style="display:flex;align-items:center;justify-content:center;position:relative;"><input class="grid-inp" value="${c}" onchange="syncGridCol('${f.id}',${i},this.value)" onfocus="select('${f.id}')"><span class="del-col-btn" onclick="delCol('${f.id}',${i})">×</span></div></th>`).join('');
+                            thead = `<thead><tr>${headerCell}${ths}<th class="grid-add-btn grid-add-col" onclick="addCol('${f.id}')">+</th></tr></thead>`;
                          }
-                         const trs = f.rows.map((r,i) => `<tr>${f.showRow?`<td><div style="display:flex;align-items:center;justify-content:center;"><input class="grid-inp no-drag" value="${r}" onchange="syncGridRow('${f.id}',${i},this.value)" onfocus="select('${f.id}')"><span class="del-row-btn no-drag" onclick="delRow('${f.id}',${i})">🗑</span></div></td>`:''}${f.cols.map((c, colIndex) => {
+                         const trs = f.rows.map((r,i) => `<tr>${f.showRow?`<td><div style="display:flex;align-items:center;justify-content:center;"><input class="grid-inp" value="${r}" onchange="syncGridRow('${f.id}',${i},this.value)" onfocus="select('${f.id}')"><span class="del-row-btn" onclick="delRow('${f.id}',${i})">🗑</span></div></td>`:''}${f.cols.map((c, colIndex) => {
                              const mode = f.colModes[colIndex] || 'text';
                              let inner = '';
                              if(mode === 'text') inner = renderInput('style-v27-box','');
@@ -679,7 +685,7 @@
                              else if(mode === 'mixed-checkbox') inner = `<div class="grid-cell-wrapper" onclick="select('${f.id}')">${renderMark(false)}${renderInput('style-v27-box','')}</div>`;
                              return `<td>${inner}</td>`;
                          }).join('')}</tr>`).join('');
-                         const footerRow = `<tr><td colspan="${f.cols.length + (f.showRow?1:0) + 1}" class="grid-add-btn grid-add-row no-drag" onclick="addRow('${f.id}')">+</td></tr>`;
+                         const footerRow = `<tr><td colspan="${f.cols.length + (f.showRow?1:0) + 1}" class="grid-add-btn grid-add-row" onclick="addRow('${f.id}')">+</td></tr>`;
                          body = `${autoPrevBadge}<table class="grid-table">${thead}<tbody>${trs}${footerRow}</tbody></table>`;
                     } else if(f.type === 'text') {
                          let unitHtml = f.uEnable ? `<div class="unit-label" style="background:#f0f0f0; padding:0 8px; display:flex; align-items:center; border-left:1px solid #ccc; font-size:12px; color:#555;">${f.unitB}</div>` : '';
@@ -753,7 +759,6 @@
                 const mS = formConfig.metaStyle || { size: 28, color: '#000000', bgColor: 'transparent', bold: true };
                 document.getElementById('mSize').value = mS.size;
                 document.getElementById('mWidth').value = mS.width || 'w-100';
-                // Inject Palette for Meta
                 document.getElementById('metaPaletteContainer').innerHTML = getPaletteHTML('metaText', 'text', mS.color, 'indmetaText') + getPaletteHTML('metaBg', 'bg', mS.bgColor, 'indmetaBg');
 
                 ['mB','mI','mU'].forEach(b => document.getElementById(b).classList.remove('active'));
@@ -1016,7 +1021,13 @@
             const f = fields.find(x=>x.id===activeId);
             if(f) {
                 if(!f.valRules) f.valRules = [];
-                f.valRules.push({target: 'val', op1: '>', val1: '', op2: '<', val2: ''}); 
+                // Default based on selector
+                const type = document.getElementById('newRuleType').value;
+                if(type === 'dec') {
+                    f.valRules.push({target: 'dec', val1: '2', op1: 'round'});
+                } else {
+                    f.valRules.push({target: 'val', op1: '>', val1: '0', op2: '<', val2: '100'}); 
+                }
                 renderValRules(); 
                 apply();
             }
@@ -1028,17 +1039,10 @@
             const f = fields.find(x=>x.id===activeId);
             if(f) {
                 document.getElementById('valRulesList').innerHTML = (f.valRules||[]).map((r,i) => {
-                    const ruleTypeSelector = `
-                        <select style="width:70px; margin-right:4px;" onchange="upValRule(${i},'target',this.value)">
-                            <option value="len" ${r.target==='len'?'selected':''}>字數</option>
-                            <option value="val" ${r.target==='val'?'selected':''}>數值</option>
-                            <option value="dec" ${r.target==='dec'?'selected':''}>小數位</option>
-                        </select>`;
-
                     if(r.target === 'dec') {
                         return `
                         <div class="val-rule-item">
-                            ${ruleTypeSelector}
+                            <span style="font-size:12px; margin-right:4px;">小數位</span>
                             <input type="number" style="flex:1" value="${r.val1}" placeholder="位數" oninput="upValRule(${i},'val1',this.value)">
                             <select style="flex:1" onchange="upValRule(${i},'op1',this.value)">
                                 <option value="round" ${r.op1==='round'?'selected':''}>四捨五入</option>
@@ -1050,7 +1054,10 @@
                     }
                     return `
                     <div class="val-rule-item">
-                        ${ruleTypeSelector}
+                        <select style="width:55px" onchange="upValRule(${i},'target',this.value)">
+                            <option value="val" ${r.target==='val'?'selected':''}>數值</option>
+                            <option value="len" ${r.target==='len'?'selected':''}>字數</option>
+                        </select>
                         <input type="number" style="width:40px" value="${r.val1}" placeholder="A" oninput="upValRule(${i},'val1',this.value)">
                         <select style="width:40px" onchange="upValRule(${i},'op1',this.value)">
                             <option value=">" ${r.op1==='>'?'selected':''}>&gt;</option><option value="<" ${r.op1==='<'?'selected':''}>&lt;</option><option value="=" ${r.op1==='='?'selected':''}>=</option><option value=">=" ${r.op1==='>='?'selected':''}>≥</option><option value="<=" ${r.op1==='<='?'selected':''}>≤</option>
