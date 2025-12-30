@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>專業表單規格生成器 v60.00 (Style Sync & Layout Final)</title>
+    <title>專業表單規格生成器 v61.00 (Style & Validation Fix)</title>
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&display=swap" rel="stylesheet">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/Sortable/1.15.0/Sortable.min.js"></script>
     <style>
@@ -260,26 +260,26 @@
         
         <div id="formSettings" style="display:none;">
             <div class="p-item">
-                <label>標題與文字樣式</label>
-                <div class="p-row-flex">
-                    <input type="number" class="inp-p" id="mSize" style="width:50px" value="28" oninput="applyGlobal()">
-                    <div id="metaPaletteContainer" style="display:flex; gap:2px;"></div> 
-                    <button class="biu-btn" id="mB" onclick="toggleMetaStyle('bold')">B</button>
-                    <button class="biu-btn" id="mI" onclick="toggleMetaStyle('italic')">I</button>
-                    <button class="biu-btn" id="mU" onclick="toggleMetaStyle('underline')">U</button>
+                <div style="margin-top:5px; border-bottom:1px dashed #eee; padding-bottom:10px; margin-bottom:10px;">
+                    <label style="font-size:12px; color:#666;">標題與文字樣式</label>
+                    <div class="p-row-flex">
+                        <input type="number" class="inp-p" id="mSize" style="width:50px" value="28" oninput="applyGlobal()">
+                        <div id="metaPaletteContainer" style="display:flex; gap:2px;"></div> 
+                        <button class="biu-btn" id="mB" onclick="toggleMetaStyle('bold')">B</button>
+                        <button class="biu-btn" id="mI" onclick="toggleMetaStyle('italic')">I</button>
+                        <button class="biu-btn" id="mU" onclick="toggleMetaStyle('underline')">U</button>
+                    </div>
                 </div>
-            </div>
-            
-            <div class="p-item">
-                <label>寬度與排列</label>
-                <div class="p-row-flex">
+                
+                <div style="margin-top:10px;">
+                    <label>寬度與排列</label>
                     <select class="inp-p" id="mWidth" onchange="applyGlobal()" style="width:100%">
                         <option value="w-100">100% 全寬</option>
                         <option value="w-50">50% 半寬</option>
                         <option value="w-33">33% 1/3寬</option>
                     </select>
                 </div>
-                <label class="p-check-row" style="margin-top:5px;"><input type="checkbox" id="gMetaDescE" onchange="applyGlobal()"> 啟用說明文字</label>
+                <label class="p-check-row" style="margin-top:10px;"><input type="checkbox" id="gMetaDescE" onchange="applyGlobal()"> 啟用說明文字</label>
             </div>
 
             <div class="p-item sec-divider">
@@ -465,11 +465,13 @@
         let formConfig = { 
             layout: 'horizontal', titleIdx: 1, dataIdx: 2, 
             enableTemp: false, clearOnSubmit: false, metaDescE: false,
-            metaStyle: { size: 28, color: '#000000', bgColor: 'transparent', bold: true, width: 'w-100' },
-            tempColIds: [], calcCols: [], clearTimes: [] 
+            metaStyle: { size: 28, color: '#000000', bgColor: 'transparent', bold: true, width: 'w-100' }
         };
-        const list = document.getElementById('fList');
+        // Removed explicit initialization of tempColIds etc to avoid overwriting imported config
+        // Default values will be handled when accessing them or in init logic
+        
         let tempModalState = { tempColIds: [], calcCols: [], clearTimes: [], clearOnSubmit: false };
+        const list = document.getElementById('fList');
 
         /* --- Reusable Palette HTML Generator --- */
         const getPaletteHTML = (idPrefix, targetType, currentColor, indicatorId) => `
@@ -485,23 +487,23 @@
                 </div>
                 <div id="pal${idPrefix}" class="palette-popover">
                     <div class="palette-title">${targetType==='text'?'文字顏色':'文字背景'}</div>
-                    <div class="color-cell ${targetType==='bg'?'transparent':''}" style="width:100%; text-align:center; font-size:11px; line-height:24px; border:1px solid #ddd; margin-bottom:6px;" onclick="setPaletteColor('${idPrefix}', '${targetType}','${targetType==='bg'?'transparent':'#000000'}')">${targetType==='bg'?'無填滿':'自動 (黑色)'}</div>
+                    <div class="color-cell ${targetType==='bg'?'transparent':''}" style="width:100%; text-align:center; font-size:11px; line-height:24px; border:1px solid #ddd; margin-bottom:6px;" onclick="updateColor('${targetType}','${targetType==='bg'?'transparent':'#000000'}', '${idPrefix}')">${targetType==='bg'?'無填滿':'自動 (黑色)'}</div>
                     <div class="palette-title">基本色</div>
                     <div class="color-grid">
                         ${['#000000','#ffffff','#eeece1','#1f497d','#4f81bd','#c0504d','#9bbb59','#8064a2','#4bacc6','#f79646'].map(c => 
-                            `<div class="color-cell" style="background:${c}; ${c==='#ffffff'?'border:1px solid #ccc;':''}" onclick="setPaletteColor('${idPrefix}', '${targetType}','${c}')"></div>`
+                            `<div class="color-cell" style="background:${c}; ${c==='#ffffff'?'border:1px solid #ccc;':''}" onclick="updateColor('${targetType}','${c}', '${idPrefix}')"></div>`
                         ).join('')}
                     </div>
                     <div class="palette-title">常用色</div>
                     <div class="color-grid">
                         ${['#c00000','#ff0000','#ffc000','#ffff00','#92d050','#00b050','#00b0f0','#0070c0','#002060','#7030a0'].map(c => 
-                            `<div class="color-cell" style="background:${c}" onclick="setPaletteColor('${idPrefix}', '${targetType}','${c}')"></div>`
+                            `<div class="color-cell" style="background:${c}" onclick="updateColor('${targetType}','${c}', '${idPrefix}')"></div>`
                         ).join('')}
                     </div>
                     <label class="palette-custom-row">
                         <div class="custom-color-icon"></div>
                         <span>自訂顏色...</span>
-                        <input type="color" style="position:absolute; opacity:0; left:0; width:100%; bottom:0; height:30px; cursor:pointer;" oninput="setPaletteColor('${idPrefix}', '${targetType}', this.value)">
+                        <input type="color" style="position:absolute; opacity:0; left:0; width:100%; bottom:0; height:30px; cursor:pointer;" oninput="updateColor('${targetType}', this.value, '${idPrefix}')">
                     </label>
                 </div>
             </div>`;
@@ -532,26 +534,25 @@
             document.querySelectorAll('.palette-popover').forEach(p => { if(p.id!=='pal'+id) p.classList.remove('active'); });
             pop.classList.toggle('active');
         }
-        function setPaletteColor(idPrefix, type, color) {
-            if(idPrefix.startsWith('rule')) {
-                const index = parseInt(idPrefix.replace('rule',''));
-                updateModalCalc(index, 'ruleColor', color);
-                document.getElementById('ind'+idPrefix).style.backgroundColor = color;
-            } 
-            else if(activeId === 'form_meta') {
+        
+        function updateColor(type, color, idPrefix) {
+            // Update indicator
+            document.getElementById('ind'+idPrefix).style.backgroundColor = color;
+            
+            if (idPrefix.startsWith('rule')) {
+                 const index = parseInt(idPrefix.replace('rule',''));
+                 updateModalCalc(index, 'ruleColor', color);
+            } else if(activeId === 'form_meta') {
                 if(!formConfig.metaStyle) formConfig.metaStyle = {};
                 if(type === 'text') formConfig.metaStyle.color = color;
                 if(type === 'bg') formConfig.metaStyle.bgColor = color;
-                document.getElementById('ind'+idPrefix).style.backgroundColor = color;
-                applyGlobal();
-            }
-            else {
+                render(); // Force render to see changes immediately
+            } else {
                 const f = fields.find(x => x.id === activeId);
                 if(f) {
                     if(type === 'text') f.color = color;
                     if(type === 'bg') f.bgColor = color;
-                    document.getElementById('ind'+idPrefix).style.backgroundColor = color;
-                    apply();
+                    render(); // Force render
                 }
             }
             document.querySelectorAll('.palette-popover').forEach(p => p.classList.remove('active'));
@@ -604,7 +605,6 @@
                 rows:['第 1 列'], cols:['第 1 欄'], colModes: ['text'],
                 corner:true, cornerTop:'欄名', cornerBot:'列名', showCol:true, showRow:true,
                 opts:['選項 1'], testV:'', link:'', upper:false, defVal:'', 
-                minLen:'', maxLen:'', minVal:'', maxVal:'', decPlaces:'', roundMode:'round',
                 valRules: [], 
                 shiftStyle: 'dropdown', shiftLogicE: false, shiftRules: [], 
                 autoPrevRules: [], showTime: false, autoDate: false, autoTime: false, dateOffset: false,
@@ -671,11 +671,11 @@
                     else if(f.type === 'grid') {
                          let thead = '';
                          if(f.showCol) {
-                            let headerCell = f.corner && f.showRow ? `<th class="slash-header"><input class="slash-top" value="${f.cornerTop}" placeholder="欄" onfocus="select('${f.id}')"><input class="slash-bot" value="${f.cornerBot}" placeholder="列" onfocus="select('${f.id}')"></th>` : (f.showRow ? `<th></th>` : '');
-                            const ths = f.cols.map((c,i) => `<th><div style="display:flex;align-items:center;justify-content:center;position:relative;"><input class="grid-inp" value="${c}" onchange="syncGridCol('${f.id}',${i},this.value)" onfocus="select('${f.id}')"><span class="del-col-btn" onclick="delCol('${f.id}',${i})">×</span></div></th>`).join('');
-                            thead = `<thead><tr>${headerCell}${ths}<th class="grid-add-btn grid-add-col" onclick="addCol('${f.id}')">+</th></tr></thead>`;
+                            let headerCell = f.corner && f.showRow ? `<th class="slash-header"><input class="slash-top no-drag" value="${f.cornerTop}" placeholder="欄" onfocus="select('${f.id}')"><input class="slash-bot no-drag" value="${f.cornerBot}" placeholder="列" onfocus="select('${f.id}')"></th>` : (f.showRow ? `<th></th>` : '');
+                            const ths = f.cols.map((c,i) => `<th><div style="display:flex;align-items:center;justify-content:center;position:relative;"><input class="grid-inp no-drag" value="${c}" onchange="syncGridCol('${f.id}',${i},this.value)" onfocus="select('${f.id}')"><span class="del-col-btn no-drag" onclick="delCol('${f.id}',${i})">×</span></div></th>`).join('');
+                            thead = `<thead><tr>${headerCell}${ths}<th class="grid-add-btn grid-add-col no-drag" onclick="addCol('${f.id}')">+</th></tr></thead>`;
                          }
-                         const trs = f.rows.map((r,i) => `<tr>${f.showRow?`<td><div style="display:flex;align-items:center;justify-content:center;"><input class="grid-inp" value="${r}" onchange="syncGridRow('${f.id}',${i},this.value)" onfocus="select('${f.id}')"><span class="del-row-btn" onclick="delRow('${f.id}',${i})">🗑</span></div></td>`:''}${f.cols.map((c, colIndex) => {
+                         const trs = f.rows.map((r,i) => `<tr>${f.showRow?`<td><div style="display:flex;align-items:center;justify-content:center;"><input class="grid-inp no-drag" value="${r}" onchange="syncGridRow('${f.id}',${i},this.value)" onfocus="select('${f.id}')"><span class="del-row-btn no-drag" onclick="delRow('${f.id}',${i})">🗑</span></div></td>`:''}${f.cols.map((c, colIndex) => {
                              const mode = f.colModes[colIndex] || 'text';
                              let inner = '';
                              if(mode === 'text') inner = renderInput('style-v27-box','');
@@ -685,7 +685,7 @@
                              else if(mode === 'mixed-checkbox') inner = `<div class="grid-cell-wrapper" onclick="select('${f.id}')">${renderMark(false)}${renderInput('style-v27-box','')}</div>`;
                              return `<td>${inner}</td>`;
                          }).join('')}</tr>`).join('');
-                         const footerRow = `<tr><td colspan="${f.cols.length + (f.showRow?1:0) + 1}" class="grid-add-btn grid-add-row" onclick="addRow('${f.id}')">+</td></tr>`;
+                         const footerRow = `<tr><td colspan="${f.cols.length + (f.showRow?1:0) + 1}" class="grid-add-btn grid-add-row no-drag" onclick="addRow('${f.id}')">+</td></tr>`;
                          body = `${autoPrevBadge}<table class="grid-table">${thead}<tbody>${trs}${footerRow}</tbody></table>`;
                     } else if(f.type === 'text') {
                          let unitHtml = f.uEnable ? `<div class="unit-label" style="background:#f0f0f0; padding:0 8px; display:flex; align-items:center; border-left:1px solid #ccc; font-size:12px; color:#555;">${f.unitB}</div>` : '';
@@ -860,12 +860,8 @@
             tempModalState.clearTimes = [...(formConfig.clearTimes || [])];
             tempModalState.clearOnSubmit = formConfig.clearOnSubmit || false;
             document.getElementById('mClearOnSubmit').checked = tempModalState.clearOnSubmit;
-            
-            // v50: Render Multi-Select for Basic Fields
             renderMultiSelectHTML('msBasicFields', fields.filter(f => f.type !== 'header'), tempModalState.tempColIds, 'basic');
-            
-            renderModalCalcs(); 
-            renderModalTimes();
+            renderModalCalcs(); renderModalTimes();
             document.getElementById('tempConfigModal').style.display = 'flex';
         }
         function closeTempModal() { document.getElementById('tempConfigModal').style.display = 'none'; }
@@ -884,31 +880,13 @@
             const uniqueId = containerId;
             const count = selectedIds.length;
             const labelText = count === 0 ? '無選擇' : `已選擇 ${count} 欄位`;
-            
             let itemsHtml = options.map(opt => `
                 <label class="ms-item">
                     <input type="checkbox" value="${opt.id}" ${selectedIds.includes(opt.id)?'checked':''}>
                     ${opt.title}
                 </label>`).join('');
-
-            container.innerHTML = `
-                <div class="ms-trigger" onclick="toggleMS('${uniqueId}')">
-                    <span>${labelText}</span> <span>▾</span>
-                </div>
-                <div id="dropdown-${uniqueId}" class="ms-dropdown">
-                    <div class="ms-header">
-                        <label><input type="checkbox" onchange="toggleAllMS('${uniqueId}', this.checked)"> 全選</label>
-                        <input type="text" class="ms-search" placeholder="🔍 搜尋..." oninput="filterMS('${uniqueId}', this.value)" onclick="event.stopPropagation()">
-                    </div>
-                    <div class="ms-list">${itemsHtml}</div>
-                    <div class="ms-footer">
-                        <button class="ms-btn clear" onclick="clearMS('${uniqueId}')">清空</button>
-                        <button class="ms-btn confirm" onclick="confirmMS('${uniqueId}', '${contextStr}')">確定</button>
-                    </div>
-                </div>
-            `;
+            container.innerHTML = `<div class="ms-trigger" onclick="toggleMS('${uniqueId}')"><span>${labelText}</span> <span>▾</span></div><div id="dropdown-${uniqueId}" class="ms-dropdown"><div class="ms-header"><label><input type="checkbox" onchange="toggleAllMS('${uniqueId}', this.checked)"> 全選</label><input type="text" class="ms-search" placeholder="🔍 搜尋..." oninput="filterMS('${uniqueId}', this.value)" onclick="event.stopPropagation()"></div><div class="ms-list">${itemsHtml}</div><div class="ms-footer"><button class="ms-btn clear" onclick="clearMS('${uniqueId}')">清空</button><button class="ms-btn confirm" onclick="confirmMS('${uniqueId}', '${contextStr}')">確定</button></div></div>`;
         }
-
         function filterMS(uniqueId, text) {
             const list = document.getElementById('dropdown-'+uniqueId).querySelector('.ms-list');
             const items = list.querySelectorAll('.ms-item');
@@ -916,60 +894,22 @@
                 item.style.display = item.textContent.toLowerCase().includes(text.toLowerCase()) ? 'flex' : 'none';
             });
         }
-
-        function toggleMS(id) {
-            const dd = document.getElementById('dropdown-' + id);
-            // Close others
-            document.querySelectorAll('.ms-dropdown').forEach(d => { if(d.id !== 'dropdown-'+id) d.classList.remove('active'); });
-            dd.classList.toggle('active');
-        }
-        function toggleAllMS(id, checked) {
-            const dd = document.getElementById('dropdown-' + id);
-            dd.querySelectorAll('.ms-list input[type="checkbox"]').forEach(chk => {
-                if(chk.closest('.ms-item').style.display !== 'none') chk.checked = checked;
-            });
-        }
-        function clearMS(id) {
-            toggleAllMS(id, false);
-        }
+        function toggleMS(id) { const dd = document.getElementById('dropdown-' + id); document.querySelectorAll('.ms-dropdown').forEach(d => { if(d.id !== 'dropdown-'+id) d.classList.remove('active'); }); dd.classList.toggle('active'); }
+        function toggleAllMS(id, checked) { const dd = document.getElementById('dropdown-' + id); dd.querySelectorAll('.ms-list input[type="checkbox"]').forEach(chk => { if(chk.closest('.ms-item').style.display !== 'none') chk.checked = checked; }); }
+        function clearMS(id) { toggleAllMS(id, false); }
         function confirmMS(id, contextStr) {
-            const dd = document.getElementById('dropdown-' + id);
-            const selected = [];
+            const dd = document.getElementById('dropdown-' + id); const selected = [];
             dd.querySelectorAll('.ms-list input[type="checkbox"]:checked').forEach(chk => selected.push(chk.value));
-            
-            if(contextStr === 'basic') {
-                tempModalState.tempColIds = selected;
-                renderMultiSelectHTML(id, fields.filter(f => f.type !== 'header'), tempModalState.tempColIds, 'basic');
-            } else if(contextStr.startsWith('calc:')) {
-                const idx = parseInt(contextStr.split(':')[1]);
-                tempModalState.calcCols[idx].targets = selected;
-                renderModalCalcs(); 
-            } else if(contextStr.startsWith('mach_val:')) {
-                const idx = parseInt(contextStr.split(':')[1]);
-                const f = fields.find(x=>x.id===activeId);
-                if(f && f.machineRules[idx]) {
-                    f.machineRules[idx].val = selected.join(',');
-                    renderMachineRules(); 
-                }
-            } else if(contextStr.startsWith('mach_target:')) {
-                const idx = parseInt(contextStr.split(':')[1]);
-                const f = fields.find(x=>x.id===activeId);
-                if(f && f.machineRules[idx]) {
-                     const titles = selected.map(sid => {
-                         const ff = fields.find(x=>x.id===sid);
-                         return ff ? ff.title : sid;
-                     });
-                    f.machineRules[idx].target = titles.join(',');
-                    renderMachineRules(); 
-                }
-            }
+            if(contextStr === 'basic') { tempModalState.tempColIds = selected; renderMultiSelectHTML(id, fields.filter(f => f.type !== 'header'), tempModalState.tempColIds, 'basic'); } 
+            else if(contextStr.startsWith('calc:')) { const idx = parseInt(contextStr.split(':')[1]); tempModalState.calcCols[idx].targets = selected; renderModalCalcs(); }
+            else if(contextStr.startsWith('mach_val:')) { const idx = parseInt(contextStr.split(':')[1]); const f = fields.find(x=>x.id===activeId); if(f && f.machineRules[idx]) { f.machineRules[idx].val = selected.join(','); renderMachineRules(); } }
+            else if(contextStr.startsWith('mach_target:')) { const idx = parseInt(contextStr.split(':')[1]); const f = fields.find(x=>x.id===activeId); if(f && f.machineRules[idx]) { const titles = selected.map(sid => { const ff = fields.find(x=>x.id===sid); return ff ? ff.title : sid; }); f.machineRules[idx].target = titles.join(','); renderMachineRules(); } }
             dd.classList.remove('active');
         }
 
         function addTempCalc() { tempModalState.calcCols.push({ id: 'c'+Date.now(), title: '新統計', type: 'sum_fields', targets: [], ruleVal: '', ruleOp: '>', ruleColor: '#d93025' }); renderModalCalcs(); }
         function delModalCalc(i) { tempModalState.calcCols.splice(i, 1); renderModalCalcs(); }
         function updateModalCalc(i, key, val) { tempModalState.calcCols[i][key] = val; renderModalCalcs(); }
-        
         function renderModalCalcs() {
             const container = document.getElementById('modalCalcList');
             container.innerHTML = tempModalState.calcCols.map((c, i) => {
@@ -979,9 +919,7 @@
                     const validFields = fields.filter(f => ['text','batch'].includes(f.type)); 
                     const msId = `msCalc${i}`;
                     targetHtml = `<div id="${msId}" class="ms-container" style="margin-top:4px;"></div>`;
-                    setTimeout(() => {
-                        renderMultiSelectHTML(msId, validFields, c.targets, `calc:${i}`);
-                    }, 0);
+                    setTimeout(() => { renderMultiSelectHTML(msId, validFields, c.targets, `calc:${i}`); }, 0);
                 } else {
                     targetHtml = `<select class="inp-p" style="margin-top:4px;" onchange="updateModalCalc(${i},'targets',[this.value])"><option value="">--選擇章節標題--</option>${fields.filter(x=>x.type==='header').map(h=>`<option value="${h.id}" ${c.targets[0]===h.id?'selected':''}>${h.title}</option>`).join('')}</select>`;
                 }
@@ -1043,8 +981,8 @@
                         return `
                         <div class="val-rule-item">
                             <span style="font-size:12px; margin-right:4px;">小數位</span>
-                            <input type="number" style="flex:1" value="${r.val1}" placeholder="位數" oninput="upValRule(${i},'val1',this.value)">
-                            <select style="flex:1" onchange="upValRule(${i},'op1',this.value)">
+                            <input type="number" style="flex:1; min-width:0;" value="${r.val1}" placeholder="位數" oninput="upValRule(${i},'val1',this.value)">
+                            <select style="flex:1; min-width:0;" onchange="upValRule(${i},'op1',this.value)">
                                 <option value="round" ${r.op1==='round'?'selected':''}>四捨五入</option>
                                 <option value="ceil" ${r.op1==='ceil'?'selected':''}>無條件進位</option>
                                 <option value="floor" ${r.op1==='floor'?'selected':''}>無條件捨去</option>
