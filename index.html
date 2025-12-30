@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>專業表單規格生成器 v62.01 (Size & Unit Fixed)</title>
+    <title>專業表單規格生成器 v62.02 (Logic & Tooltips Restored)</title>
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&display=swap" rel="stylesheet">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/Sortable/1.15.0/Sortable.min.js"></script>
     <style>
@@ -96,7 +96,10 @@
         .p-check-row { display: flex; align-items: center; gap: 8px; font-size: 13px; margin-bottom: 6px; font-weight: 500; cursor: pointer; }
         .biu-btn { border: 1px solid #ccc; background: #fff; padding: 6px 12px; border-radius: 4px; cursor: pointer; font-weight: bold; font-size: 12px; }
         .biu-btn.active { background: #333; color: #fff; border-color: #333; }
-        .logic-panel { background: #fffde7; border: 1px dashed #fbc02d; padding: 10px; border-radius: 8px; margin-top: 8px; }
+        
+        /* Logic Panel - v42 Style Restored */
+        .logic-panel { background: #f0f9ff; border: 1px dashed #ccc; padding: 10px; border-radius: 6px; margin-top: 8px; font-size: 12px; color: #444; }
+        
         .logic-line { display: flex; align-items: center; gap: 4px; margin-bottom: 5px; font-size: 12px; }
         .logic-line input, .logic-line select { padding: 3px; border: 1px solid #ccc; border-radius: 3px; }
         .opt-manage-item { display: flex; align-items: center; gap: 5px; margin-bottom: 6px; }
@@ -340,7 +343,7 @@
             <div id="autoPrevSec" class="p-item sec-divider">
                 <label>
                     自動帶入規則 
-                    <span class="info-icon" data-msg="<b>設計目的：</b><br>減少重複輸入(如工單批號)。<br><br><b>運作邏輯：</b><br>在設定時段內，自動填入上一筆資料。<br>若非此時段(跨班)則留空。">i</span>
+                    <span class="info-icon" data-msg="設定時段區間（如 08:00~16:00），在此區間內新資料會自動帶入上一筆。">?</span>
                 </label>
                 <div style="background:#f0f9ff; padding:10px; border-radius:6px; font-size:12px; color:#444; margin-top:5px;">
                     <div id="apRules"></div>
@@ -425,7 +428,10 @@
 
             <div id="unitSec" class="p-item sec-divider" style="display:none;">
                 <div class="header-split">
-                    <label style="margin:0;">單位判定與權限</label>
+                    <label style="margin:0;">
+                        單位判定與權限
+                        <span class="info-icon" data-msg="設定數值判定規則。例如：當輸入值 > 10 時，自動判定為 '合格' 並帶入結果。">?</span>
+                    </label>
                     <label class="header-right-check"><input type="checkbox" id="pManual" onchange="apply()"> 允許手動變更</label>
                 </div>
                 <label class="p-check-row"><input type="checkbox" id="pUnitE" onchange="apply()"> 啟用判定</label>
@@ -792,12 +798,19 @@
             const hideContentConfig = ['datetime', 'shift', 'header', 'batch', 'choices', 'dropdown'].includes(f.type);
             document.getElementById('contentSec').style.display = hideContentConfig ? 'none' : 'block';
             document.getElementById('defValRow').style.display = (f.type === 'header' || f.type === 'batch') ? 'none' : 'block';
-            /* Unit Logic Button Visibility */
-            document.getElementById('uLogic').style.display = (f.uEnable && f.type === 'text') ? 'block' : 'none';
+            
+            /* Logic Sections Visibility */
             document.getElementById('gridSec').style.display = f.type==='grid'?'block':'none';
             document.getElementById('unitSec').style.display = f.type==='text'?'block':'none'; 
             document.getElementById('autoPrevSec').style.display = 'block';
             
+            /* Apply Logic Checks */
+            const uLogic = document.getElementById('uLogic');
+            if(f.type==='text') {
+                uLogic.style.display = f.uEnable ? 'block' : 'none';
+                if(f.uEnable) renderRules();
+            }
+
             renderAutoPrevRules();
             renderValRules(); 
             document.getElementById('shiftSec').style.display = f.type==='shift'?'block':'none';
@@ -838,17 +851,12 @@
             render();
         }
 
-        // ============================
-        //  FIX: Main Apply Function
-        // ============================
         function apply() {
             if(!activeId) return;
             const f = fields.find(x => x.id === activeId);
             if(!f) return;
             
-            // Fix 1: Update Font Size
-            f.size = document.getElementById('pSize').value; 
-
+            f.size = document.getElementById('pSize').value;
             f.width = document.getElementById('pWidth').value;
             f.mode = document.getElementById('pMode').value;
             f.unitB = document.getElementById('pUnitB').value;
@@ -876,12 +884,12 @@
             if(document.getElementById('pShiftLogicE')) f.shiftLogicE = document.getElementById('pShiftLogicE').checked;
             if(document.getElementById('pAutoPrev')) f.autoPrev = document.getElementById('pAutoPrev').checked;
 
-            // Fix 2: Immediate UI Feedback for Unit Logic
+            // Unit Logic Visibility Check
             if(f.type === 'text') {
                  const uLogic = document.getElementById('uLogic');
                  if(f.uEnable) {
                      uLogic.style.display = 'block';
-                     renderRules(); // Ensure rules are shown
+                     renderRules(); 
                  } else {
                      uLogic.style.display = 'none';
                  }
@@ -999,7 +1007,7 @@
             document.getElementById('modalTimeList').innerHTML = tempModalState.clearTimes.map((t, i) => `<div class="time-row"><input type="time" value="${t}" oninput="updateClearTime(${i}, this.value)"><span style="cursor:pointer; color:#999;" onclick="delClearTime(${i})">×</span></div>`).join('');
         }
 
-        /* --- ADD RULE FUNCTIONS (Restored Logic) --- */
+        /* --- ADD RULE FUNCTIONS --- */
         function addAutoPrevRule() { 
             if(!activeId) return;
             const f = fields.find(x=>x.id===activeId);
@@ -1024,7 +1032,6 @@
             const f = fields.find(x=>x.id===activeId);
             if(f) {
                 if(!f.valRules) f.valRules = [];
-                /* Default based on selector */
                 const type = document.getElementById('newRuleType').value;
                 if(type === 'dec') {
                     f.valRules.push({target: 'dec', val1: '2', op1: 'round'});
@@ -1136,6 +1143,8 @@
         }
         window.upS = (i,k,v) => { fields.find(x=>x.id===activeId).shiftRules[i][k]=v; render(); };
         window.delS = (i) => { fields.find(x=>x.id===activeId).shiftRules.splice(i,1); renderShiftRules(); render(); };
+        
+        // Unit Judgment Rules Logic
         function addURule() { fields.find(x=>x.id===activeId).uRules.push({cond:'', val:'', res:''}); renderRules(); }
         function renderRules() { const f = fields.find(x=>x.id===activeId);
             document.getElementById('uRules').innerHTML = (f.uRules||[]).map((r,i)=>`<div class="logic-line">當 <select onchange="upR(${i},'cond',this.value)"><option value="" ${r.cond===''?'selected':''}></option><option value="<" ${r.cond==='<'?'selected':''}>&lt;</option><option value="=" ${r.cond==='='?'selected':''}>=</option><option value=">=" ${r.cond==='>='?'selected':''}>≥</option><option value="<=" ${r.cond==='<='?'selected':''}>≤</option></select> <input style="width:40px" value="${r.val}" oninput="upR(${i},'val',this.value)"> 帶入 <input style="width:40px" value="${r.res}" oninput="upR(${i},'res',this.value)"> <span style="cursor:pointer" onclick="delR(${i})">🗑</span></div>`).join('');
