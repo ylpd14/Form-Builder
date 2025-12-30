@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>專業表單規格生成器 v62.07 (Auto Unit Logic Fixed)</title>
+    <title>專業表單規格生成器 v62.08 (Styled Unit Dropdown)</title>
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&display=swap" rel="stylesheet">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/Sortable/1.15.0/Sortable.min.js"></script>
     <style>
@@ -195,30 +195,70 @@
         .ms-btn.confirm { color: var(--p); font-weight: bold; border-left: 1px solid #eee; }
         .ms-btn.clear { color: #666; }
 
-        /* Unit Dropdown Styles */
-        .unit-label-container {
-            display: flex; align-items: center; background: #f0f0f0; border-left: 1px solid #ccc; position: relative;
+        /* Unit Dropdown Styling (v62.08) */
+        .input-group-wrapper {
+            display: flex;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            overflow: visible; /* Ensure dropdown visible */
+            background: #fff;
+            position: relative;
         }
-        .unit-text-display {
-            padding: 0 8px; font-size: 12px; color: #555; white-space: nowrap;
+        .unit-suffix {
+            display: flex;
+            align-items: center;
+            background: #f1f3f4; /* Light gray from image */
+            border-left: 1px solid #ccc;
+            padding: 0 8px;
+            font-size: 12px;
+            color: #333;
+            white-space: nowrap;
+            cursor: default;
+            position: relative;
+            border-radius: 0 4px 4px 0;
         }
-        .manual-arrow {
-            display: flex; align-items: center; justify-content: center;
-            padding: 0 6px; cursor: pointer; font-size: 10px; color: #666;
-            height: 100%; transition: 0.2s; border-left: 1px solid #ddd;
+        .unit-suffix.clickable {
+            cursor: pointer;
+            padding-right: 2px;
         }
-        .manual-arrow:hover { background: #e0e0e0; }
-        
-        .unit-dropdown-menu {
-            position: absolute; top: 100%; right: 0; min-width: 80px;
-            background: #fff; border: 1px solid #ccc; box-shadow: 0 3px 8px rgba(0,0,0,0.15);
-            z-index: 100; display: none; flex-direction: column; border-radius: 4px; overflow: hidden;
+        .unit-suffix.clickable:hover {
+            background: #e8eaed;
         }
-        .unit-dropdown-menu.active { display: flex; }
-        .unit-option {
-            padding: 6px 10px; font-size: 12px; cursor: pointer; color: #333; transition: 0.1s;
+        .unit-arrow {
+            display: inline-block;
+            margin-left: 4px;
+            font-size: 10px;
+            color: #555;
+            padding: 0 4px;
         }
-        .unit-option:hover { background: #f0f7ff; }
+        .unit-dropdown-list {
+            display: none;
+            position: absolute;
+            top: 100%;
+            right: 0;
+            background: #fff;
+            border: 1px solid #ccc;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+            border-radius: 4px;
+            z-index: 200;
+            min-width: 80px;
+            flex-direction: column;
+            margin-top: 2px;
+        }
+        .unit-dropdown-list.active {
+            display: flex;
+        }
+        .unit-dropdown-item {
+            padding: 6px 12px;
+            font-size: 12px;
+            color: #333;
+            cursor: pointer;
+            text-align: left;
+        }
+        .unit-dropdown-item:hover {
+            background: #666; /* Dark gray from image */
+            color: #fff;
+        }
     </style>
 </head>
 <body>
@@ -558,8 +598,8 @@
             if(!e.target.closest('.ms-container')) {
                 document.querySelectorAll('.ms-dropdown').forEach(d => d.classList.remove('active'));
             }
-            if(!e.target.closest('.unit-label-container') && !e.target.closest('.unit-dropdown-menu')) {
-                document.querySelectorAll('.unit-dropdown-menu').forEach(d => d.classList.remove('active'));
+            if(!e.target.closest('.unit-suffix') && !e.target.closest('.unit-dropdown-list')) {
+                document.querySelectorAll('.unit-dropdown-list').forEach(d => d.classList.remove('active'));
             }
         });
         function togglePalette(id, event) {
@@ -724,16 +764,20 @@
                          if(f.uEnable) {
                              if(f.manual) {
                                  unitHtml = `
-                                 <div class="unit-label-container" onclick="toggleUnitDropdown('${f.id}', event)">
-                                     <div class="unit-text-display" id="unitDisplay_${f.id}">${f.unitB}</div>
-                                     <div class="manual-arrow">▼</div>
-                                     <div id="unitDrop_${f.id}" class="unit-dropdown-menu"></div>
+                                 <div class="unit-suffix clickable" onclick="toggleUnitDropdown('${f.id}', event)">
+                                     <span id="unitDisplay_${f.id}">${f.unitB}</span>
+                                     <span class="unit-arrow">▼</span>
+                                     <div id="unitDrop_${f.id}" class="unit-dropdown-list"></div>
                                  </div>`;
                              } else {
-                                 unitHtml = `<div class="unit-label-container" style="cursor:default;"><div class="unit-text-display" id="unitDisplay_${f.id}">${f.unitB}</div></div>`;
+                                 unitHtml = `<div class="unit-suffix"><span id="unitDisplay_${f.id}">${f.unitB}</span></div>`;
                              }
                          }
-                         body = `${autoPrevBadge}<div style="display:flex; border:1px solid #ccc; border-radius:4px; overflow:visible; position:relative;">${renderInput('style-v27-box','請輸入...')}${unitHtml}</div>`;
+                         body = `${autoPrevBadge}
+                         <div class="input-group-wrapper" onclick="select('${f.id}')">
+                             <input class="style-v27-box no-drag" style="flex:1; border:none; box-shadow:none; padding:4px 6px;" placeholder="請輸入..." oninput="validateInput(this, '${f.id}')" value="${f.defVal || ''}">
+                             ${unitHtml}
+                         </div>`;
                     } else if(['choices','dropdown'].includes(f.type)) {
                          if(f.type==='dropdown') body = `${autoPrevBadge}<div class="preview-dropdown" onclick="select('${f.id}')"><select class="no-drag" style="width:100%; border:none; background:transparent;"><option>-- 請選擇 --</option>${(f.opts||[]).map(o=>`<option>${o}</option>`).join('')}</select></div>`;
                          else body = `${autoPrevBadge}<div style="display:flex; flex-direction:column; gap:8px;">${(f.opts||[]).map(o=> {
@@ -808,7 +852,7 @@
             event.stopPropagation();
             const dd = document.getElementById('unitDrop_' + id);
             
-            document.querySelectorAll('.unit-dropdown-menu').forEach(d => {
+            document.querySelectorAll('.unit-dropdown-list').forEach(d => {
                 if (d.id !== 'unitDrop_' + id) d.classList.remove('active');
             });
 
@@ -829,10 +873,10 @@
             }
 
             if(options.length === 0) {
-                dd.innerHTML = '<div class="unit-option" style="color:#999;">無選項</div>';
+                dd.innerHTML = '<div class="unit-dropdown-item" style="color:#999; cursor:default;">無選項</div>';
             } else {
                 dd.innerHTML = options.map(opt => 
-                    `<div class="unit-option" onclick="selectUnit('${id}', '${opt}')">${opt}</div>`
+                    `<div class="unit-dropdown-item" onclick="selectUnit('${id}', '${opt}')">${opt}</div>`
                 ).join('');
             }
             
@@ -842,7 +886,9 @@
         function selectUnit(id, val) {
             const display = document.getElementById('unitDisplay_' + id);
             if(display) display.textContent = val;
-            document.getElementById('unitDrop_' + id).classList.remove('active');
+            // Close dropdown
+            const dd = document.getElementById('unitDrop_' + id);
+            if(dd) dd.classList.remove('active');
         }
 
         /* Sidebar Logic for Unit B Update without re-render */
@@ -852,7 +898,7 @@
             if(f) {
                 f.unitB = val;
                 const display = document.getElementById('unitDisplay_' + activeId);
-                if(display) display.textContent = val; // Only update text, no re-render
+                if(display) display.textContent = val; 
             }
         }
 
