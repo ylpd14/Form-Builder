@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>專業表單規格生成器 v62.05 (Unit Logic Fully Restored)</title>
+    <title>專業表單規格生成器 v62.06 (Unit Dropdown Logic)</title>
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&display=swap" rel="stylesheet">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/Sortable/1.15.0/Sortable.min.js"></script>
     <style>
@@ -194,6 +194,27 @@
         .ms-btn:hover { background: #f5f5f5; }
         .ms-btn.confirm { color: var(--p); font-weight: bold; border-left: 1px solid #eee; }
         .ms-btn.clear { color: #666; }
+
+        /* Manual Dropdown */
+        .manual-arrow {
+            display: flex; align-items: center; justify-content: center;
+            padding: 0 6px; background: #f0f0f0; color: #666;
+            cursor: pointer; font-size: 10px; border-left: 1px solid #ccc;
+            user-select: none;
+        }
+        .manual-arrow:hover { background: #e0e0e0; }
+        
+        .unit-dropdown {
+            position: absolute; top: 100%; right: 0; min-width: 80px;
+            background: #fff; border: 1px solid #bbb; box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+            z-index: 100; display: none; border-radius: 4px;
+            margin-top: 2px; flex-direction: column;
+        }
+        .unit-dropdown.active { display: flex; }
+        .unit-option {
+            padding: 5px 10px; font-size: 12px; cursor: pointer; color: #333;
+        }
+        .unit-option:hover { background: #f0f7ff; }
     </style>
 </head>
 <body>
@@ -429,12 +450,12 @@
             <div id="unitSec" class="p-item sec-divider" style="display:none;">
                 <div class="header-split">
                     <label style="margin:0;">
-                        單位判定與權限
+                        單位帶入與規則
                         <span class="info-icon" data-msg="設定數值判定規則。例如：當輸入值 > 10 時，自動判定為 '合格' 並帶入結果。">?</span>
                     </label>
                     <label class="header-right-check"><input type="checkbox" id="pManual" onchange="apply()"> 允許手動變更</label>
                 </div>
-                <label class="p-check-row"><input type="checkbox" id="pUnitE" onchange="apply()"> 啟用判定</label>
+                <label class="p-check-row"><input type="checkbox" id="pUnitE" onchange="apply()"> 單位</label>
                 <input type="text" class="inp-p" id="pUnitB" placeholder="預設單位 (如 pcs)" oninput="apply()">
                 
                 <div id="uLogic" class="logic-panel" style="display:none;">
@@ -533,6 +554,9 @@
             if(!e.target.closest('.ms-container')) {
                 document.querySelectorAll('.ms-dropdown').forEach(d => d.classList.remove('active'));
             }
+            if(!e.target.closest('.manual-arrow') && !e.target.closest('.unit-dropdown')) {
+                document.querySelectorAll('.unit-dropdown').forEach(d => d.classList.remove('active'));
+            }
         });
         function togglePalette(id, event) {
             if(event) event.stopPropagation();
@@ -605,7 +629,7 @@
              const f = {
                 id, type, title, width:'w-100', size:14, color:'#000000', bgColor: 'transparent', bold:false, italic:false, underline:false,
                 req:false, descE:false, desc:'', unitB:'', uEnable:false, uRules: [], 
-                mode:'text', manual:true,
+                mode:'text', manual:false,
                 rows:['第 1 列'], cols:['第 1 欄'], colModes: ['text'],
                 corner:true, cornerTop:'欄名', cornerBot:'列名', showCol:true, showRow:true,
                 opts:['選項 1'], testV:'', link:'', upper:false, defVal:'', 
@@ -692,12 +716,16 @@
                          const footerRow = `<tr><td colspan="${f.cols.length + (f.showRow?1:0) + 1}" class="grid-add-btn grid-add-row no-drag" onclick="addRow('${f.id}')">+</td></tr>`;
                          body = `${autoPrevBadge}<table class="grid-table">${thead}<tbody>${trs}${footerRow}</tbody></table>`;
                     } else if(f.type === 'text') {
-                         let unitHtml = f.uEnable ? `<div class="unit-label" style="background:#f0f0f0; padding:0 8px; display:flex; align-items:center; border-left:1px solid #ccc; font-size:12px; color:#555;">${f.unitB}</div>` : '';
+                         let unitHtml = f.uEnable ? `<div class="unit-label" id="unitDisplay_${f.id}" style="background:#f0f0f0; padding:0 8px; display:flex; align-items:center; border-left:1px solid #ccc; font-size:12px; color:#555;">${f.unitB}</div>` : '';
                          
-                         // v42 style manual arrow
-                         let manualArrow = f.manual ? `<div style="display:flex; align-items:center; justify-content:center; padding:0 6px; background:#f0f0f0; color:#666; cursor:pointer; font-size:10px; border-left:1px solid #ccc;">▼</div>` : '';
+                         // Fix: Arrow for Manual Change with Logic
+                         let manualArrow = '';
+                         if(f.manual) {
+                             manualArrow = `<div class="manual-arrow" onclick="toggleUnitDropdown('${f.id}', event)">▼</div>
+                             <div id="unitDrop_${f.id}" class="unit-dropdown"></div>`;
+                         }
 
-                         body = `${autoPrevBadge}<div style="display:flex; border:1px solid #ccc; border-radius:4px; overflow:hidden;">${renderInput('style-v27-box','請輸入...')}${manualArrow}${unitHtml}</div>`;
+                         body = `${autoPrevBadge}<div style="display:flex; border:1px solid #ccc; border-radius:4px; overflow:hidden; position:relative;">${renderInput('style-v27-box','請輸入...')}${manualArrow}${unitHtml}</div>`;
                     } else if(['choices','dropdown'].includes(f.type)) {
                          if(f.type==='dropdown') body = `${autoPrevBadge}<div class="preview-dropdown" onclick="select('${f.id}')"><select class="no-drag" style="width:100%; border:none; background:transparent;"><option>-- 請選擇 --</option>${(f.opts||[]).map(o=>`<option>${o}</option>`).join('')}</select></div>`;
                          else body = `${autoPrevBadge}<div style="display:flex; flex-direction:column; gap:8px;">${(f.opts||[]).map(o=> {
@@ -728,6 +756,51 @@
                 } catch (err) { return `<div class="card w-100 error" data-id="${f.id}">⚠️ 渲染錯誤</div>`; }
             });
             list.innerHTML = htmlArr.join('');
+        }
+
+        // New Dropdown Logic
+        function toggleUnitDropdown(id, event) {
+            event.stopPropagation();
+            const dd = document.getElementById('unitDrop_' + id);
+            
+            // Close others
+            document.querySelectorAll('.unit-dropdown').forEach(d => {
+                if (d.id !== 'unitDrop_' + id) d.classList.remove('active');
+            });
+
+            if (dd.classList.contains('active')) {
+                dd.classList.remove('active');
+                return;
+            }
+
+            // Populate options
+            const f = fields.find(x => x.id === id);
+            if (!f) return;
+
+            let options = [];
+            if(f.unitB) options.push(f.unitB);
+            if(f.uRules && f.uRules.length > 0) {
+                f.uRules.forEach(r => {
+                    if(r.res && !options.includes(r.res)) options.push(r.res);
+                });
+            }
+
+            if(options.length === 0) {
+                dd.innerHTML = '<div class="unit-option" style="color:#999;">無選項</div>';
+            } else {
+                dd.innerHTML = options.map(opt => 
+                    `<div class="unit-option" onclick="selectUnit('${id}', '${opt}')">${opt}</div>`
+                ).join('');
+            }
+            
+            dd.classList.add('active');
+        }
+
+        function selectUnit(id, val) {
+            const display = document.getElementById('unitDisplay_' + id);
+            if(display) display.textContent = val;
+            // Close dropdown
+            document.getElementById('unitDrop_' + id).classList.remove('active');
         }
 
         function highlightCard(id) {
@@ -1160,7 +1233,12 @@
             <option value="<=" ${r.cond==='<='?'selected':''}>≤</option>
             </select> <input style="width:40px" value="${r.val}" oninput="upR(${i},'val',this.value)"> 帶入 <input style="width:40px" value="${r.res}" oninput="upR(${i},'res',this.value)"> <span style="cursor:pointer" onclick="delR(${i})">🗑</span></div>`).join('');
         }
-        window.upR = (i,k,v) => { fields.find(x=>x.id===activeId).uRules[i][k]=v; apply(); };
+        // Fixed: Do NOT call apply/render on every input, prevents focus loss
+        window.upR = (i,k,v) => { 
+            if(!activeId) return;
+            fields.find(x=>x.id===activeId).uRules[i][k]=v; 
+            // Removed apply() call
+        };
         window.delR = (i) => { fields.find(x=>x.id===activeId).uRules.splice(i, 1); renderRules(); };
 
         function copyF(id) { const f=fields.find(x=>x.id===id);
