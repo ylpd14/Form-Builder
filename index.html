@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>專業表單規格生成器 v62.02 (Logic & Tooltips Restored)</title>
+    <title>專業表單規格生成器 v62.03 (Operators & Manual Arrow Fix)</title>
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&display=swap" rel="stylesheet">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/Sortable/1.15.0/Sortable.min.js"></script>
     <style>
@@ -693,7 +693,8 @@
                          body = `${autoPrevBadge}<table class="grid-table">${thead}<tbody>${trs}${footerRow}</tbody></table>`;
                     } else if(f.type === 'text') {
                          let unitHtml = f.uEnable ? `<div class="unit-label" style="background:#f0f0f0; padding:0 8px; display:flex; align-items:center; border-left:1px solid #ccc; font-size:12px; color:#555;">${f.unitB}</div>` : '';
-                         body = `${autoPrevBadge}<div style="display:flex; border:1px solid #ccc; border-radius:4px; overflow:hidden;">${renderInput('style-v27-box','請輸入...')}${unitHtml}</div>`;
+                         let manualArrow = f.manual ? `<div style="display:flex;align-items:center;justify-content:center;width:20px;background:#f1f3f4;border-left:1px solid #ccc;color:#555;font-size:10px;cursor:pointer;">▼</div>` : '';
+                         body = `${autoPrevBadge}<div style="display:flex; border:1px solid #ccc; border-radius:4px; overflow:hidden;">${renderInput('style-v27-box','請輸入...')}${manualArrow}${unitHtml}</div>`;
                     } else if(['choices','dropdown'].includes(f.type)) {
                          if(f.type==='dropdown') body = `${autoPrevBadge}<div class="preview-dropdown" onclick="select('${f.id}')"><select class="no-drag" style="width:100%; border:none; background:transparent;"><option>-- 請選擇 --</option>${(f.opts||[]).map(o=>`<option>${o}</option>`).join('')}</select></div>`;
                          else body = `${autoPrevBadge}<div style="display:flex; flex-direction:column; gap:8px;">${(f.opts||[]).map(o=> {
@@ -1144,10 +1145,10 @@
         window.upS = (i,k,v) => { fields.find(x=>x.id===activeId).shiftRules[i][k]=v; render(); };
         window.delS = (i) => { fields.find(x=>x.id===activeId).shiftRules.splice(i,1); renderShiftRules(); render(); };
         
-        // Unit Judgment Rules Logic
+        // Unit Judgment Rules Logic - FIXED (Added '>')
         function addURule() { fields.find(x=>x.id===activeId).uRules.push({cond:'', val:'', res:''}); renderRules(); }
         function renderRules() { const f = fields.find(x=>x.id===activeId);
-            document.getElementById('uRules').innerHTML = (f.uRules||[]).map((r,i)=>`<div class="logic-line">當 <select onchange="upR(${i},'cond',this.value)"><option value="" ${r.cond===''?'selected':''}></option><option value="<" ${r.cond==='<'?'selected':''}>&lt;</option><option value="=" ${r.cond==='='?'selected':''}>=</option><option value=">=" ${r.cond==='>='?'selected':''}>≥</option><option value="<=" ${r.cond==='<='?'selected':''}>≤</option></select> <input style="width:40px" value="${r.val}" oninput="upR(${i},'val',this.value)"> 帶入 <input style="width:40px" value="${r.res}" oninput="upR(${i},'res',this.value)"> <span style="cursor:pointer" onclick="delR(${i})">🗑</span></div>`).join('');
+            document.getElementById('uRules').innerHTML = (f.uRules||[]).map((r,i)=>`<div class="logic-line">當 <select onchange="upR(${i},'cond',this.value)"><option value="" ${r.cond===''?'selected':''}></option><option value=">" ${r.cond==='>'?'selected':''}>&gt;</option><option value="<" ${r.cond==='<'?'selected':''}>&lt;</option><option value="=" ${r.cond==='='?'selected':''}>=</option><option value=">=" ${r.cond==='>='?'selected':''}>≥</option><option value="<=" ${r.cond==='<='?'selected':''}>≤</option></select> <input style="width:40px" value="${r.val}" oninput="upR(${i},'val',this.value)"> 帶入 <input style="width:40px" value="${r.res}" oninput="upR(${i},'res',this.value)"> <span style="cursor:pointer" onclick="delR(${i})">🗑</span></div>`).join('');
         }
         window.upR = (i,k,v) => { fields.find(x=>x.id===activeId).uRules[i][k]=v; apply(); };
         window.delR = (i) => { fields.find(x=>x.id===activeId).uRules.splice(i, 1); renderRules(); };
