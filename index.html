@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>專業表單規格生成器 v62.06 (Unit & Focus Fix)</title>
+    <title>專業表單規格生成器 v62.06 (Unit Dropdown Logic Fixed)</title>
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&display=swap" rel="stylesheet">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/Sortable/1.15.0/Sortable.min.js"></script>
     <style>
@@ -97,7 +97,7 @@
         .biu-btn { border: 1px solid #ccc; background: #fff; padding: 6px 12px; border-radius: 4px; cursor: pointer; font-weight: bold; font-size: 12px; }
         .biu-btn.active { background: #333; color: #fff; border-color: #333; }
         
-        /* v42 Yellow Logic Panel Style */
+        /* v42 Yellow Logic Panel Style [RESTORED] */
         .logic-panel { background: #fffde7; border: 1px dashed #fbc02d; padding: 10px; border-radius: 8px; margin-top: 8px; }
         
         .logic-line { display: flex; align-items: center; gap: 4px; margin-bottom: 5px; font-size: 12px; }
@@ -195,26 +195,30 @@
         .ms-btn.confirm { color: var(--p); font-weight: bold; border-left: 1px solid #eee; }
         .ms-btn.clear { color: #666; }
 
-        /* Unit Dropdown */
-        .unit-arrow {
+        /* Unit Dropdown Styles */
+        .unit-label-container {
+            display: flex; align-items: center; background: #f0f0f0; border-left: 1px solid #ccc; position: relative;
+        }
+        .unit-text-display {
+            padding: 0 8px; font-size: 12px; color: #555; white-space: nowrap;
+        }
+        .manual-arrow {
             display: flex; align-items: center; justify-content: center;
-            padding: 0 6px; background: #eee; color: #666;
-            cursor: pointer; font-size: 10px; border-left: 1px solid #ccc;
-            user-select: none; transition: 0.2s;
+            padding: 0 6px; cursor: pointer; font-size: 10px; color: #666;
+            height: 100%; transition: 0.2s;
         }
-        .unit-arrow:hover { background: #e0e0e0; }
+        .manual-arrow:hover { background: #e0e0e0; }
         
-        .unit-menu {
+        .unit-dropdown-menu {
             position: absolute; top: 100%; right: 0; min-width: 80px;
-            background: #fff; border: 1px solid #ccc; box-shadow: 0 2px 5px rgba(0,0,0,0.15);
-            z-index: 100; display: none; border-radius: 4px;
-            margin-top: 1px; flex-direction: column; overflow: hidden;
+            background: #fff; border: 1px solid #ccc; box-shadow: 0 3px 8px rgba(0,0,0,0.15);
+            z-index: 100; display: none; flex-direction: column; border-radius: 4px; overflow: hidden;
         }
-        .unit-menu.active { display: flex; }
-        .unit-opt {
+        .unit-dropdown-menu.active { display: flex; }
+        .unit-option {
             padding: 6px 10px; font-size: 12px; cursor: pointer; color: #333; transition: 0.1s;
         }
-        .unit-opt:hover { background: #f0f7ff; }
+        .unit-option:hover { background: #444; color: #fff; }
     </style>
 </head>
 <body>
@@ -456,7 +460,7 @@
                     <label class="header-right-check"><input type="checkbox" id="pManual" onchange="apply()"> 允許手動變更</label>
                 </div>
                 <label class="p-check-row"><input type="checkbox" id="pUnitE" onchange="apply()"> 單位</label>
-                <input type="text" class="inp-p" id="pUnitB" placeholder="預設單位 (如 pcs)" oninput="apply()">
+                <input type="text" class="inp-p" id="pUnitB" placeholder="預設單位 (如 pcs)" oninput="updateUnitB(this.value)">
                 
                 <div id="uLogic" class="logic-panel" style="display:none;">
                     <div id="uRules"></div>
@@ -554,8 +558,8 @@
             if(!e.target.closest('.ms-container')) {
                 document.querySelectorAll('.ms-dropdown').forEach(d => d.classList.remove('active'));
             }
-            if(!e.target.closest('.unit-arrow') && !e.target.closest('.unit-menu')) {
-                document.querySelectorAll('.unit-menu').forEach(d => d.classList.remove('active'));
+            if(!e.target.closest('.unit-label-container') && !e.target.closest('.unit-dropdown-menu')) {
+                document.querySelectorAll('.unit-dropdown-menu').forEach(d => d.classList.remove('active'));
             }
         });
         function togglePalette(id, event) {
@@ -716,15 +720,20 @@
                          const footerRow = `<tr><td colspan="${f.cols.length + (f.showRow?1:0) + 1}" class="grid-add-btn grid-add-row no-drag" onclick="addRow('${f.id}')">+</td></tr>`;
                          body = `${autoPrevBadge}<table class="grid-table">${thead}<tbody>${trs}${footerRow}</tbody></table>`;
                     } else if(f.type === 'text') {
-                         // UNIT LOGIC v62.06
-                         let unitHtml = f.uEnable ? `<div class="unit-label" id="unitDisplay_${f.id}" style="background:#f0f0f0; padding:0 8px; display:flex; align-items:center; border-left:1px solid #ccc; font-size:12px; color:#555;">${f.unitB}</div>` : '';
-                         
-                         let arrowHtml = '';
-                         if(f.manual && f.uEnable) {
-                             arrowHtml = `<div class="unit-arrow" onclick="toggleUnitMenu('${f.id}', event)">▼</div><div id="unitMenu_${f.id}" class="unit-menu"></div>`;
+                         let unitHtml = '';
+                         if(f.uEnable) {
+                             if(f.manual) {
+                                 unitHtml = `
+                                 <div class="unit-label-container" onclick="toggleUnitDropdown('${f.id}', event)">
+                                     <div class="unit-text-display" id="unitDisplay_${f.id}">${f.unitB}</div>
+                                     <div class="manual-arrow">▼</div>
+                                     <div id="unitDrop_${f.id}" class="unit-dropdown-menu"></div>
+                                 </div>`;
+                             } else {
+                                 unitHtml = `<div class="unit-label-container" style="cursor:default;"><div class="unit-text-display">${f.unitB}</div></div>`;
+                             }
                          }
-
-                         body = `${autoPrevBadge}<div style="display:flex; border:1px solid #ccc; border-radius:4px; overflow:hidden; position:relative;">${renderInput('style-v27-box','請輸入...')}${arrowHtml}${unitHtml}</div>`;
+                         body = `${autoPrevBadge}<div style="display:flex; border:1px solid #ccc; border-radius:4px; overflow:visible;">${renderInput('style-v27-box','請輸入...')}${unitHtml}</div>`;
                     } else if(['choices','dropdown'].includes(f.type)) {
                          if(f.type==='dropdown') body = `${autoPrevBadge}<div class="preview-dropdown" onclick="select('${f.id}')"><select class="no-drag" style="width:100%; border:none; background:transparent;"><option>-- 請選擇 --</option>${(f.opts||[]).map(o=>`<option>${o}</option>`).join('')}</select></div>`;
                          else body = `${autoPrevBadge}<div style="display:flex; flex-direction:column; gap:8px;">${(f.opts||[]).map(o=> {
@@ -757,24 +766,25 @@
             list.innerHTML = htmlArr.join('');
         }
 
-        // New Dropdown Logic for Unit
-        function toggleUnitMenu(id, event) {
+        /* Unit Dropdown Logic */
+        function toggleUnitDropdown(id, event) {
             event.stopPropagation();
-            const menu = document.getElementById(`unitMenu_${id}`);
-            // Close others
-            document.querySelectorAll('.unit-menu').forEach(m => {
-                if(m.id !== `unitMenu_${id}`) m.classList.remove('active');
-            });
+            const dd = document.getElementById('unitDrop_' + id);
             
-            if(menu.classList.contains('active')) {
-                menu.classList.remove('active');
+            // Close others
+            document.querySelectorAll('.unit-dropdown-menu').forEach(d => {
+                if (d.id !== 'unitDrop_' + id) d.classList.remove('active');
+            });
+
+            if (dd.classList.contains('active')) {
+                dd.classList.remove('active');
                 return;
             }
 
-            // Populate options
+            // Populate options from UnitB and Rules
             const f = fields.find(x => x.id === id);
-            if(!f) return;
-            
+            if (!f) return;
+
             let options = [];
             if(f.unitB) options.push(f.unitB);
             if(f.uRules && f.uRules.length > 0) {
@@ -784,18 +794,32 @@
             }
 
             if(options.length === 0) {
-                menu.innerHTML = '<div class="unit-opt" style="color:#999; cursor:default;">無選項</div>';
+                dd.innerHTML = '<div class="unit-option" style="color:#999;">無選項</div>';
             } else {
-                menu.innerHTML = options.map(op => `<div class="unit-opt" onclick="setUnit('${id}', '${op}')">${op}</div>`).join('');
+                dd.innerHTML = options.map(opt => 
+                    `<div class="unit-option" onclick="selectUnit('${id}', '${opt}')">${opt}</div>`
+                ).join('');
             }
-            menu.classList.add('active');
+            
+            dd.classList.add('active');
         }
 
-        function setUnit(id, val) {
-            const label = document.getElementById(`unitDisplay_${id}`);
-            if(label) label.textContent = val;
-            const menu = document.getElementById(`unitMenu_${id}`);
-            if(menu) menu.classList.remove('active');
+        function selectUnit(id, val) {
+            const display = document.getElementById('unitDisplay_' + id);
+            if(display) display.textContent = val;
+            document.getElementById('unitDrop_' + id).classList.remove('active');
+        }
+
+        /* Sidebar Logic for Unit B Update without re-render */
+        function updateUnitB(val) {
+            if(!activeId) return;
+            const f = fields.find(x => x.id === activeId);
+            if(f) {
+                f.unitB = val;
+                // Try to update card DOM directly if exists
+                const display = document.getElementById('unitDisplay_' + activeId);
+                if(display) display.textContent = val;
+            }
         }
 
         function highlightCard(id) {
@@ -842,7 +866,7 @@
             const f = fields.find(x => x.id === id);
             if(!f) return;
             sanitizeField(f);
-            /* Populate inputs, safe check */
+            
             const setVal = (eid, val) => { if(document.getElementById(eid)) document.getElementById(eid).value = val; };
             const setChk = (eid, val) => { if(document.getElementById(eid)) document.getElementById(eid).checked = val; };
 
@@ -1228,11 +1252,12 @@
             <option value="<=" ${r.cond==='<='?'selected':''}>≤</option>
             </select> <input style="width:40px" value="${r.val}" oninput="upR(${i},'val',this.value)"> 帶入 <input style="width:40px" value="${r.res}" oninput="upR(${i},'res',this.value)"> <span style="cursor:pointer" onclick="delR(${i})">🗑</span></div>`).join('');
         }
+        
         // Fixed: Do NOT call apply/render on every input, prevents focus loss
         window.upR = (i,k,v) => { 
             if(!activeId) return;
             fields.find(x=>x.id===activeId).uRules[i][k]=v; 
-            // Removed apply() call
+            // Removed apply() call to prevent re-render and focus loss
         };
         window.delR = (i) => { fields.find(x=>x.id===activeId).uRules.splice(i, 1); renderRules(); };
 
