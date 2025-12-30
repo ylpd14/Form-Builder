@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>專業表單規格生成器 v62.03 (Manual Arrow & Logic Fix)</title>
+    <title>專業表單規格生成器 v62.04 (UI Enhanced)</title>
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&display=swap" rel="stylesheet">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/Sortable/1.15.0/Sortable.min.js"></script>
     <style>
@@ -692,12 +692,23 @@
                          const footerRow = `<tr><td colspan="${f.cols.length + (f.showRow?1:0) + 1}" class="grid-add-btn grid-add-row no-drag" onclick="addRow('${f.id}')">+</td></tr>`;
                          body = `${autoPrevBadge}<table class="grid-table">${thead}<tbody>${trs}${footerRow}</tbody></table>`;
                     } else if(f.type === 'text') {
-                         let unitHtml = f.uEnable ? `<div class="unit-label" style="background:#f0f0f0; padding:0 8px; display:flex; align-items:center; border-left:1px solid #ccc; font-size:12px; color:#555;">${f.unitB}</div>` : '';
+                         // Fix: Integrated Unit & Arrow Logic
+                         let unitHtml = '';
+                         if (f.uEnable) {
+                             const arrowSvg = f.manual ? `<svg width="10" height="6" viewBox="0 0 10 6" fill="none" stroke="#666" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="margin-left:5px;"><path d="M1 1L5 5L9 1"></path></svg>` : '';
+                             // Yellowish if manual, grey if static
+                             const unitBg = f.manual ? '#fff9c4' : '#f0f0f0'; 
+                             const unitBorder = f.manual ? '#fbc02d' : '#ccc';
+                             
+                             unitHtml = `<div class="unit-label" style="background:${unitBg}; padding:0 10px; display:flex; align-items:center; border-left:1px solid ${unitBorder}; font-size:12px; color:#333; cursor:${f.manual?'pointer':'default'}; height:100%; white-space:nowrap;">
+                                ${f.unitB || ''}${arrowSvg}
+                             </div>`;
+                         }
                          
-                         // Fix: Arrow for Manual
-                         let manualArrow = f.manual ? `<div style="display:flex; align-items:center; justify-content:center; padding:0 6px; background:#fff; color:#666; cursor:pointer; font-size:10px;">▼</div>` : '';
-
-                         body = `${autoPrevBadge}<div style="display:flex; border:1px solid #ccc; border-radius:4px; overflow:hidden;">${renderInput('style-v27-box','請輸入...')}${manualArrow}${unitHtml}</div>`;
+                         body = `${autoPrevBadge}<div style="display:flex; align-items:stretch; border:1px solid #ccc; border-radius:4px; overflow:hidden; height:30px; background:#fff;">
+                            <input class="style-v27-box no-drag" style="flex:1; border:none; padding:4px 6px; font-size:12px; outline:none; background:transparent; ${f.upper ? 'text-transform:uppercase;' : ''}" placeholder="請輸入..." oninput="validateInput(this, '${f.id}')" onblur="handleBlur(this, '${f.id}')" onfocus="select('${f.id}')" data-fid="${f.id}" value="${f.defVal || ''}">
+                            ${unitHtml}
+                         </div>`;
                     } else if(['choices','dropdown'].includes(f.type)) {
                          if(f.type==='dropdown') body = `${autoPrevBadge}<div class="preview-dropdown" onclick="select('${f.id}')"><select class="no-drag" style="width:100%; border:none; background:transparent;"><option>-- 請選擇 --</option>${(f.opts||[]).map(o=>`<option>${o}</option>`).join('')}</select></div>`;
                          else body = `${autoPrevBadge}<div style="display:flex; flex-direction:column; gap:8px;">${(f.opts||[]).map(o=> {
@@ -1148,7 +1159,6 @@
         window.upS = (i,k,v) => { fields.find(x=>x.id===activeId).shiftRules[i][k]=v; render(); };
         window.delS = (i) => { fields.find(x=>x.id===activeId).shiftRules.splice(i,1); renderShiftRules(); render(); };
         
-        // Fix: Added Greater Than Operator (>)
         function addURule() { fields.find(x=>x.id===activeId).uRules.push({cond:'', val:'', res:''}); renderRules(); }
         function renderRules() { const f = fields.find(x=>x.id===activeId);
             document.getElementById('uRules').innerHTML = (f.uRules||[]).map((r,i)=>`<div class="logic-line">當 <select onchange="upR(${i},'cond',this.value)">
