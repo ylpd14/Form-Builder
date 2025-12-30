@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>專業表單規格生成器 v64.00 (Safe Apply & Logic Fix)</title>
+    <title>專業表單規格生成器 v63.00 (Size & Unit Button Fix)</title>
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&display=swap" rel="stylesheet">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/Sortable/1.15.0/Sortable.min.js"></script>
     <style>
@@ -245,7 +245,7 @@
 
     <div class="canvas-area">
         <div class="canvas-container">
-            <div class="meta-card" id="formMetaCard" onmousedown="select('form_meta')">
+            <div class="meta-card" id="formMetaCard" onclick="select('form_meta')">
                 <textarea id="mT" class="title-inp no-drag" rows="1" style="font-size:1.8rem; font-weight:bold;" oninput="autoResize(this); syncMeta()" onfocus="select('form_meta')">未命名的表單</textarea>
                 <textarea id="mD" class="title-inp no-drag" rows="1" style="margin-top:10px; font-size:14px; font-weight:normal; display:none;" placeholder="輸入表單說明..." oninput="autoResize(this); syncMeta()" onfocus="select('form_meta')"></textarea>
             </div>
@@ -316,9 +316,9 @@
                 <div class="p-row-flex">
                     <input type="number" class="inp-p" id="pSize" style="width:50px" oninput="apply()">
                     <div id="editorPaletteContainer" style="display:flex; gap:2px;"></div>
-                    <button class="biu-btn" id="bB" onclick="toggleStyle('bold')">B</button>
-                    <button class="biu-btn" id="bI" onclick="toggleStyle('italic')">I</button>
-                    <button class="biu-btn" id="bU" onclick="toggleStyle('underline')">U</button>
+                    <button class="biu-btn" id="bB" onclick="toggleFieldStyle('bold')">B</button>
+                    <button class="biu-btn" id="bI" onclick="toggleFieldStyle('italic')">I</button>
+                    <button class="biu-btn" id="bU" onclick="toggleFieldStyle('underline')">U</button>
                 </div>
             </div>
 
@@ -645,7 +645,7 @@
                 try {
                     sanitizeField(f);
                     const s = `font-size:${f.size}px; color:${f.color}; background-color:${f.bgColor}; font-weight:${f.bold?'bold':'normal'}; font-style:${f.italic?'italic':'normal'}; text-decoration:${f.underline?'underline':'none'};`;
-                    const renderInput = (cls, ph) => `<input class="${cls} no-drag" style="width:100%; border:1px solid #ccc; border-radius:4px; padding:4px 6px; font-size:12px; height:28px; outline:none; background:#fff; ${f.upper ? 'text-transform:uppercase;' : ''}" placeholder="${ph}" oninput="validateInput(this, '${f.id}')" onblur="handleBlur(this, '${f.id}')" onfocus="select('${f.id}')" data-fid="${f.id}" value="${f.defVal || ''}">`;
+                    const renderInput = (cls, ph) => `<input class="${cls} no-drag" style="width:100%; border:1px solid #ccc; border-radius:4px; padding:4px 6px; font-size:12px; height:28px; outline:none; background:#fff; ${f.upper ? 'text-transform:uppercase;' : ''}" placeholder="${ph}" oninput="validateInput(this, '${f.id}')" onblur="handleBlur(this, '${f.id}')" onclick="select('${f.id}')" data-fid="${f.id}" value="${f.defVal || ''}">`;
                     const renderMark = (isRadio, customMarkStyle) => `<div class="fake-icon ${isRadio?'radio':'checkbox'} no-drag" onclick="toggleCheck(this, '${customMarkStyle || f.markStyle}', ${isRadio}); select('${f.id}')"></div>`;
                     
                     let autoPrevBadge = '';
@@ -690,7 +690,7 @@
                          body = `${autoPrevBadge}<table class="grid-table">${thead}<tbody>${trs}${footerRow}</tbody></table>`;
                     } else if(f.type === 'text') {
                          let unitHtml = f.uEnable ? `<div class="unit-label" style="background:#f0f0f0; padding:0 8px; display:flex; align-items:center; border-left:1px solid #ccc; font-size:12px; color:#555;">${f.unitB}</div>` : '';
-                         body = `${autoPrevBadge}<div style="display:flex; border:1px solid #ccc; border-radius:4px; overflow:hidden;" onclick="select('${f.id}')">${renderInput('style-v27-box','請輸入...')}${unitHtml}</div>`;
+                         body = `${autoPrevBadge}<div style="display:flex; border:1px solid #ccc; border-radius:4px; overflow:hidden;">${renderInput('style-v27-box','請輸入...')}${unitHtml}</div>`;
                     } else if(['choices','dropdown'].includes(f.type)) {
                          if(f.type==='dropdown') body = `${autoPrevBadge}<div class="preview-dropdown" onclick="select('${f.id}')"><select class="no-drag" style="width:100%; border:none; background:transparent;"><option>-- 請選擇 --</option>${(f.opts||[]).map(o=>`<option>${o}</option>`).join('')}</select></div>`;
                          else body = `${autoPrevBadge}<div style="display:flex; flex-direction:column; gap:8px;">${(f.opts||[]).map(o=> {
@@ -701,7 +701,7 @@
                     } else if(f.type === 'header') body = `<div style="border-bottom:2px solid #ddd; padding:5px; color:#666;" onclick="select('${f.id}')">(章節標題)</div>`;
 
                     return `
-                        <div class="card ${f.width} ${activeId===f.id?'selected':''}" data-id="${f.id}" onmousedown="select('${f.id}')">
+                        <div class="card ${f.width} ${activeId===f.id?'selected':''}" data-id="${f.id}" onclick="select('${f.id}')">
                             <div style="display:flex; justify-content:space-between; margin-bottom:5px;">
                                 <div style="width:85%; display:flex; align-items:center; gap:4px;">
                                     <textarea class="title-inp no-drag" rows="1" style="${s} flex:1;" oninput="autoResize(this); syncTitle('${f.id}',this.value)" onfocus="select('${f.id}')">${f.title}</textarea>
@@ -768,36 +768,21 @@
             if(!f) return;
             sanitizeField(f);
             
-            // Safe setters
-            const setVal = (eid, val) => { if(document.getElementById(eid)) document.getElementById(eid).value = val; };
-            const setChk = (eid, val) => { if(document.getElementById(eid)) document.getElementById(eid).checked = val; };
-
-            setVal('pSize', f.size || 14);
-            setVal('pWidth', f.width);
-            setVal('pMode', f.mode);
-            setVal('pUnitB', f.unitB);
-            setVal('pLink', f.link);
-            setVal('pDefVal', f.defVal);
-            
-            setChk('pUpperCase', f.upper);
-            setChk('pReq', f.req);
-            setChk('pManual', f.manual);
-            setChk('pDescE', f.descE);
-            setChk('pUnitE', f.uEnable);
-            
-            if(document.getElementById('pMarkStyle')) document.getElementById('pMarkStyle').value = f.markStyle;
+            ['pSize','pWidth','pMode','pUnitB','pLink','pDefVal'].forEach(k => { if(document.getElementById(k)) document.getElementById(k).value = f[k.replace('p','').replace(k.charAt(1),k.charAt(1).toLowerCase())] || (k==='pSize'?14:''); });
             
             document.getElementById('editorPaletteContainer').innerHTML = getPaletteHTML('editorText', 'text', f.color, 'indeditorText') + getPaletteHTML('editorBg', 'bg', f.bgColor, 'indeditorBg');
 
-            ['bB','bI','bU'].forEach(b => document.getElementById(b).classList.remove('active'));
-            if(f.bold) document.getElementById('bB').classList.add('active');
-            if(f.italic) document.getElementById('bI').classList.add('active');
-            if(f.underline) document.getElementById('bU').classList.add('active');
+            document.getElementById('pUpperCase').checked = f.upper;
+            document.getElementById('pMode').value = f.mode;
+            document.getElementById('pReq').checked = f.req;
+            document.getElementById('pManual').checked = f.manual;
+            document.getElementById('pDescE').checked = f.descE;
+            document.getElementById('pUnitE').checked = f.uEnable;
+            if(document.getElementById('pMarkStyle')) document.getElementById('pMarkStyle').value = f.markStyle;
 
             const hideContentConfig = ['datetime', 'shift', 'header', 'batch', 'choices', 'dropdown'].includes(f.type);
             document.getElementById('contentSec').style.display = hideContentConfig ? 'none' : 'block';
             document.getElementById('defValRow').style.display = (f.type === 'header' || f.type === 'batch') ? 'none' : 'block';
-            
             // Unit Logic Button Visibility Fix
             document.getElementById('uLogic').style.display = (f.uEnable && f.type === 'text') ? 'block' : 'none';
 
@@ -819,6 +804,14 @@
                 const colContainer = document.getElementById('gridColSettings');
                 colContainer.innerHTML = f.cols.map((c, i) => `<div class="grid-col-config"><input value="${c}" onchange="syncGridCol('${f.id}',${i},this.value)"><div class="mode-icon-btn" onclick="toggleGridColMode('${f.id}', ${i}, this)" title="切換模式">${getIconForMode(f.colModes[i])}</div><span onclick="delCol('${f.id}',${i})">×</span></div>`).join('');
             }
+            ['bB','bI','bU'].forEach(b => document.getElementById(b).classList.remove('active'));
+            if(f.bold) document.getElementById('bB').classList.add('active');
+            if(f.italic) document.getElementById('bI').classList.add('active');
+            if(f.underline) document.getElementById('bU').classList.add('active');
+            
+            Array.from(list.children).forEach(c => {
+                if(c.dataset.id === id) c.classList.add('selected'); else c.classList.remove('selected');
+            });
         }
         
         function getIconForMode(m) {
@@ -852,19 +845,13 @@
             if(s==='underline') document.getElementById('mU').classList.toggle('active');
         }
 
-        function toggleStyle(s) {
-            if (activeId === 'form_meta') {
-                toggleMetaStyle(s);
-            } else {
-                const f = fields.find(x => x.id === activeId);
-                if(f) {
-                    f[s] = !f[s];
-                    const btnMap = { bold: 'bB', italic: 'bI', underline: 'bU' };
-                    if(document.getElementById(btnMap[s])) {
-                         document.getElementById(btnMap[s]).classList.toggle('active');
-                    }
-                    render();
-                }
+        function toggleFieldStyle(s) {
+            const f = fields.find(x => x.id === activeId);
+            if(f) {
+                f[s] = !f[s];
+                const btnMap = { bold: 'bB', italic: 'bI', underline: 'bU' };
+                document.getElementById(btnMap[s]).classList.toggle('active');
+                render();
             }
         }
 
