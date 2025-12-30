@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>專業表單規格生成器 v61.00 (Safe Apply & Validation)</title>
+    <title>專業表單規格生成器 v62.00 (Styles & Unit Fix)</title>
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&display=swap" rel="stylesheet">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/Sortable/1.15.0/Sortable.min.js"></script>
     <style>
@@ -260,26 +260,26 @@
         
         <div id="formSettings" style="display:none;">
             <div class="p-item">
-                <label>標題與文字樣式</label>
-                <div class="p-row-flex">
-                    <input type="number" class="inp-p" id="mSize" style="width:60px" value="28" oninput="applyGlobal()">
-                    <div id="metaPaletteContainer" style="display:flex; gap:2px;"></div> 
-                    <button class="biu-btn" id="mB" onclick="toggleMetaStyle('bold')">B</button>
-                    <button class="biu-btn" id="mI" onclick="toggleMetaStyle('italic')">I</button>
-                    <button class="biu-btn" id="mU" onclick="toggleMetaStyle('underline')">U</button>
+                <div style="margin-top:5px; border-bottom:1px dashed #eee; padding-bottom:10px; margin-bottom:10px;">
+                    <label style="font-size:12px; color:#666;">標題與文字樣式</label>
+                    <div class="p-row-flex">
+                        <input type="number" class="inp-p" id="mSize" style="width:50px" value="28" oninput="applyGlobal()">
+                        <div id="metaPaletteContainer" style="display:flex; gap:2px;"></div> 
+                        <button class="biu-btn" id="mB" onclick="toggleMetaStyle('bold')">B</button>
+                        <button class="biu-btn" id="mI" onclick="toggleMetaStyle('italic')">I</button>
+                        <button class="biu-btn" id="mU" onclick="toggleMetaStyle('underline')">U</button>
+                    </div>
                 </div>
-            </div>
-            
-            <div class="p-item">
-                <label>寬度與排列</label>
-                <div class="p-row-flex">
+                
+                <div style="margin-top:10px;">
+                    <label>寬度與排列</label>
                     <select class="inp-p" id="mWidth" onchange="applyGlobal()" style="width:100%">
                         <option value="w-100">100% 全寬</option>
                         <option value="w-50">50% 半寬</option>
                         <option value="w-33">33% 1/3寬</option>
                     </select>
                 </div>
-                <label class="p-check-row" style="margin-top:5px;"><input type="checkbox" id="gMetaDescE" onchange="applyGlobal()"> 啟用說明文字</label>
+                <label class="p-check-row" style="margin-top:10px;"><input type="checkbox" id="gMetaDescE" onchange="applyGlobal()"> 啟用說明文字</label>
             </div>
 
             <div class="p-item sec-divider">
@@ -470,10 +470,6 @@
         };
         const list = document.getElementById('fList');
         let tempModalState = { tempColIds: [], calcCols: [], clearTimes: [], clearOnSubmit: false };
-
-        /* --- Safe Apply Helpers --- */
-        const getVal = (id) => document.getElementById(id) ? document.getElementById(id).value : '';
-        const getChk = (id) => document.getElementById(id) ? document.getElementById(id).checked : false;
 
         /* --- Reusable Palette HTML Generator --- */
         const getPaletteHTML = (idPrefix, targetType, currentColor, indicatorId) => `
@@ -721,19 +717,6 @@
                 } catch (err) { return `<div class="card w-100 error" data-id="${f.id}">⚠️ 渲染錯誤</div>`; }
             });
             list.innerHTML = htmlArr.join('');
-
-            const footer = document.getElementById('formFooter');
-            footer.innerHTML = '';
-            if(formConfig.enableTemp) {
-                let ths = [];
-                (formConfig.tempColIds || []).forEach(fid => { const field = fields.find(x => x.id === fid); if(field) ths.push(field.title); });
-                (formConfig.calcCols || []).forEach(c => ths.push(c.title));
-                if(ths.length === 0) ths.push("未選擇顯示欄位");
-                const thHtml = ths.map(c=>`<th>${c}</th>`).join('');
-                footer.innerHTML += `<button class="btn-temp" onclick="validateAndSubmit('temp')">暫存單筆紀錄 (加入列表)</button><div class="temp-table-view"><div class="temp-table-header">暫存列表預覽</div><table class="temp-table-mock"><tr><th>#</th>${thHtml}<th>操作</th></tr><tr><td colspan="${ths.length+2}">目前暫存區無紀錄</td></tr></table></div><button class="btn-submit" onclick="validateAndSubmit('submit')">🚀 最終送出所有紀錄至 Excel (清空暫存)</button>`;
-            } else {
-                footer.innerHTML += `<button class="btn-submit" onclick="validateAndSubmit('submit')">🚀 送出資料</button>`;
-            }
         }
 
         function highlightCard(id) {
@@ -780,25 +763,42 @@
             if(!f) return;
             sanitizeField(f);
             
-            ['pSize','pWidth','pMode','pUnitB','pLink','pDefVal'].forEach(k => { if(document.getElementById(k)) document.getElementById(k).value = f[k.replace('p','').replace(k.charAt(1),k.charAt(1).toLowerCase())] || (k==='pSize'?14:''); });
+            // Populate inputs, safe check
+            const setVal = (eid, val) => { if(document.getElementById(eid)) document.getElementById(eid).value = val; };
+            const setChk = (eid, val) => { if(document.getElementById(eid)) document.getElementById(eid).checked = val; };
+
+            setVal('pSize', f.size || 14);
+            setVal('pWidth', f.width);
+            setVal('pMode', f.mode);
+            setVal('pUnitB', f.unitB);
+            setVal('pLink', f.link);
+            setVal('pDefVal', f.defVal);
+            
+            setChk('pUpperCase', f.upper);
+            setChk('pReq', f.req);
+            setChk('pManual', f.manual);
+            setChk('pDescE', f.descE);
+            setChk('pUnitE', f.uEnable);
+            
+            if(document.getElementById('pMarkStyle')) document.getElementById('pMarkStyle').value = f.markStyle;
             
             document.getElementById('editorPaletteContainer').innerHTML = getPaletteHTML('editorText', 'text', f.color, 'indeditorText') + getPaletteHTML('editorBg', 'bg', f.bgColor, 'indeditorBg');
 
-            document.getElementById('pUpperCase').checked = f.upper;
-            document.getElementById('pMode').value = f.mode;
-            document.getElementById('pReq').checked = f.req;
-            document.getElementById('pManual').checked = f.manual;
-            document.getElementById('pDescE').checked = f.descE;
-            document.getElementById('pUnitE').checked = f.uEnable;
-            if(document.getElementById('pMarkStyle')) document.getElementById('pMarkStyle').value = f.markStyle;
+            ['bB','bI','bU'].forEach(b => document.getElementById(b).classList.remove('active'));
+            if(f.bold) document.getElementById('bB').classList.add('active');
+            if(f.italic) document.getElementById('bI').classList.add('active');
+            if(f.underline) document.getElementById('bU').classList.add('active');
 
             const hideContentConfig = ['datetime', 'shift', 'header', 'batch', 'choices', 'dropdown'].includes(f.type);
             document.getElementById('contentSec').style.display = hideContentConfig ? 'none' : 'block';
             document.getElementById('defValRow').style.display = (f.type === 'header' || f.type === 'batch') ? 'none' : 'block';
+            // Unit Logic Button Visibility
             document.getElementById('uLogic').style.display = (f.uEnable && f.type === 'text') ? 'block' : 'none';
+
             document.getElementById('gridSec').style.display = f.type==='grid'?'block':'none';
             document.getElementById('unitSec').style.display = f.type==='text'?'block':'none'; 
             document.getElementById('autoPrevSec').style.display = 'block';
+            
             renderAutoPrevRules();
             renderValRules(); 
             document.getElementById('shiftSec').style.display = f.type==='shift'?'block':'none';
@@ -813,14 +813,6 @@
                 const colContainer = document.getElementById('gridColSettings');
                 colContainer.innerHTML = f.cols.map((c, i) => `<div class="grid-col-config"><input value="${c}" onchange="syncGridCol('${f.id}',${i},this.value)"><div class="mode-icon-btn" onclick="toggleGridColMode('${f.id}', ${i}, this)" title="切換模式">${getIconForMode(f.colModes[i])}</div><span onclick="delCol('${f.id}',${i})">×</span></div>`).join('');
             }
-            ['bB','bI','bU'].forEach(b => document.getElementById(b).classList.remove('active'));
-            if(f.bold) document.getElementById('bB').classList.add('active');
-            if(f.italic) document.getElementById('bI').classList.add('active');
-            if(f.underline) document.getElementById('bU').classList.add('active');
-            
-            Array.from(list.children).forEach(c => {
-                if(c.dataset.id === id) c.classList.add('selected'); else c.classList.remove('selected');
-            });
         }
         
         function getIconForMode(m) {
@@ -854,14 +846,26 @@
             if(s==='underline') document.getElementById('mU').classList.toggle('active');
         }
 
+        function toggleStyle(s) {
+            const f = fields.find(x => x.id === activeId);
+            if(f) {
+                f[s] = !f[s];
+                const btnMap = { bold: 'bB', italic: 'bI', underline: 'bU' };
+                document.getElementById(btnMap[s]).classList.toggle('active');
+                render();
+            }
+        }
+
         function openTempModal() {
             tempModalState.tempColIds = [...(formConfig.tempColIds || [])];
             tempModalState.calcCols = JSON.parse(JSON.stringify(formConfig.calcCols || []));
             tempModalState.clearTimes = [...(formConfig.clearTimes || [])];
             tempModalState.clearOnSubmit = formConfig.clearOnSubmit || false;
             document.getElementById('mClearOnSubmit').checked = tempModalState.clearOnSubmit;
+            
             renderMultiSelectHTML('msBasicFields', fields.filter(f => f.type !== 'header'), tempModalState.tempColIds, 'basic');
-            renderModalCalcs(); renderModalTimes();
+            renderModalCalcs(); 
+            renderModalTimes();
             document.getElementById('tempConfigModal').style.display = 'flex';
         }
         function closeTempModal() { document.getElementById('tempConfigModal').style.display = 'none'; }
@@ -919,9 +923,7 @@
                     const validFields = fields.filter(f => ['text','batch'].includes(f.type)); 
                     const msId = `msCalc${i}`;
                     targetHtml = `<div id="${msId}" class="ms-container" style="margin-top:4px;"></div>`;
-                    setTimeout(() => {
-                        renderMultiSelectHTML(msId, validFields, c.targets, `calc:${i}`);
-                    }, 0);
+                    setTimeout(() => { renderMultiSelectHTML(msId, validFields, c.targets, `calc:${i}`); }, 0);
                 } else {
                     targetHtml = `<select class="inp-p" style="margin-top:4px;" onchange="updateModalCalc(${i},'targets',[this.value])"><option value="">--選擇章節標題--</option>${fields.filter(x=>x.type==='header').map(h=>`<option value="${h.id}" ${c.targets[0]===h.id?'selected':''}>${h.title}</option>`).join('')}</select>`;
                 }
@@ -1081,6 +1083,10 @@
         function delF(id) { fields=fields.filter(x=>x.id!==id); activeId=null; render(); document.getElementById('editor').style.display='none'; document.getElementById('noSel').style.display='block'; }
         function hExport() { const clean = fields.map(f => { const { testV, ...cF } = f; return cF; }); const d = { title:document.getElementById('mT').value, desc:document.getElementById('mD').value, config: formConfig, fields:clean }; const blob = new Blob([JSON.stringify(d, null, 2)], {type:'application/json'}); const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'questions.json'; a.click(); }
         function hImport(inp) { const r=new FileReader(); r.onload=(e)=>{ const d=JSON.parse(e.target.result); document.getElementById('mT').value=d.title; document.getElementById('mD').value=d.desc; if(d.config) formConfig = d.config; fields=d.fields.map(f=>({...f, valRules: f.valRules || [], autoPrevRules: f.autoPrevRules || [], machineRules: f.machineRules || [], shiftRules: f.shiftRules || [], uRules: f.uRules || [], opts: f.opts || [], colModes: f.colModes || [] })); render(); }; r.readAsText(inp.files[0]); }
+
+        // --- Safe Helpers ---
+        function getVal(id) { return document.getElementById(id) ? document.getElementById(id).value : ''; }
+        function getChk(id) { return document.getElementById(id) ? document.getElementById(id).checked : false; }
     </script>
 </body>
 </html>
