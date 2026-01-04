@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>專業表單規格生成器 v62.09 (Fixes 1-7)</title>
+    <title>專業表單規格生成器 v62.10 (Fixes & Features Added)</title>
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&display=swap" rel="stylesheet">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/Sortable/1.15.0/Sortable.min.js"></script>
     <style>
@@ -87,7 +87,7 @@
         .fake-icon.checked-x { border-color: var(--danger); background-color: #fff5f5; color: var(--danger); font-size: 12px; } .fake-icon.checked-x::after { content: '✕'; }
         .fake-icon.radio.checked-x::after { content: '✕'; }
         
-        .opt-item { display: flex; align-items: center; gap: 8px; margin-top: 5px; } /* Fixed 6: Ensure horizontal alignment */
+        .opt-item { display: flex; align-items: center; gap: 8px; margin-top: 5px; } /* Fixed: Horizontal alignment */
         .preview-dropdown { display: flex; justify-content: space-between; align-items: center; border: 1px solid #ccc; padding: 10px; border-radius: 8px; background: #fff; color: #666; font-size: 14px; cursor: pointer; }
         .p-item { margin-bottom: 15px; }
         .p-item label { display: flex; align-items: center; font-weight: bold; font-size: 13px; margin-bottom: 5px; }
@@ -97,10 +97,10 @@
         .biu-btn { border: 1px solid #ccc; background: #fff; padding: 6px 12px; border-radius: 4px; cursor: pointer; font-weight: bold; font-size: 12px; }
         .biu-btn.active { background: #333; color: #fff; border-color: #333; }
         
-        /* v42 Yellow Logic Panel Style [RESTORED] */
+        /* Logic Panel Style (v42 Restored) */
         .logic-panel { background: #fffde7; border: 1px dashed #fbc02d; padding: 10px; border-radius: 8px; margin-top: 8px; }
         
-        .logic-line { display: flex; align-items: center; gap: 4px; margin-bottom: 5px; font-size: 12px; flex-wrap: wrap; } /* Fixed 7: allow wrap */
+        .logic-line { display: flex; align-items: center; gap: 4px; margin-bottom: 5px; font-size: 12px; flex-wrap: wrap; } /* Fixed: Wrap for long rules */
         .logic-line input, .logic-line select { padding: 3px; border: 1px solid #ccc; border-radius: 3px; }
         .opt-manage-item { display: flex; align-items: center; gap: 5px; margin-bottom: 6px; }
         .opt-manage-item input { flex: 1; padding: 6px; border: 1px solid #eee; border-radius: 4px; font-size: 12px; }
@@ -158,7 +158,7 @@
         .palette-custom-row:hover { background: #f5f5f5; }
         .custom-color-icon { width: 16px; height: 16px; border-radius: 50%; background: linear-gradient(to right, red, yellow, lime, cyan, blue, magenta, red); border: 1px solid #ccc; }
 
-        .val-rule-item { display: flex; align-items: center; gap: 4px; margin-bottom: 5px; background: #fdfdfd; padding: 4px; border-radius: 4px; border: 1px solid #eee; flex-wrap: wrap; height: auto; } /* Fixed 3: wrap for full view */
+        .val-rule-item { display: flex; align-items: center; gap: 4px; margin-bottom: 5px; background: #fdfdfd; padding: 4px; border-radius: 4px; border: 1px solid #eee; flex-wrap: wrap; height: auto; }
         .val-rule-item select, .val-rule-item input { padding: 4px; border: 1px solid #ccc; border-radius: 3px; font-size: 12px; }
         
         .header-split { display: flex; align-items: center; justify-content: space-between; margin-bottom: 5px; }
@@ -195,30 +195,16 @@
         .ms-btn.confirm { color: var(--p); font-weight: bold; border-left: 1px solid #eee; }
         .ms-btn.clear { color: #666; }
 
-        /* Unit Dropdown Styles */
-        .unit-label-container {
-            display: flex; align-items: center; background: #f0f0f0; border-left: 1px solid #ccc; position: relative;
-        }
-        .unit-text-display {
-            padding: 0 8px; font-size: 12px; color: #555; white-space: nowrap;
-        }
-        .manual-arrow {
-            display: flex; align-items: center; justify-content: center;
-            padding: 0 6px; cursor: pointer; font-size: 10px; color: #666;
-            height: 100%; transition: 0.2s; border-left: 1px solid #ddd;
-        }
-        .manual-arrow:hover { background: #e0e0e0; }
-        
-        .unit-dropdown-menu {
-            position: absolute; top: 100%; right: 0; min-width: 80px;
-            background: #fff; border: 1px solid #ccc; box-shadow: 0 3px 8px rgba(0,0,0,0.15);
-            z-index: 100; display: none; flex-direction: column; border-radius: 4px; overflow: hidden;
-        }
-        .unit-dropdown-menu.active { display: flex; }
-        .unit-option {
-            padding: 6px 10px; font-size: 12px; cursor: pointer; color: #333; transition: 0.1s;
-        }
-        .unit-option:hover { background: #444; color: #fff; }
+        /* Unit Dropdown Styling */
+        .input-group-wrapper { display: flex; border: 1px solid #ccc; border-radius: 4px; overflow: visible; background: #fff; position: relative; }
+        .unit-suffix { display: flex; align-items: center; background: #f1f3f4; border-left: 1px solid #ccc; padding: 0 8px; font-size: 12px; color: #333; white-space: nowrap; cursor: default; position: relative; border-radius: 0 4px 4px 0; }
+        .unit-suffix.clickable { cursor: pointer; padding-right: 2px; }
+        .unit-suffix.clickable:hover { background: #e8eaed; }
+        .unit-arrow { display: inline-block; margin-left: 4px; font-size: 10px; color: #555; padding: 0 4px; }
+        .unit-dropdown-list { display: none; position: absolute; top: 100%; right: 0; background: #fff; border: 1px solid #ccc; box-shadow: 0 2px 6px rgba(0,0,0,0.2); border-radius: 4px; z-index: 200; min-width: 80px; flex-direction: column; margin-top: 2px; }
+        .unit-dropdown-list.active { display: flex; }
+        .unit-dropdown-item { padding: 6px 12px; font-size: 12px; color: #333; cursor: pointer; text-align: left; }
+        .unit-dropdown-item:hover { background: #666; color: #fff; }
     </style>
 </head>
 <body>
@@ -408,7 +394,10 @@
             <div id="optSec" class="p-item sec-divider" style="display:none;">
                 <label>選項管理</label>
                 <div id="optList"></div>
-                <span class="add-link" onclick="addSidebarOpt()">+ 新增選項</span>
+                <div style="display:flex; gap:10px;">
+                    <span class="add-link" onclick="addSidebarOpt()">+ 新增選項</span>
+                    <span class="add-link" onclick="bulkAddSidebarOpt()">+ 批量新增</span>
+                </div>
             </div>
 
             <div id="gridSec" class="p-item sec-divider" style="display:none;">
@@ -437,7 +426,8 @@
                          <select id="newRuleType" style="font-size:12px; padding:4px; border:1px solid #e65100; border-radius:4px; background:#fff;">
                              <option value="val">數值範圍</option>
                              <option value="dec">小數位數</option>
-                             <option value="len">字數限制</option> </select>
+                             <option value="len">字數限制</option>
+                         </select>
                          <span class="add-link" style="margin-top:2px;" onclick="addValRule()">+ 新增規則</span>
                     </div>
                 </div>
@@ -680,8 +670,8 @@
                     let body = '';
                     if(f.type === 'batch') body = `<div class="batch-container"><label class="batch-label"><div class="fake-icon checkbox no-drag" onclick="toggleCheck(this, 'mark-check'); select('${f.id}')"></div> FA</label>${renderInput('batch-input-flex', '主批號(3)')}<span>-</span>${renderInput('batch-input-flex', '子批號(2)')}</div>`;
                     else if(f.type === 'machine') {
-                        if(f.machineStyle === 'dropdown') body = `${autoPrevBadge}<div class="preview-dropdown" onclick="select('${f.id}')"><select class="no-drag" style="width:100%; border:none; background:transparent;"><option>-- 請選擇機台 --</option>${(f.opts||[]).map(o=>`<option>${o}</option>`).join('')}</select></div>`;
-                        else body = `${autoPrevBadge}<div style="display:flex; gap:10px; flex-wrap:wrap;">${(f.opts||[]).map(o=>`<label style="display:flex;align-items:center;gap:4px;font-size:13px;" onclick="select('${f.id}')">${renderMark(f.machineStyle==='radio')} ${o}</label>`).join('')}</div>`;
+                        if(f.machineStyle === 'dropdown') body = `${autoPrevBadge}<div class="preview-dropdown" onclick="select('${f.id}')"><select class="no-drag" style="width:100%; border:none; background:transparent;" onchange="simulateMachineChange('${f.id}', this.value)"><option>-- 請選擇機台 --</option>${(f.opts||[]).map(o=>`<option value="${o}">${o}</option>`).join('')}</select></div>`;
+                        else body = `${autoPrevBadge}<div style="display:flex; gap:10px; flex-wrap:wrap;">${(f.opts||[]).map(o=>`<label style="display:flex;align-items:center;gap:4px;font-size:13px;" onclick="select('${f.id}'); simulateMachineChange('${f.id}', '${o}')">${renderMark(f.machineStyle==='radio')} ${o}</label>`).join('')}</div>`;
                         if((f.machineRules||[]).length > 0) {
                             const ruleText = f.machineRules.map(r=> `<span style="font-size:10px; background:#eee; padding:1px 3px;">${r.val}→${r.target}</span>`).join(' ');
                             body = `<div style="font-size:11px; color:#888; margin-bottom:4px;">連動 ${ruleText}</div>` + body;
@@ -727,10 +717,8 @@
                          }
                          body = `${autoPrevBadge}<div style="display:flex; border:1px solid #ccc; border-radius:4px; overflow:visible; position:relative;">${renderInput('style-v27-box','請輸入...')}${unitHtml}</div>`;
                     } else if(['choices','dropdown'].includes(f.type)) {
-                         // Fix 6: Choices Text Mode & Mixed Style
-                         if(f.type === 'dropdown') {
-                             body = `${autoPrevBadge}<div class="preview-dropdown" onclick="select('${f.id}')"><select class="no-drag" style="width:100%; border:none; background:transparent;"><option>-- 請選擇 --</option>${(f.opts||[]).map(o=>`<option>${o}</option>`).join('')}</select></div>`;
-                         } else {
+                         if(f.type==='dropdown') body = `${autoPrevBadge}<div class="preview-dropdown" onclick="select('${f.id}')"><select class="no-drag" style="width:100%; border:none; background:transparent;"><option>-- 請選擇 --</option>${(f.opts||[]).map(o=>`<option>${o}</option>`).join('')}</select></div>`;
+                         else {
                              if(f.mode === 'text') {
                                  body = `${autoPrevBadge}<div style="display:flex; border:1px solid #ccc; border-radius:4px; overflow:hidden;">${renderInput('style-v27-box','請輸入文字...')}</div>`;
                              } else {
@@ -742,7 +730,6 @@
                              }
                          }
                     } else if(f.type === 'header') {
-                        // Fix 1: Remove body content for header
                         body = ``; 
                     }
                     return `
@@ -767,6 +754,32 @@
                 } catch (err) { return `<div class="card w-100 error" data-id="${f.id}">⚠️ 渲染錯誤</div>`; }
             });
             list.innerHTML = htmlArr.join('');
+        }
+
+        /* --- Machine Logic Simulation --- */
+        function simulateMachineChange(id, val) {
+            const f = fields.find(x => x.id === id);
+            if (!f || !f.machineRules) return;
+            const rule = f.machineRules.find(r => r.val.split(',').includes(val));
+            if (rule) {
+                // Find target fields by title or ID
+                const targetIds = rule.target.split(',');
+                targetIds.forEach(tid => {
+                    const tf = fields.find(x => x.title === tid || x.id === tid);
+                    if (tf) {
+                        const newOpts = rule.targetOpts.split(',').map(s=>s.trim());
+                        if(tf.type === 'grid') { 
+                            tf.cols = newOpts; 
+                            // Resize colModes if needed
+                            while(tf.colModes.length < tf.cols.length) tf.colModes.push('text');
+                            if(tf.colModes.length > tf.cols.length) tf.colModes = tf.colModes.slice(0, tf.cols.length);
+                        } else { 
+                            tf.opts = newOpts; 
+                        }
+                    }
+                });
+                render(); 
+            }
         }
 
         /* --- New: Real-time Validation for Unit Logic --- */
@@ -845,12 +858,9 @@
         function selectUnit(id, val) {
             const display = document.getElementById('unitDisplay_' + id);
             if(display) display.textContent = val;
-            // Close dropdown
-            const dd = document.getElementById('unitDrop_' + id);
-            if(dd) dd.classList.remove('active');
+            document.getElementById('unitDrop_' + id).classList.remove('active');
         }
 
-        /* Sidebar Logic for Unit B Update without re-render */
         function updateUnitB(val) {
             if(!activeId) return;
             const f = fields.find(x => x.id === activeId);
@@ -884,7 +894,7 @@
                 
                 const mS = formConfig.metaStyle || { size: 28, color: '#000000', bgColor: 'transparent', bold: true };
                 document.getElementById('mSize').value = mS.size;
-                document.getElementById('mWidth').value = mS.width || 'w-100';
+                // Removed mWidth element setting as requested
                 document.getElementById('metaPaletteContainer').innerHTML = getPaletteHTML('metaText', 'text', mS.color, 'indmetaText') + getPaletteHTML('metaBg', 'bg', mS.bgColor, 'indmetaBg');
 
                 ['mB','mI','mU'].forEach(b => document.getElementById(b).classList.remove('active'));
@@ -981,7 +991,7 @@
             formConfig.metaDescE = document.getElementById('gMetaDescE').checked;
             if(!formConfig.metaStyle) formConfig.metaStyle = {};
             formConfig.metaStyle.size = document.getElementById('mSize').value;
-            formConfig.metaStyle.width = document.getElementById('mWidth').value;
+            // Removed mWidth
             document.getElementById('tempConfigBtn').style.display = formConfig.enableTemp ? 'block' : 'none';
             render();
         }
@@ -1171,7 +1181,6 @@
                 if(type === 'dec') {
                     f.valRules.push({target: 'dec', val1: '2', op1: 'round'});
                 } else if(type === 'len') {
-                    // Fix 3: Handle Length Rule Logic
                     f.valRules.push({target: 'len', op1: '', val1: '0', op2: '', val2: '50'});
                 } else {
                     f.valRules.push({target: 'val', op1: '', val1: '0', op2: '', val2: '100'});
@@ -1187,7 +1196,6 @@
             const f = fields.find(x=>x.id===activeId);
             if(f) {
                 document.getElementById('valRulesList').innerHTML = (f.valRules||[]).map((r,i) => {
-                    // Fix 3: Render logic for length rule
                     if(r.target === 'dec') {
                         return `
                         <div class="val-rule-item">
@@ -1201,7 +1209,6 @@
                             <span style="cursor:pointer; color:#999;" onclick="delValRule(${i})">×</span>
                         </div>`;
                     }
-                    // Generic rendering for Val or Len
                     const label = r.target === 'len' ? '字數' : '數值';
                     return `
                     <div class="val-rule-item">
@@ -1281,7 +1288,6 @@
         /* --- Other Helpers --- */
         function addShiftRule() { fields.find(x=>x.id===activeId).shiftRules.push({start:'08:00', end:'12:00', val:'早班'}); renderShiftRules(); render(); }
         function renderShiftRules() { const f = fields.find(x=>x.id===activeId);
-            // Fix 7: Logic line style update for wrapping
             document.getElementById('sRules').innerHTML = (f.shiftRules||[]).map((r,i) => `<div class="logic-line" style="flex-wrap:wrap;"><input type="time" style="width:55px" value="${r.start}" oninput="upS(${i},'start',this.value)"> ~ <input type="time" style="width:55px" value="${r.end}" oninput="upS(${i},'end',this.value)"> <input style="width:40px" placeholder="班別" value="${r.val}" oninput="upS(${i},'val',this.value)"> <span style="cursor:pointer; margin-left:4px;" onclick="delS(${i})">🗑</span></div>`).join('');
         }
         window.upS = (i,k,v) => { fields.find(x=>x.id===activeId).shiftRules[i][k]=v; render(); };
@@ -1334,14 +1340,26 @@
         function delCol(id, i) { const f=fields.find(x=>x.id===id); if(f.cols.length>1){f.cols.splice(i,1); f.colModes.splice(i,1); render(); select(id);} }
         function addRow(id) { const f=fields.find(x=>x.id===id); f.rows.push(`第 ${f.rows.length+1} 列`); render(); select(id); }
         function delRow(id, i) { const f=fields.find(x=>x.id===id); if(f.rows.length>1){f.rows.splice(i,1); render(); select(id);} }
+        
         function addSidebarOpt() { 
-            // Fix 5: Use activeId properly instead of 'id' which was undefined
-            const f=fields.find(x=>x.id===activeId); 
+            const f=fields.find(x=>x.id===activeId); // Fixed logic
             if(f) { 
                 f.opts.push(`選項 ${f.opts.length+1}`); 
                 renderSidebarOpts(); 
                 render(); 
             } 
+        }
+        function bulkAddSidebarOpt() {
+            const f = fields.find(x=>x.id===activeId);
+            if(f) {
+                const text = prompt("請輸入選項 (每行一個):");
+                if(text) {
+                    const lines = text.split('\n').map(l => l.trim()).filter(l => l);
+                    f.opts = [...f.opts, ...lines];
+                    renderSidebarOpts();
+                    render();
+                }
+            }
         }
         function renderSidebarOpts() {
             if(!activeId) return; const f = fields.find(x=>x.id===activeId);
