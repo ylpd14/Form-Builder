@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>專業表單規格生成器 v62.10 (Fixes & Features Added)</title>
+    <title>專業表單規格生成器 v62.11 (Ultimate Merged Version)</title>
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&display=swap" rel="stylesheet">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/Sortable/1.15.0/Sortable.min.js"></script>
     <style>
@@ -87,7 +87,7 @@
         .fake-icon.checked-x { border-color: var(--danger); background-color: #fff5f5; color: var(--danger); font-size: 12px; } .fake-icon.checked-x::after { content: '✕'; }
         .fake-icon.radio.checked-x::after { content: '✕'; }
         
-        .opt-item { display: flex; align-items: center; gap: 8px; margin-top: 5px; } /* Fixed: Horizontal alignment */
+        .opt-item { display: flex; align-items: center; gap: 8px; margin-top: 5px; } /* Fixed Alignment */
         .preview-dropdown { display: flex; justify-content: space-between; align-items: center; border: 1px solid #ccc; padding: 10px; border-radius: 8px; background: #fff; color: #666; font-size: 14px; cursor: pointer; }
         .p-item { margin-bottom: 15px; }
         .p-item label { display: flex; align-items: center; font-weight: bold; font-size: 13px; margin-bottom: 5px; }
@@ -97,10 +97,10 @@
         .biu-btn { border: 1px solid #ccc; background: #fff; padding: 6px 12px; border-radius: 4px; cursor: pointer; font-weight: bold; font-size: 12px; }
         .biu-btn.active { background: #333; color: #fff; border-color: #333; }
         
-        /* Logic Panel Style (v42 Restored) */
+        /* Logic Panel (v42 Restored) */
         .logic-panel { background: #fffde7; border: 1px dashed #fbc02d; padding: 10px; border-radius: 8px; margin-top: 8px; }
         
-        .logic-line { display: flex; align-items: center; gap: 4px; margin-bottom: 5px; font-size: 12px; flex-wrap: wrap; } /* Fixed: Wrap for long rules */
+        .logic-line { display: flex; align-items: center; gap: 4px; margin-bottom: 5px; font-size: 12px; flex-wrap: wrap; } /* Wrap enabled */
         .logic-line input, .logic-line select { padding: 3px; border: 1px solid #ccc; border-radius: 3px; }
         .opt-manage-item { display: flex; align-items: center; gap: 5px; margin-bottom: 6px; }
         .opt-manage-item input { flex: 1; padding: 6px; border: 1px solid #eee; border-radius: 4px; font-size: 12px; }
@@ -158,7 +158,7 @@
         .palette-custom-row:hover { background: #f5f5f5; }
         .custom-color-icon { width: 16px; height: 16px; border-radius: 50%; background: linear-gradient(to right, red, yellow, lime, cyan, blue, magenta, red); border: 1px solid #ccc; }
 
-        .val-rule-item { display: flex; align-items: center; gap: 4px; margin-bottom: 5px; background: #fdfdfd; padding: 4px; border-radius: 4px; border: 1px solid #eee; flex-wrap: wrap; height: auto; }
+        .val-rule-item { display: flex; align-items: center; gap: 4px; margin-bottom: 5px; background: #fdfdfd; padding: 4px; border-radius: 4px; border: 1px solid #eee; flex-wrap: wrap; height: auto; } /* Wrapping fix */
         .val-rule-item select, .val-rule-item input { padding: 4px; border: 1px solid #ccc; border-radius: 3px; font-size: 12px; }
         
         .header-split { display: flex; align-items: center; justify-content: space-between; margin-bottom: 5px; }
@@ -195,16 +195,15 @@
         .ms-btn.confirm { color: var(--p); font-weight: bold; border-left: 1px solid #eee; }
         .ms-btn.clear { color: #666; }
 
-        /* Unit Dropdown Styling */
-        .input-group-wrapper { display: flex; border: 1px solid #ccc; border-radius: 4px; overflow: visible; background: #fff; position: relative; }
-        .unit-suffix { display: flex; align-items: center; background: #f1f3f4; border-left: 1px solid #ccc; padding: 0 8px; font-size: 12px; color: #333; white-space: nowrap; cursor: default; position: relative; border-radius: 0 4px 4px 0; }
-        .unit-suffix.clickable { cursor: pointer; padding-right: 2px; }
-        .unit-suffix.clickable:hover { background: #e8eaed; }
-        .unit-arrow { display: inline-block; margin-left: 4px; font-size: 10px; color: #555; padding: 0 4px; }
-        .unit-dropdown-list { display: none; position: absolute; top: 100%; right: 0; background: #fff; border: 1px solid #ccc; box-shadow: 0 2px 6px rgba(0,0,0,0.2); border-radius: 4px; z-index: 200; min-width: 80px; flex-direction: column; margin-top: 2px; }
-        .unit-dropdown-list.active { display: flex; }
-        .unit-dropdown-item { padding: 6px 12px; font-size: 12px; color: #333; cursor: pointer; text-align: left; }
-        .unit-dropdown-item:hover { background: #666; color: #fff; }
+        /* Unit Dropdown Styles */
+        .unit-label-container { display: flex; align-items: center; background: #f0f0f0; border-left: 1px solid #ccc; position: relative; }
+        .unit-text-display { padding: 0 8px; font-size: 12px; color: #555; white-space: nowrap; }
+        .manual-arrow { display: flex; align-items: center; justify-content: center; padding: 0 6px; cursor: pointer; font-size: 10px; color: #666; height: 100%; transition: 0.2s; border-left: 1px solid #ddd; }
+        .manual-arrow:hover { background: #e0e0e0; }
+        .unit-dropdown-menu { position: absolute; top: 100%; right: 0; min-width: 80px; background: #fff; border: 1px solid #ccc; box-shadow: 0 3px 8px rgba(0,0,0,0.15); z-index: 100; display: none; flex-direction: column; border-radius: 4px; overflow: hidden; }
+        .unit-dropdown-menu.active { display: flex; }
+        .unit-option { padding: 6px 10px; font-size: 12px; cursor: pointer; color: #333; transition: 0.1s; }
+        .unit-option:hover { background: #444; color: #fff; }
     </style>
 </head>
 <body>
@@ -286,7 +285,6 @@
                         <button class="biu-btn" id="mU" onclick="toggleMetaStyle('underline')">U</button>
                     </div>
                 </div>
-                
                 <label class="p-check-row" style="margin-top:10px;"><input type="checkbox" id="gMetaDescE" onchange="applyGlobal()"> 啟用說明文字</label>
             </div>
 
@@ -824,7 +822,7 @@
             event.stopPropagation();
             const dd = document.getElementById('unitDrop_' + id);
             
-            document.querySelectorAll('.unit-dropdown-list').forEach(d => {
+            document.querySelectorAll('.unit-dropdown-menu').forEach(d => {
                 if (d.id !== 'unitDrop_' + id) d.classList.remove('active');
             });
 
@@ -1293,7 +1291,6 @@
         window.upS = (i,k,v) => { fields.find(x=>x.id===activeId).shiftRules[i][k]=v; render(); };
         window.delS = (i) => { fields.find(x=>x.id===activeId).shiftRules.splice(i,1); renderShiftRules(); render(); };
         
-        // Fix: Added Greater Than Operator (>)
         function addURule() { fields.find(x=>x.id===activeId).uRules.push({cond:'', val:'', res:''}); renderRules(); }
         function renderRules() { const f = fields.find(x=>x.id===activeId);
             document.getElementById('uRules').innerHTML = (f.uRules||[]).map((r,i)=>`<div class="logic-line">當 <select onchange="upR(${i},'cond',this.value)">
@@ -1306,11 +1303,9 @@
             </select> <input style="width:40px" value="${r.val}" oninput="upR(${i},'val',this.value)"> 帶入 <input style="width:40px" value="${r.res}" oninput="upR(${i},'res',this.value)"> <span style="cursor:pointer" onclick="delR(${i})">🗑</span></div>`).join('');
         }
         
-        // Fixed: Do NOT call apply/render on every input, prevents focus loss
         window.upR = (i,k,v) => { 
             if(!activeId) return;
             fields.find(x=>x.id===activeId).uRules[i][k]=v; 
-            // Removed apply() call to prevent re-render and focus loss
         };
         window.delR = (i) => { fields.find(x=>x.id===activeId).uRules.splice(i, 1); renderRules(); };
 
