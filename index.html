@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>專業表單規格生成器 v62.12 (Logic & Style Fix)</title>
+    <title>專業表單規格生成器 v62.13 (Logic & Validation Fix)</title>
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&display=swap" rel="stylesheet">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/Sortable/1.15.0/Sortable.min.js"></script>
     <style>
@@ -87,7 +87,7 @@
         .fake-icon.checked-x { border-color: var(--danger); background-color: #fff5f5; color: var(--danger); font-size: 12px; } .fake-icon.checked-x::after { content: '✕'; }
         .fake-icon.radio.checked-x::after { content: '✕'; }
         
-        .opt-item { display: flex; align-items: center; gap: 8px; margin-top: 5px; } /* Fixed Alignment: Center */
+        .opt-item { display: flex; align-items: center; gap: 8px; margin-top: 5px; } /* Fixed: Center alignment */
         .preview-dropdown { display: flex; justify-content: space-between; align-items: center; border: 1px solid #ccc; padding: 10px; border-radius: 8px; background: #fff; color: #666; font-size: 14px; cursor: pointer; }
         .p-item { margin-bottom: 15px; }
         .p-item label { display: flex; align-items: center; font-weight: bold; font-size: 13px; margin-bottom: 5px; }
@@ -99,7 +99,7 @@
         
         /* Logic Panel (Updated Wrapping) */
         .logic-panel { background: #fffde7; border: 1px dashed #fbc02d; padding: 10px; border-radius: 8px; margin-top: 8px; }
-        .logic-line { display: flex; align-items: center; gap: 4px; margin-bottom: 5px; font-size: 12px; flex-wrap: wrap; } /* Added wrap */
+        .logic-line { display: flex; align-items: center; gap: 4px; margin-bottom: 5px; font-size: 12px; flex-wrap: wrap; } /* Added wrap for visibility */
         .logic-line input, .logic-line select { padding: 3px; border: 1px solid #ccc; border-radius: 3px; }
         .opt-manage-item { display: flex; align-items: center; gap: 5px; margin-bottom: 6px; }
         .opt-manage-item input { flex: 1; padding: 6px; border: 1px solid #eee; border-radius: 4px; font-size: 12px; }
@@ -357,7 +357,7 @@
                 <select class="inp-p" id="pMode" onchange="apply()">
                     <option value="radio">單選模式</option>
                     <option value="checkbox">多選模式</option>
-                    <option value="text">文字框</option>
+                    <option value="text">文字框模式</option>
                     <option value="mixed-radio">混合單選 (圓鈕+文字)</option>
                     <option value="mixed-checkbox">混合多選 (方框+文字)</option>
                 </select>
@@ -422,9 +422,9 @@
                     <div id="valRulesList"></div>
                     <div style="display:flex; gap:5px; margin-top:5px;">
                          <select id="newRuleType" style="font-size:12px; padding:4px; border:1px solid #e65100; border-radius:4px; background:#fff;">
+                             <option value="len">字數限制</option>
                              <option value="val">數值範圍</option>
                              <option value="dec">小數位數</option>
-                             <option value="len">字數限制</option>
                          </select>
                          <span class="add-link" style="margin-top:2px;" onclick="addValRule()">+ 新增規則</span>
                     </div>
@@ -712,7 +712,10 @@
                          if(f.type==='dropdown') body = `${autoPrevBadge}<div class="preview-dropdown" onclick="select('${f.id}')"><select class="no-drag" style="width:100%; border:none; background:transparent;"><option>-- 請選擇 --</option>${(f.opts||[]).map(o=>`<option>${o}</option>`).join('')}</select></div>`;
                          else {
                              if(f.mode === 'text') {
-                                 body = `${autoPrevBadge}<div style="display:flex; border:1px solid #ccc; border-radius:4px; overflow:hidden;">${renderInput('style-v27-box','請輸入文字...')}</div>`;
+                                 // Fix: Text mode now renders a list of inputs (Label + Input) instead of one big input
+                                 body = `${autoPrevBadge}<div style="display:flex; flex-direction:column; gap:8px;">${(f.opts||[]).map(o=> {
+                                        return `<div class="opt-item" onclick="select('${f.id}')"><span>${o}</span> ${renderInput('style-v27-box','')}</div>`;
+                                 }).join('')}</div>`;
                              } else {
                                  body = `${autoPrevBadge}<div style="display:flex; flex-direction:column; gap:8px;">${(f.opts||[]).map(o=> {
                                         const mark = renderMark(f.mode==='radio' || f.mode==='mixed-radio');
@@ -756,7 +759,9 @@
                 const targetIds = rule.target.split(',');
                 targetIds.forEach(tid => {
                     // Try to match by Title first, then ID (as fallback)
-                    const tf = fields.find(x => x.title === tid.trim() || x.id === tid.trim());
+                    let tf = fields.find(x => x.title === tid.trim());
+                    if(!tf) tf = fields.find(x => x.id === tid.trim());
+                    
                     if (tf) {
                         const newOpts = rule.targetOpts.split(',').map(s=>s.trim()).filter(s=>s);
                         if(tf.type === 'grid') { 
@@ -769,7 +774,7 @@
                     }
                 });
                 render(); 
-                // Restore selection after render
+                // Restore selection after render (Simulating persistence for preview)
                 setTimeout(() => select(id), 50);
             }
         }
@@ -1179,9 +1184,13 @@
                     if(r.target === 'dec') {
                         return `
                         <div class="val-rule-item">
-                            <span style="font-size:12px; margin-right:4px;">小數位</span>
-                            <input type="number" style="flex:1; min-width:50px;" value="${r.val1}" placeholder="位數" oninput="upValRule(${i},'val1',this.value)">
-                            <select style="flex:1; min-width:80px;" onchange="upValRule(${i},'op1',this.value)">
+                            <select style="width:65px" onchange="upValRule(${i},'target',this.value)">
+                                <option value="len" ${r.target==='len'?'selected':''}>字數</option>
+                                <option value="val" ${r.target==='val'?'selected':''}>數值</option>
+                                <option value="dec" ${r.target==='dec'?'selected':''}>小數</option>
+                            </select>
+                            <input type="number" style="flex:1; min-width:40px;" value="${r.val1}" placeholder="位數" oninput="upValRule(${i},'val1',this.value)">
+                            <select style="flex:1; min-width:70px;" onchange="upValRule(${i},'op1',this.value)">
                                 <option value="round" ${r.op1==='round'?'selected':''}>四捨五入</option>
                                 <option value="ceil" ${r.op1==='ceil'?'selected':''}>無條件進位</option>
                                 <option value="floor" ${r.op1==='floor'?'selected':''}>無條件捨去</option>
@@ -1189,15 +1198,15 @@
                             <span style="cursor:pointer; color:#999;" onclick="delValRule(${i})">×</span>
                         </div>`;
                     }
-                    const label = r.target === 'len' ? '字數' : '數值';
+                    const isLen = r.target === 'len';
                     return `
                     <div class="val-rule-item">
-                        <select style="width:55px" onchange="upValRule(${i},'target',this.value)">
+                        <select style="width:65px" onchange="upValRule(${i},'target',this.value)">
+                            <option value="len" ${r.target==='len'?'selected':''}>字數</option>
                             <option value="val" ${r.target==='val'?'selected':''}>數值</option>
                             <option value="dec" ${r.target==='dec'?'selected':''}>小數</option>
-                            <option value="len" ${r.target==='len'?'selected':''}>字數</option>
                         </select>
-                        <input type="number" style="width:40px" value="${r.val1}" placeholder="A" oninput="upValRule(${i},'val1',this.value)">
+                        <input type="number" style="width:40px" value="${r.val1}" placeholder="${isLen?'Min':'A'}" oninput="upValRule(${i},'val1',this.value)">
                         <select style="width:40px" onchange="upValRule(${i},'op1',this.value)">
                             <option value="" ${r.op1===''?'selected':''}>&gt;</option><option value="<" ${r.op1==='<'?'selected':''}>&lt;</option><option value="=" ${r.op1==='='?'selected':''}>=</option><option value=">=" ${r.op1==='>='?'selected':''}>≥</option><option value="<=" ${r.op1==='<='?'selected':''}>≤</option>
                         </select>
@@ -1205,7 +1214,7 @@
                         <select style="width:40px" onchange="upValRule(${i},'op2',this.value)">
                             <option value="" ${r.op2===''?'selected':''}>&gt;</option><option value="<" ${r.op2==='<'?'selected':''}>&lt;</option><option value="=" ${r.op2==='='?'selected':''}>=</option><option value=">=" ${r.op2==='>='?'selected':''}>≥</option><option value="<=" ${r.op2==='<='?'selected':''}>≤</option>
                         </select>
-                        <input type="number" style="width:40px" value="${r.val2}" placeholder="B" oninput="upValRule(${i},'val2',this.value)">
+                        <input type="number" style="width:40px" value="${r.val2}" placeholder="${isLen?'Max':'B'}" oninput="upValRule(${i},'val2',this.value)">
                         <span style="cursor:pointer; color:#999;" onclick="delValRule(${i})">×</span>
                     </div>
                 `;}).join('');
@@ -1237,9 +1246,9 @@
                     if(r.target) {
                         const targetTitles = r.target.split(',');
                         targetTitles.forEach(tTitle => {
-                            // Try to match Title first, but if title contains IDs or no title match, check ID
-                            let found = fields.find(ff => ff.title === tTitle.trim());
-                            if(!found) found = fields.find(ff => ff.id === tTitle.trim());
+                            // Match by ID first, then Title
+                            let found = fields.find(ff => ff.id === tTitle.trim());
+                            if(!found) found = fields.find(ff => ff.title === tTitle.trim());
                             if(found) selectedTargets.push(found.id);
                         });
                     }
