@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>專業表單規格生成器 v62.11 (Ultimate Merged Version)</title>
+    <title>專業表單規格生成器 v62.12 (Logic & Style Fix)</title>
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&display=swap" rel="stylesheet">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/Sortable/1.15.0/Sortable.min.js"></script>
     <style>
@@ -87,7 +87,7 @@
         .fake-icon.checked-x { border-color: var(--danger); background-color: #fff5f5; color: var(--danger); font-size: 12px; } .fake-icon.checked-x::after { content: '✕'; }
         .fake-icon.radio.checked-x::after { content: '✕'; }
         
-        .opt-item { display: flex; align-items: center; gap: 8px; margin-top: 5px; } /* Fixed Alignment */
+        .opt-item { display: flex; align-items: center; gap: 8px; margin-top: 5px; } /* Fixed Alignment: Center */
         .preview-dropdown { display: flex; justify-content: space-between; align-items: center; border: 1px solid #ccc; padding: 10px; border-radius: 8px; background: #fff; color: #666; font-size: 14px; cursor: pointer; }
         .p-item { margin-bottom: 15px; }
         .p-item label { display: flex; align-items: center; font-weight: bold; font-size: 13px; margin-bottom: 5px; }
@@ -97,10 +97,9 @@
         .biu-btn { border: 1px solid #ccc; background: #fff; padding: 6px 12px; border-radius: 4px; cursor: pointer; font-weight: bold; font-size: 12px; }
         .biu-btn.active { background: #333; color: #fff; border-color: #333; }
         
-        /* Logic Panel (v42 Restored) */
+        /* Logic Panel (Updated Wrapping) */
         .logic-panel { background: #fffde7; border: 1px dashed #fbc02d; padding: 10px; border-radius: 8px; margin-top: 8px; }
-        
-        .logic-line { display: flex; align-items: center; gap: 4px; margin-bottom: 5px; font-size: 12px; flex-wrap: wrap; } /* Wrap enabled */
+        .logic-line { display: flex; align-items: center; gap: 4px; margin-bottom: 5px; font-size: 12px; flex-wrap: wrap; } /* Added wrap */
         .logic-line input, .logic-line select { padding: 3px; border: 1px solid #ccc; border-radius: 3px; }
         .opt-manage-item { display: flex; align-items: center; gap: 5px; margin-bottom: 6px; }
         .opt-manage-item input { flex: 1; padding: 6px; border: 1px solid #eee; border-radius: 4px; font-size: 12px; }
@@ -158,7 +157,7 @@
         .palette-custom-row:hover { background: #f5f5f5; }
         .custom-color-icon { width: 16px; height: 16px; border-radius: 50%; background: linear-gradient(to right, red, yellow, lime, cyan, blue, magenta, red); border: 1px solid #ccc; }
 
-        .val-rule-item { display: flex; align-items: center; gap: 4px; margin-bottom: 5px; background: #fdfdfd; padding: 4px; border-radius: 4px; border: 1px solid #eee; flex-wrap: wrap; height: auto; } /* Wrapping fix */
+        .val-rule-item { display: flex; align-items: center; gap: 4px; margin-bottom: 5px; background: #fdfdfd; padding: 4px; border-radius: 4px; border: 1px solid #eee; flex-wrap: wrap; height: auto; }
         .val-rule-item select, .val-rule-item input { padding: 4px; border: 1px solid #ccc; border-radius: 3px; font-size: 12px; }
         
         .header-split { display: flex; align-items: center; justify-content: space-between; margin-bottom: 5px; }
@@ -228,6 +227,7 @@
                 <div id="modalTimeList"></div>
                 <span class="add-link" onclick="addClearTime()">+ 新增時間點</span>
             </div>
+          
             <div class="modal-footer">
                 <button class="btn-main btn-blue" style="width:auto; padding:8px 20px;" onclick="saveTempModal()">確認儲存</button>
             </div>
@@ -416,7 +416,7 @@
                     <input type="text" class="inp-p" id="pLink" placeholder="插入連結 (URL)" oninput="apply()" style="margin-bottom:6px;">
                     <input type="text" class="inp-p" id="pDefVal" placeholder="預設值" oninput="apply()" style="margin-bottom:6px;">
                 </div>
-                
+            
                 <div style="margin-top:10px; background:#fff3e0; padding:8px; border-radius:4px; border:1px solid #ffe0b2;">
                     <label style="margin-bottom:4px; color:#e65100;">內容驗證規則</label>
                     <div id="valRulesList"></div>
@@ -484,7 +484,7 @@
         };
         const list = document.getElementById('fList');
         let tempModalState = { tempColIds: [], calcCols: [], clearTimes: [], clearOnSubmit: false };
-
+        
         /* --- Reusable Palette HTML Generator --- */
         const getPaletteHTML = (idPrefix, targetType, currentColor, indicatorId) => `
             <div style="position:relative; z-index:50;">
@@ -588,7 +588,6 @@
                 document.querySelectorAll('.global-tooltip').forEach(t => t.remove());
             }
         });
-
         function sanitizeField(f) {
             if(!f.opts) f.opts = ['選項 1'];
             if(!f.cols) f.cols = ['第 1 欄'];
@@ -668,8 +667,8 @@
                     let body = '';
                     if(f.type === 'batch') body = `<div class="batch-container"><label class="batch-label"><div class="fake-icon checkbox no-drag" onclick="toggleCheck(this, 'mark-check'); select('${f.id}')"></div> FA</label>${renderInput('batch-input-flex', '主批號(3)')}<span>-</span>${renderInput('batch-input-flex', '子批號(2)')}</div>`;
                     else if(f.type === 'machine') {
-                        if(f.machineStyle === 'dropdown') body = `${autoPrevBadge}<div class="preview-dropdown" onclick="select('${f.id}')"><select class="no-drag" style="width:100%; border:none; background:transparent;" onchange="simulateMachineChange('${f.id}', this.value)"><option>-- 請選擇機台 --</option>${(f.opts||[]).map(o=>`<option value="${o}">${o}</option>`).join('')}</select></div>`;
-                        else body = `${autoPrevBadge}<div style="display:flex; gap:10px; flex-wrap:wrap;">${(f.opts||[]).map(o=>`<label style="display:flex;align-items:center;gap:4px;font-size:13px;" onclick="select('${f.id}'); simulateMachineChange('${f.id}', '${o}')">${renderMark(f.machineStyle==='radio')} ${o}</label>`).join('')}</div>`;
+                        if(f.machineStyle === 'dropdown') body = `${autoPrevBadge}<div class="preview-dropdown" onclick="select('${f.id}')"><select class="no-drag" style="width:100%; border:none; background:transparent;" onchange="runMachineLogic('${f.id}', this.value)"><option>-- 請選擇機台 --</option>${(f.opts||[]).map(o=>`<option value="${o}">${o}</option>`).join('')}</select></div>`;
+                        else body = `${autoPrevBadge}<div style="display:flex; gap:10px; flex-wrap:wrap;">${(f.opts||[]).map(o=>`<label style="display:flex;align-items:center;gap:4px;font-size:13px;" onclick="select('${f.id}'); runMachineLogic('${f.id}', '${o}')">${renderMark(f.machineStyle==='radio')} ${o}</label>`).join('')}</div>`;
                         if((f.machineRules||[]).length > 0) {
                             const ruleText = f.machineRules.map(r=> `<span style="font-size:10px; background:#eee; padding:1px 3px;">${r.val}→${r.target}</span>`).join(' ');
                             body = `<div style="font-size:11px; color:#888; margin-bottom:4px;">連動 ${ruleText}</div>` + body;
@@ -703,12 +702,7 @@
                          let unitHtml = '';
                          if(f.uEnable) {
                              if(f.manual) {
-                                 unitHtml = `
-                                 <div class="unit-label-container" onclick="toggleUnitDropdown('${f.id}', event)">
-                                     <div class="unit-text-display" id="unitDisplay_${f.id}">${f.unitB}</div>
-                                     <div class="manual-arrow">▼</div>
-                                     <div id="unitDrop_${f.id}" class="unit-dropdown-menu"></div>
-                                 </div>`;
+                                 unitHtml = `<div class="unit-label-container" onclick="toggleUnitDropdown('${f.id}', event)"><div class="unit-text-display" id="unitDisplay_${f.id}">${f.unitB}</div><div class="manual-arrow">▼</div><div id="unitDrop_${f.id}" class="unit-dropdown-menu"></div></div>`;
                              } else {
                                  unitHtml = `<div class="unit-label-container" style="cursor:default;"><div class="unit-text-display" id="unitDisplay_${f.id}">${f.unitB}</div></div>`;
                              }
@@ -723,8 +717,8 @@
                                  body = `${autoPrevBadge}<div style="display:flex; flex-direction:column; gap:8px;">${(f.opts||[]).map(o=> {
                                         const mark = renderMark(f.mode==='radio' || f.mode==='mixed-radio');
                                         const input = (f.mode==='mixed-radio'||f.mode==='mixed-checkbox') ? renderInput('style-v27-box','') : '';
-                                        return `<div class="opt-item" onclick="select('${f.id}')">${mark} ${o} ${input}</div>`;
-                                    }).join('')}</div>`;
+                                        return `<div class="opt-item" onclick="select('${f.id}')">${mark} <span>${o}</span> ${input}</div>`;
+                                 }).join('')}</div>`;
                              }
                          }
                     } else if(f.type === 'header') {
@@ -740,9 +734,7 @@
                                 </div>
                                 <span style="font-size:10px; color:#aaa; border:1px solid #eee; padding:2px 5px; border-radius:4px;">${f.type.toUpperCase()}</span>
                             </div>
-                            ${f.descE?`<div style="margin-bottom:8px; font-size:12px; color:#666;">
-                                <textarea class="desc-inp no-drag" rows="1" placeholder="輸入說明..." oninput="autoResize(this); syncDesc('${f.id}',this.value)" onfocus="select('${f.id}')">${f.desc || ''}</textarea>
-                            </div>`:''}
+                            ${f.descE?`<div style="margin-bottom:8px; font-size:12px; color:#666;"><textarea class="desc-inp no-drag" rows="1" placeholder="輸入說明..." oninput="autoResize(this); syncDesc('${f.id}',this.value)" onfocus="select('${f.id}')">${f.desc || ''}</textarea></div>`:''}
                             <div>${body}</div>
                             <div class="card-tools">
                                 <span class="tool-action no-drag" onclick="copyF('${f.id}')">📋 複製</span>
@@ -754,8 +746,8 @@
             list.innerHTML = htmlArr.join('');
         }
 
-        /* --- Machine Logic Simulation --- */
-        function simulateMachineChange(id, val) {
+        /* --- Machine Logic (Real-time Simulation) --- */
+        function runMachineLogic(id, val) {
             const f = fields.find(x => x.id === id);
             if (!f || !f.machineRules) return;
             const rule = f.machineRules.find(r => r.val.split(',').includes(val));
@@ -763,12 +755,12 @@
                 // Find target fields by title or ID
                 const targetIds = rule.target.split(',');
                 targetIds.forEach(tid => {
-                    const tf = fields.find(x => x.title === tid || x.id === tid);
+                    // Try to match by Title first, then ID (as fallback)
+                    const tf = fields.find(x => x.title === tid.trim() || x.id === tid.trim());
                     if (tf) {
-                        const newOpts = rule.targetOpts.split(',').map(s=>s.trim());
+                        const newOpts = rule.targetOpts.split(',').map(s=>s.trim()).filter(s=>s);
                         if(tf.type === 'grid') { 
                             tf.cols = newOpts; 
-                            // Resize colModes if needed
                             while(tf.colModes.length < tf.cols.length) tf.colModes.push('text');
                             if(tf.colModes.length > tf.cols.length) tf.colModes = tf.colModes.slice(0, tf.cols.length);
                         } else { 
@@ -777,6 +769,8 @@
                     }
                 });
                 render(); 
+                // Restore selection after render
+                setTimeout(() => select(id), 50);
             }
         }
 
@@ -791,8 +785,7 @@
                 const display = document.getElementById('unitDisplay_' + id);
                 
                 if(display) {
-                    let newUnit = f.unitB; // Default to basic unit
-                    
+                    let newUnit = f.unitB;
                     // Check rules if valid number
                     if(!isNaN(val) && f.uRules && f.uRules.length > 0) {
                         for(const r of f.uRules) {
@@ -805,10 +798,9 @@
                             else if(r.cond === '=' && val === t) match = true;
                             else if(r.cond === '>=' && val >= t) match = true;
                             else if(r.cond === '<=' && val <= t) match = true;
-                            
                             if(match) {
                                 newUnit = r.res;
-                                break; // Take first matching rule
+                                break; 
                             }
                         }
                     }
@@ -821,11 +813,9 @@
         function toggleUnitDropdown(id, event) {
             event.stopPropagation();
             const dd = document.getElementById('unitDrop_' + id);
-            
             document.querySelectorAll('.unit-dropdown-menu').forEach(d => {
                 if (d.id !== 'unitDrop_' + id) d.classList.remove('active');
             });
-
             if (dd.classList.contains('active')) {
                 dd.classList.remove('active');
                 return;
@@ -865,7 +855,7 @@
             if(f) {
                 f.unitB = val;
                 const display = document.getElementById('unitDisplay_' + activeId);
-                if(display) display.textContent = val; 
+                if(display) display.textContent = val;
             }
         }
 
@@ -892,9 +882,7 @@
                 
                 const mS = formConfig.metaStyle || { size: 28, color: '#000000', bgColor: 'transparent', bold: true };
                 document.getElementById('mSize').value = mS.size;
-                // Removed mWidth element setting as requested
                 document.getElementById('metaPaletteContainer').innerHTML = getPaletteHTML('metaText', 'text', mS.color, 'indmetaText') + getPaletteHTML('metaBg', 'bg', mS.bgColor, 'indmetaBg');
-
                 ['mB','mI','mU'].forEach(b => document.getElementById(b).classList.remove('active'));
                 if(mS.bold) document.getElementById('mB').classList.add('active');
                 if(mS.italic) document.getElementById('mI').classList.add('active');
@@ -913,7 +901,6 @@
             const f = fields.find(x => x.id === id);
             if(!f) return;
             sanitizeField(f);
-            
             const setVal = (eid, val) => { if(document.getElementById(eid)) document.getElementById(eid).value = val; };
             const setChk = (eid, val) => { if(document.getElementById(eid)) document.getElementById(eid).checked = val; };
 
@@ -930,18 +917,16 @@
             setChk('pDescE', f.descE);
             setChk('pUnitE', f.uEnable);
             if(document.getElementById('pMarkStyle')) document.getElementById('pMarkStyle').value = f.markStyle;
-            
             document.getElementById('editorPaletteContainer').innerHTML = getPaletteHTML('editorText', 'text', f.color, 'indeditorText') + getPaletteHTML('editorBg', 'bg', f.bgColor, 'indeditorBg');
 
             ['bB','bI','bU'].forEach(b => document.getElementById(b).classList.remove('active'));
             if(f.bold) document.getElementById('bB').classList.add('active');
             if(f.italic) document.getElementById('bI').classList.add('active');
             if(f.underline) document.getElementById('bU').classList.add('active');
-
             const hideContentConfig = ['datetime', 'shift', 'header', 'batch', 'choices', 'dropdown'].includes(f.type);
             document.getElementById('contentSec').style.display = hideContentConfig ? 'none' : 'block';
+            // Fix: Hide defValRow for Header
             document.getElementById('defValRow').style.display = (f.type === 'header' || f.type === 'batch') ? 'none' : 'block';
-            
             /* Logic Sections Visibility */
             document.getElementById('gridSec').style.display = f.type==='grid'?'block':'none';
             document.getElementById('unitSec').style.display = f.type==='text'?'block':'none'; 
@@ -955,7 +940,7 @@
             }
 
             renderAutoPrevRules();
-            renderValRules(); 
+            renderValRules();
             document.getElementById('shiftSec').style.display = f.type==='shift'?'block':'none';
             document.getElementById('machineSec').style.display = f.type==='machine'?'block':'none';
             document.getElementById('dateSec').style.display = f.type==='datetime'?'block':'none';
@@ -989,7 +974,6 @@
             formConfig.metaDescE = document.getElementById('gMetaDescE').checked;
             if(!formConfig.metaStyle) formConfig.metaStyle = {};
             formConfig.metaStyle.size = document.getElementById('mSize').value;
-            // Removed mWidth
             document.getElementById('tempConfigBtn').style.display = formConfig.enableTemp ? 'block' : 'none';
             render();
         }
@@ -1026,7 +1010,6 @@
             
             if(document.getElementById('pShiftLogicE')) f.shiftLogicE = document.getElementById('pShiftLogicE').checked;
             if(document.getElementById('pAutoPrev')) f.autoPrev = document.getElementById('pAutoPrev').checked;
-
             // Unit Logic Visibility Check
             if(f.type === 'text') {
                  const uLogic = document.getElementById('uLogic');
@@ -1037,7 +1020,6 @@
                      uLogic.style.display = 'none';
                  }
             }
-
             render();
         }
 
@@ -1255,7 +1237,9 @@
                     if(r.target) {
                         const targetTitles = r.target.split(',');
                         targetTitles.forEach(tTitle => {
-                            const found = fields.find(ff => ff.title === tTitle.trim());
+                            // Try to match Title first, but if title contains IDs or no title match, check ID
+                            let found = fields.find(ff => ff.title === tTitle.trim());
+                            if(!found) found = fields.find(ff => ff.id === tTitle.trim());
                             if(found) selectedTargets.push(found.id);
                         });
                     }
@@ -1264,7 +1248,6 @@
                         renderMultiSelectHTML(msIdVal, machOpts, selectedVals, `mach_val${i}`);
                         renderMultiSelectHTML(msIdTarget, allFieldOpts, selectedTargets, `mach_target${i}`);
                     }, 0);
-
                     return `<div style="background:#fff; border:1px solid #ddd; padding:6px; border-radius:4px; margin-bottom:5px;">
                         <div style="display:flex; align-items:center; gap:4px; margin-bottom:4px;">
                             <span style="font-size:11px; color:#666; width:50px;">當機台=</span>
@@ -1282,7 +1265,7 @@
         }
         window.upM = (i,k,v) => { if(!activeId) return; fields.find(x=>x.id===activeId).machineRules[i][k]=v; };
         window.delM = (i) => { if(!activeId) return; fields.find(x=>x.id===activeId).machineRules.splice(i,1); renderMachineRules(); };
-        
+
         /* --- Other Helpers --- */
         function addShiftRule() { fields.find(x=>x.id===activeId).shiftRules.push({start:'08:00', end:'12:00', val:'早班'}); renderShiftRules(); render(); }
         function renderShiftRules() { const f = fields.find(x=>x.id===activeId);
@@ -1310,9 +1293,11 @@
         window.delR = (i) => { fields.find(x=>x.id===activeId).uRules.splice(i, 1); renderRules(); };
 
         function copyF(id) { const f=fields.find(x=>x.id===id);
-            const n=JSON.parse(JSON.stringify(f)); n.id='f'+Date.now(); fields.splice(fields.findIndex(x=>x.id===id)+1,0,n); render(); select(n.id); }
+            const n=JSON.parse(JSON.stringify(f)); n.id='f'+Date.now(); fields.splice(fields.findIndex(x=>x.id===id)+1,0,n);
+            render(); select(n.id); }
         function delF(id) { fields=fields.filter(x=>x.id!==id); activeId=null; render();
-            document.getElementById('editor').style.display='none'; document.getElementById('noSel').style.display='block'; }
+            document.getElementById('editor').style.display='none'; document.getElementById('noSel').style.display='block';
+        }
         function hExport() { const clean = fields.map(f => { const { testV, ...cF } = f; return cF; });
             const d = { title:document.getElementById('mT').value, desc:document.getElementById('mD').value, config: formConfig, fields:clean }; const blob = new Blob([JSON.stringify(d, null, 2)], {type:'application/json'});
             const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'questions.json'; a.click();
@@ -1337,9 +1322,9 @@
         function delRow(id, i) { const f=fields.find(x=>x.id===id); if(f.rows.length>1){f.rows.splice(i,1); render(); select(id);} }
         
         function addSidebarOpt() { 
-            const f=fields.find(x=>x.id===activeId); // Fixed logic
+            const f=fields.find(x=>x.id===activeId);
             if(f) { 
-                f.opts.push(`選項 ${f.opts.length+1}`); 
+                f.opts.push(`選項 ${f.opts.length+1}`);
                 renderSidebarOpts(); 
                 render(); 
             } 
@@ -1357,7 +1342,8 @@
             }
         }
         function renderSidebarOpts() {
-            if(!activeId) return; const f = fields.find(x=>x.id===activeId);
+            if(!activeId) return;
+            const f = fields.find(x=>x.id===activeId);
             document.getElementById('optList').innerHTML = (f.opts||[]).map((o,i) => `<div class="opt-manage-item"><input value="${o}" oninput="upOpt(${i},this.value)"> <span onclick="delOpt(${i})">×</span></div>`).join('');
         }
         window.upOpt = (i,v) => { fields.find(x=>x.id===activeId).opts[i]=v; render(); };
