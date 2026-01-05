@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>專業表單規格生成器 v62.13 (Logic & Validation Fix)</title>
+    <title>專業表單規格生成器 v62.14 (Fixes & Optimization)</title>
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&display=swap" rel="stylesheet">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/Sortable/1.15.0/Sortable.min.js"></script>
     <style>
@@ -87,7 +87,7 @@
         .fake-icon.checked-x { border-color: var(--danger); background-color: #fff5f5; color: var(--danger); font-size: 12px; } .fake-icon.checked-x::after { content: '✕'; }
         .fake-icon.radio.checked-x::after { content: '✕'; }
         
-        .opt-item { display: flex; align-items: center; gap: 8px; margin-top: 5px; } /* Fixed: Center alignment */
+        .opt-item { display: flex; align-items: center; gap: 8px; margin-top: 5px; } 
         .preview-dropdown { display: flex; justify-content: space-between; align-items: center; border: 1px solid #ccc; padding: 10px; border-radius: 8px; background: #fff; color: #666; font-size: 14px; cursor: pointer; }
         .p-item { margin-bottom: 15px; }
         .p-item label { display: flex; align-items: center; font-weight: bold; font-size: 13px; margin-bottom: 5px; }
@@ -97,9 +97,9 @@
         .biu-btn { border: 1px solid #ccc; background: #fff; padding: 6px 12px; border-radius: 4px; cursor: pointer; font-weight: bold; font-size: 12px; }
         .biu-btn.active { background: #333; color: #fff; border-color: #333; }
         
-        /* Logic Panel (Updated Wrapping) */
+        /* Logic Panel */
         .logic-panel { background: #fffde7; border: 1px dashed #fbc02d; padding: 10px; border-radius: 8px; margin-top: 8px; }
-        .logic-line { display: flex; align-items: center; gap: 4px; margin-bottom: 5px; font-size: 12px; flex-wrap: wrap; } /* Added wrap for visibility */
+        .logic-line { display: flex; align-items: center; gap: 4px; margin-bottom: 5px; font-size: 12px; flex-wrap: wrap; } 
         .logic-line input, .logic-line select { padding: 3px; border: 1px solid #ccc; border-radius: 3px; }
         .opt-manage-item { display: flex; align-items: center; gap: 5px; margin-bottom: 6px; }
         .opt-manage-item input { flex: 1; padding: 6px; border: 1px solid #eee; border-radius: 4px; font-size: 12px; }
@@ -157,7 +157,8 @@
         .palette-custom-row:hover { background: #f5f5f5; }
         .custom-color-icon { width: 16px; height: 16px; border-radius: 50%; background: linear-gradient(to right, red, yellow, lime, cyan, blue, magenta, red); border: 1px solid #ccc; }
 
-        .val-rule-item { display: flex; align-items: center; gap: 4px; margin-bottom: 5px; background: #fdfdfd; padding: 4px; border-radius: 4px; border: 1px solid #eee; flex-wrap: wrap; height: auto; }
+        /* Updated Validation Rule Item CSS */
+        .val-rule-item { display: flex; align-items: center; gap: 4px; margin-bottom: 5px; background: #fdfdfd; padding: 4px; border-radius: 4px; border: 1px solid #eee; flex-wrap: nowrap; height: auto; }
         .val-rule-item select, .val-rule-item input { padding: 4px; border: 1px solid #ccc; border-radius: 3px; font-size: 12px; }
         
         .header-split { display: flex; align-items: center; justify-content: space-between; margin-bottom: 5px; }
@@ -194,15 +195,19 @@
         .ms-btn.confirm { color: var(--p); font-weight: bold; border-left: 1px solid #eee; }
         .ms-btn.clear { color: #666; }
 
-        /* Unit Dropdown Styles */
+        /* Unit Dropdown Styles (Fixed) */
         .unit-label-container { display: flex; align-items: center; background: #f0f0f0; border-left: 1px solid #ccc; position: relative; }
         .unit-text-display { padding: 0 8px; font-size: 12px; color: #555; white-space: nowrap; }
-        .manual-arrow { display: flex; align-items: center; justify-content: center; padding: 0 6px; cursor: pointer; font-size: 10px; color: #666; height: 100%; transition: 0.2s; border-left: 1px solid #ddd; }
+        .manual-arrow { display: flex; align-items: center; justify-content: center; padding: 0 6px; cursor: pointer; font-size: 10px; color: #666; height: 100%; transition: 0.2s; border-left: none; /* Fixed: Removed separator */ }
         .manual-arrow:hover { background: #e0e0e0; }
         .unit-dropdown-menu { position: absolute; top: 100%; right: 0; min-width: 80px; background: #fff; border: 1px solid #ccc; box-shadow: 0 3px 8px rgba(0,0,0,0.15); z-index: 100; display: none; flex-direction: column; border-radius: 4px; overflow: hidden; }
         .unit-dropdown-menu.active { display: flex; }
         .unit-option { padding: 6px 10px; font-size: 12px; cursor: pointer; color: #333; transition: 0.1s; }
         .unit-option:hover { background: #444; color: #fff; }
+        
+        .selected-tags-container { display:flex; flex-wrap:wrap; gap:4px; margin-top:5px; padding:4px; border:1px solid #eee; border-radius:4px; background:#f9f9f9; min-height:28px; }
+        .sel-tag { font-size:11px; background:#e8f0fe; color:#1a73e8; padding:2px 6px; border-radius:10px; display:inline-flex; align-items:center; }
+        .clear-tags-btn { font-size:11px; color:#d93025; cursor:pointer; text-decoration:underline; margin-left:auto; margin-top:2px; display:block; text-align:right; }
     </style>
 </head>
 <body>
@@ -370,6 +375,15 @@
                     <option value="radio">單選</option>
                     <option value="checkbox">多選</option>
                 </select>
+                <div id="markStyleSec" style="margin-top:10px; border-top:1px dashed #ddd; padding-top:8px;">
+                    <label>標記樣式</label>
+                    <select class="inp-p" id="pMarkStyle" onchange="apply()">
+                        <option value="mark-check">打勾 (預設)</option>
+                        <option value="mark-cross">打叉</option>
+                        <option value="mark-both">打勾或打叉 (三態)</option>
+                    </select>
+                </div>
+
                 <div style="margin-top:10px; background:#f0f9ff; padding:10px; border-radius:6px; font-size:12px; color:#444;">
                     <label style="margin:0 0 5px 0;">
                         智慧連動規則
@@ -378,15 +392,6 @@
                     <div id="mRules"></div>
                     <span class="add-link" onclick="addMachineRule()">+ 新增連動規則</span>
                 </div>
-            </div>
-
-            <div id="markStyleSec" class="p-item sec-divider" style="display:none;">
-                <label>標記樣式</label>
-                <select class="inp-p" id="pMarkStyle" onchange="apply()">
-                    <option value="mark-check">打勾 (預設)</option>
-                    <option value="mark-cross">打叉</option>
-                    <option value="mark-both">打勾或打叉 (三態)</option>
-                </select>
             </div>
 
             <div id="optSec" class="p-item sec-divider" style="display:none;">
@@ -485,7 +490,6 @@
         const list = document.getElementById('fList');
         let tempModalState = { tempColIds: [], calcCols: [], clearTimes: [], clearOnSubmit: false };
         
-        /* --- Reusable Palette HTML Generator --- */
         const getPaletteHTML = (idPrefix, targetType, currentColor, indicatorId) => `
             <div style="position:relative; z-index:50;">
                 <div class="palette-btn" onclick="togglePalette('${idPrefix}', event)" title="${targetType==='text'?'文字顏色':'文字背景'}">
@@ -530,7 +534,6 @@
             });
         } catch(e) {}
 
-        /* Palette Logic */
         document.addEventListener('click', function(e) {
             if(!e.target.closest('.palette-btn') && !e.target.closest('.palette-popover')) {
                 document.querySelectorAll('.palette-popover').forEach(p => p.classList.remove('active'));
@@ -570,7 +573,6 @@
             document.querySelectorAll('.palette-popover').forEach(p => p.classList.remove('active'));
         }
 
-        /* Tooltip Enhanced */
         document.addEventListener('mouseover', function(e) {
             if (e.target.classList.contains('info-icon')) {
                 const msg = e.target.getAttribute('data-msg');
@@ -712,7 +714,6 @@
                          if(f.type==='dropdown') body = `${autoPrevBadge}<div class="preview-dropdown" onclick="select('${f.id}')"><select class="no-drag" style="width:100%; border:none; background:transparent;"><option>-- 請選擇 --</option>${(f.opts||[]).map(o=>`<option>${o}</option>`).join('')}</select></div>`;
                          else {
                              if(f.mode === 'text') {
-                                 // Fix: Text mode now renders a list of inputs (Label + Input) instead of one big input
                                  body = `${autoPrevBadge}<div style="display:flex; flex-direction:column; gap:8px;">${(f.opts||[]).map(o=> {
                                         return `<div class="opt-item" onclick="select('${f.id}')"><span>${o}</span> ${renderInput('style-v27-box','')}</div>`;
                                  }).join('')}</div>`;
@@ -749,16 +750,14 @@
             list.innerHTML = htmlArr.join('');
         }
 
-        /* --- Machine Logic (Real-time Simulation) --- */
+        /* --- Machine Logic (Updated for v62.14) --- */
         function runMachineLogic(id, val) {
             const f = fields.find(x => x.id === id);
             if (!f || !f.machineRules) return;
             const rule = f.machineRules.find(r => r.val.split(',').includes(val));
             if (rule) {
-                // Find target fields by title or ID
                 const targetIds = rule.target.split(',');
                 targetIds.forEach(tid => {
-                    // Try to match by Title first, then ID (as fallback)
                     let tf = fields.find(x => x.title === tid.trim());
                     if(!tf) tf = fields.find(x => x.id === tid.trim());
                     
@@ -774,39 +773,29 @@
                     }
                 });
                 render(); 
-                // Restore selection after render (Simulating persistence for preview)
                 setTimeout(() => select(id), 50);
             }
         }
 
-        /* --- New: Real-time Validation for Unit Logic --- */
         function validateInput(inp, id) {
             const f = fields.find(x => x.id === id);
             if(!f) return;
-
-            // Unit Judgment Logic
             if(f.type === 'text' && f.uEnable) {
                 const val = parseFloat(inp.value);
                 const display = document.getElementById('unitDisplay_' + id);
-                
                 if(display) {
                     let newUnit = f.unitB;
-                    // Check rules if valid number
                     if(!isNaN(val) && f.uRules && f.uRules.length > 0) {
                         for(const r of f.uRules) {
                             if(!r.cond || r.val === '' || !r.res) continue;
                             const t = parseFloat(r.val);
                             let match = false;
-                            
                             if(r.cond === '>' && val > t) match = true;
                             else if(r.cond === '<' && val < t) match = true;
                             else if(r.cond === '=' && val === t) match = true;
                             else if(r.cond === '>=' && val >= t) match = true;
                             else if(r.cond === '<=' && val <= t) match = true;
-                            if(match) {
-                                newUnit = r.res;
-                                break; 
-                            }
+                            if(match) { newUnit = r.res; break; }
                         }
                     }
                     display.textContent = newUnit;
@@ -814,7 +803,6 @@
             }
         }
 
-        /* Unit Dropdown Logic */
         function toggleUnitDropdown(id, event) {
             event.stopPropagation();
             const dd = document.getElementById('unitDrop_' + id);
@@ -825,26 +813,15 @@
                 dd.classList.remove('active');
                 return;
             }
-
             const f = fields.find(x => x.id === id);
             if (!f) return;
-
             let options = [];
             if(f.unitB) options.push(f.unitB);
             if(f.uRules && f.uRules.length > 0) {
-                f.uRules.forEach(r => {
-                    if(r.res && !options.includes(r.res)) options.push(r.res);
-                });
+                f.uRules.forEach(r => { if(r.res && !options.includes(r.res)) options.push(r.res); });
             }
-
-            if(options.length === 0) {
-                dd.innerHTML = '<div class="unit-dropdown-item" style="color:#999; cursor:default;">無選項</div>';
-            } else {
-                dd.innerHTML = options.map(opt => 
-                    `<div class="unit-dropdown-item" onclick="selectUnit('${id}', '${opt}')">${opt}</div>`
-                ).join('');
-            }
-            
+            if(options.length === 0) dd.innerHTML = '<div class="unit-dropdown-item" style="color:#999; cursor:default;">無選項</div>';
+            else dd.innerHTML = options.map(opt => `<div class="unit-dropdown-item" onclick="selectUnit('${id}', '${opt}')">${opt}</div>`).join('');
             dd.classList.add('active');
         }
 
@@ -922,6 +899,7 @@
             setChk('pDescE', f.descE);
             setChk('pUnitE', f.uEnable);
             if(document.getElementById('pMarkStyle')) document.getElementById('pMarkStyle').value = f.markStyle;
+            if(document.getElementById('pMachineStyle')) f.machineStyle = document.getElementById('pMachineStyle').value; // Sync Logic
             document.getElementById('editorPaletteContainer').innerHTML = getPaletteHTML('editorText', 'text', f.color, 'indeditorText') + getPaletteHTML('editorBg', 'bg', f.bgColor, 'indeditorBg');
 
             ['bB','bI','bU'].forEach(b => document.getElementById(b).classList.remove('active'));
@@ -930,14 +908,12 @@
             if(f.underline) document.getElementById('bU').classList.add('active');
             const hideContentConfig = ['datetime', 'shift', 'header', 'batch', 'choices', 'dropdown'].includes(f.type);
             document.getElementById('contentSec').style.display = hideContentConfig ? 'none' : 'block';
-            // Fix: Hide defValRow for Header
             document.getElementById('defValRow').style.display = (f.type === 'header' || f.type === 'batch') ? 'none' : 'block';
-            /* Logic Sections Visibility */
+            
             document.getElementById('gridSec').style.display = f.type==='grid'?'block':'none';
             document.getElementById('unitSec').style.display = f.type==='text'?'block':'none'; 
             document.getElementById('autoPrevSec').style.display = 'block';
             
-            /* Apply Logic Checks */
             const uLogic = document.getElementById('uLogic');
             if(f.type==='text') {
                 uLogic.style.display = f.uEnable ? 'block' : 'none';
@@ -947,9 +923,15 @@
             renderAutoPrevRules();
             renderValRules();
             document.getElementById('shiftSec').style.display = f.type==='shift'?'block':'none';
-            document.getElementById('machineSec').style.display = f.type==='machine'?'block':'none';
+            
+            /* Logic for Machine Section and Mark Style */
+            const isMachine = f.type === 'machine';
+            document.getElementById('machineSec').style.display = isMachine ? 'block' : 'none';
+            
+            const showMarkStyle = ['choices','grid'].includes(f.type) || (isMachine && ['radio','checkbox'].includes(f.machineStyle));
+            document.getElementById('markStyleSec').style.display = showMarkStyle ? 'block' : 'none';
+
             document.getElementById('dateSec').style.display = f.type==='datetime'?'block':'none';
-            document.getElementById('markStyleSec').style.display = ['choices','grid','machine'].includes(f.type)?'block':'none';
             document.getElementById('optSec').style.display = ['dropdown','shift','machine','choices'].includes(f.type) ? 'block' : 'none';
             if(['dropdown','shift','machine','choices'].includes(f.type)) renderSidebarOpts();
             document.getElementById('modeSec').style.display = ['choices'].includes(f.type)?'block':'none';
@@ -1015,7 +997,6 @@
             
             if(document.getElementById('pShiftLogicE')) f.shiftLogicE = document.getElementById('pShiftLogicE').checked;
             if(document.getElementById('pAutoPrev')) f.autoPrev = document.getElementById('pAutoPrev').checked;
-            // Unit Logic Visibility Check
             if(f.type === 'text') {
                  const uLogic = document.getElementById('uLogic');
                  if(f.uEnable) {
@@ -1078,7 +1059,18 @@
                     <input type="checkbox" value="${opt.id}" ${selectedIds.includes(opt.id)?'checked':''}>
                     ${opt.title}
                 </label>`).join('');
-            container.innerHTML = `<div class="ms-trigger" onclick="toggleMS('${uniqueId}')"><span>${labelText}</span> <span>▾</span></div><div id="dropdown-${uniqueId}" class="ms-dropdown"><div class="ms-header"><label><input type="checkbox" onchange="toggleAllMS('${uniqueId}', this.checked)"> 全選</label><input type="text" class="ms-search" placeholder="🔍 搜尋..." oninput="filterMS('${uniqueId}', this.value)" onclick="event.stopPropagation()"></div><div class="ms-list">${itemsHtml}</div><div class="ms-footer"><button class="ms-btn clear" onclick="clearMS('${uniqueId}')">清空</button><button class="ms-btn confirm" onclick="confirmMS('${uniqueId}', '${contextStr}')">確定</button></div></div>`;
+            
+            // Add Tags View
+            let tagsHtml = '';
+            if(selectedIds.length > 0) {
+                 const tagEls = selectedIds.map(sid => {
+                     const opt = options.find(o => o.id === sid);
+                     return opt ? `<div class="sel-tag">${opt.title}</div>` : '';
+                 }).join('');
+                 tagsHtml = `<div class="selected-tags-container">${tagEls}<span class="clear-tags-btn" onclick="clearMS('${uniqueId}', '${contextStr}')">清空</span></div>`;
+            }
+
+            container.innerHTML = `<div class="ms-trigger" onclick="toggleMS('${uniqueId}')"><span>${labelText}</span> <span>▾</span></div>${tagsHtml}<div id="dropdown-${uniqueId}" class="ms-dropdown"><div class="ms-header"><label><input type="checkbox" onchange="toggleAllMS('${uniqueId}', this.checked)"> 全選</label><input type="text" class="ms-search" placeholder="🔍 搜尋..." oninput="filterMS('${uniqueId}', this.value)" onclick="event.stopPropagation()"></div><div class="ms-list">${itemsHtml}</div><div class="ms-footer"><button class="ms-btn clear" onclick="clearMS('${uniqueId}', '${contextStr}')">清空</button><button class="ms-btn confirm" onclick="confirmMS('${uniqueId}', '${contextStr}')">確定</button></div></div>`;
         }
         function filterMS(uniqueId, text) {
             const list = document.getElementById('dropdown-'+uniqueId).querySelector('.ms-list');
@@ -1092,21 +1084,43 @@
         function toggleAllMS(id, checked) { const dd = document.getElementById('dropdown-' + id);
             dd.querySelectorAll('.ms-list input[type="checkbox"]').forEach(chk => { if(chk.closest('.ms-item').style.display !== 'none') chk.checked = checked; });
         }
-        function clearMS(id) { toggleAllMS(id, false); }
+        function clearMS(id, contextStr) { 
+            toggleAllMS(id, false); 
+            confirmMS(id, contextStr); // Trigger update immediately
+        }
         function confirmMS(id, contextStr) {
             const dd = document.getElementById('dropdown-' + id);
             const selected = [];
             dd.querySelectorAll('.ms-list input[type="checkbox"]:checked').forEach(chk => selected.push(chk.value));
-            if(contextStr === 'basic') { tempModalState.tempColIds = selected;
-                renderMultiSelectHTML(id, fields.filter(f => f.type !== 'header'), tempModalState.tempColIds, 'basic'); } 
-            else if(contextStr.startsWith('calc')) { const idx = parseInt(contextStr.split('')[1]);
-                tempModalState.calcCols[idx].targets = selected; renderModalCalcs(); }
-            else if(contextStr.startsWith('mach_val')) { const idx = parseInt(contextStr.split('')[1]);
-                const f = fields.find(x=>x.id===activeId); if(f && f.machineRules[idx]) { f.machineRules[idx].val = selected.join(','); renderMachineRules();
-                } }
-            else if(contextStr.startsWith('mach_target')) { const idx = parseInt(contextStr.split('')[1]);
-                const f = fields.find(x=>x.id===activeId); if(f && f.machineRules[idx]) { const titles = selected.map(sid => { const ff = fields.find(x=>x.id===sid); return ff ? ff.title : sid; });
-                f.machineRules[idx].target = titles.join(','); renderMachineRules(); } }
+            
+            if(contextStr === 'basic') { 
+                tempModalState.tempColIds = selected;
+                renderMultiSelectHTML(id, fields.filter(f => f.type !== 'header'), tempModalState.tempColIds, 'basic'); 
+            } 
+            else if(contextStr.startsWith('calc')) { 
+                const idx = parseInt(contextStr.replace('calc',''));
+                if(!isNaN(idx) && tempModalState.calcCols[idx]) {
+                    tempModalState.calcCols[idx].targets = selected; 
+                    renderModalCalcs(); 
+                }
+            }
+            else if(contextStr.startsWith('mach_val')) { 
+                const idx = parseInt(contextStr.replace('mach_val',''));
+                const f = fields.find(x=>x.id===activeId); 
+                if(f && f.machineRules[idx]) { 
+                    f.machineRules[idx].val = selected.join(','); 
+                    renderMachineRules();
+                } 
+            }
+            else if(contextStr.startsWith('mach_target')) { 
+                const idx = parseInt(contextStr.replace('mach_target',''));
+                const f = fields.find(x=>x.id===activeId); 
+                if(f && f.machineRules[idx]) { 
+                    const titles = selected.map(sid => { const ff = fields.find(x=>x.id===sid); return ff ? ff.title : sid; });
+                    f.machineRules[idx].target = titles.join(','); // Store titles or IDs
+                    renderMachineRules(); 
+                } 
+            }
             dd.classList.remove('active');
         }
 
@@ -1195,7 +1209,7 @@
                                 <option value="ceil" ${r.op1==='ceil'?'selected':''}>無條件進位</option>
                                 <option value="floor" ${r.op1==='floor'?'selected':''}>無條件捨去</option>
                             </select>
-                            <span style="cursor:pointer; color:#999;" onclick="delValRule(${i})">×</span>
+                            <span style="cursor:pointer; color:#999; margin-left:auto; padding-left:5px;" onclick="delValRule(${i})">×</span>
                         </div>`;
                     }
                     const isLen = r.target === 'len';
@@ -1215,7 +1229,7 @@
                             <option value="" ${r.op2===''?'selected':''}>&gt;</option><option value="<" ${r.op2==='<'?'selected':''}>&lt;</option><option value="=" ${r.op2==='='?'selected':''}>=</option><option value=">=" ${r.op2==='>='?'selected':''}>≥</option><option value="<=" ${r.op2==='<='?'selected':''}>≤</option>
                         </select>
                         <input type="number" style="width:40px" value="${r.val2}" placeholder="${isLen?'Max':'B'}" oninput="upValRule(${i},'val2',this.value)">
-                        <span style="cursor:pointer; color:#999;" onclick="delValRule(${i})">×</span>
+                        <span style="cursor:pointer; color:#999; margin-left:auto; padding-left:5px;" onclick="delValRule(${i})">×</span>
                     </div>
                 `;}).join('');
             }
@@ -1315,7 +1329,6 @@
             if(d.config) formConfig = d.config; fields=d.fields.map(f=>({...f, valRules: f.valRules || [], autoPrevRules: f.autoPrevRules || [], machineRules: f.machineRules || [], shiftRules: f.shiftRules || [], uRules: f.uRules || [], opts: f.opts || [], colModes: f.colModes || [] }));
             render(); }; r.readAsText(inp.files[0]); }
         
-        // Setup initial UI states
         function autoResize(textarea) {
             textarea.style.height = 'auto';
             textarea.style.height = textarea.scrollHeight + 'px';
