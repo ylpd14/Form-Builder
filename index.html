@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>專業表單規格生成器 v62.18 (Layout & Logic Final)</title>
+    <title>專業表單規格生成器 v62.19 (Radio Fix & Layout)</title>
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&display=swap" rel="stylesheet">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/Sortable/1.15.0/Sortable.min.js"></script>
     <style>
@@ -102,10 +102,10 @@
         .logic-panel { background: #fffde7; border: 1px dashed #fbc02d; padding: 10px; border-radius: 8px; margin-top: 8px; }
         
         /* [Fix Req 2] Single Row Layout for Rules */
-        .logic-line { display: flex; align-items: center; gap: 4px; margin-bottom: 6px; font-size: 12px; flex-wrap: nowrap; width: 100%; overflow: hidden; }
+        .logic-line { display: flex; align-items: center; gap: 6px; margin-bottom: 6px; font-size: 12px; flex-wrap: nowrap; width: 100%; white-space: nowrap; overflow: hidden; }
         .logic-line input, .logic-line select { padding: 4px; border: 1px solid #ccc; border-radius: 3px; font-size: 12px; flex-shrink: 0; }
-        .time-inp-fix { min-width: 90px; width: 90px; } /* Ensure full time shows */
-        .val-inp-fix { min-width: 50px; flex: 1; } 
+        .time-inp-fix { width: 90px; flex-shrink: 0; }
+        .val-inp-fix { width: 50px; flex: 1; }
         
         .opt-manage-item { display: flex; align-items: center; gap: 5px; margin-bottom: 6px; }
         .opt-manage-item input { flex: 1; padding: 6px; border: 1px solid #eee; border-radius: 4px; font-size: 12px; }
@@ -163,11 +163,11 @@
         .palette-custom-row:hover { background: #f5f5f5; }
         .custom-color-icon { width: 16px; height: 16px; border-radius: 50%; background: linear-gradient(to right, red, yellow, lime, cyan, blue, magenta, red); border: 1px solid #ccc; }
 
-        /* [Fix Req 2] Updated Validation Rule Item CSS to be Single Row (No Wrap) */
-        .val-rule-item { display: flex; align-items: center; gap: 4px; margin-bottom: 6px; background: #fdfdfd; padding: 6px; border-radius: 4px; border: 1px solid #eee; flex-wrap: nowrap; width: 100%; white-space: nowrap; overflow: hidden; }
-        .val-type-sel { width: 60px; min-width: 60px; flex-shrink: 0; padding: 4px; border: 1px solid #ccc; border-radius: 3px; font-size: 12px; }
-        .val-op-sel { width: 45px; min-width: 45px; flex-shrink: 0; padding: 4px; border: 1px solid #ccc; border-radius: 3px; font-size: 12px; text-align: center; }
-        .val-inp { flex: 1; min-width: 0; width: 100%; padding: 4px; border: 1px solid #ccc; border-radius: 3px; font-size: 12px; }
+        /* [Fix Req 1 & 2] Compact Single Row Layout for Validation Rules */
+        .val-rule-item { display: flex; align-items: center; gap: 4px; margin-bottom: 6px; background: #fdfdfd; padding: 4px; border-radius: 4px; border: 1px solid #eee; flex-wrap: nowrap; width: 100%; white-space: nowrap; overflow: hidden; }
+        .val-type-sel { width: 55px; min-width: 55px; flex-shrink: 0; padding: 4px 0; border: 1px solid #ccc; border-radius: 3px; font-size: 12px; text-align:center; }
+        .val-op-sel { width: 35px; min-width: 35px; flex-shrink: 0; padding: 4px 0; border: 1px solid #ccc; border-radius: 3px; font-size: 12px; text-align: center; }
+        .val-inp { flex: 1; min-width: 40px; padding: 4px; border: 1px solid #ccc; border-radius: 3px; font-size: 12px; }
         .val-del { flex-shrink: 0; cursor: pointer; color: #999; margin-left: auto; padding: 0 4px; font-weight: bold; }
         
         .header-split { display: flex; align-items: center; justify-content: space-between; margin-bottom: 5px; }
@@ -670,7 +670,7 @@
                     const s = `font-size:${f.size}px; color:${f.color}; background-color:${f.bgColor}; font-weight:${f.bold?'bold':'normal'}; font-style:${f.italic?'italic':'normal'}; text-decoration:${f.underline?'underline':'none'};`;
                     const renderInput = (cls, ph) => `<input class="${cls} no-drag" style="width:100%; border:1px solid #ccc; border-radius:4px; padding:4px 6px; font-size:12px; height:28px; outline:none; background:#fff; ${f.upper ? 'text-transform:uppercase;' : ''}" placeholder="${ph}" oninput="validateInput(this, '${f.id}')" onblur="handleBlur(this, '${f.id}')" onfocus="select('${f.id}')" data-fid="${f.id}" value="${f.defVal || ''}">`;
                     /* [Fix Req 3] Use f.markStyle in renderMark calls */
-                    const renderMark = (isRadio, customMarkStyle) => `<div class="fake-icon ${isRadio?'radio':'checkbox'} no-drag" onclick="toggleCheck(this, '${customMarkStyle || f.markStyle}', ${isRadio}); select('${f.id}')"></div>`;
+                    const renderMark = (isRadio, customMarkStyle) => `<div class="fake-icon ${isRadio?'radio':'checkbox'} no-drag" onclick="toggleCheck(this, '${customMarkStyle || f.markStyle}', ${isRadio}, '${f.id}')"></div>`;
                     
                     let autoPrevBadge = '';
                     if((f.autoPrevRules || []).length > 0) {
@@ -1228,7 +1228,7 @@
         function delValRule(i) { if(!activeId) return; fields.find(x=>x.id===activeId).valRules.splice(i, 1); renderValRules(); apply(); }
         function upValRule(i, k, v) { if(!activeId) return; fields.find(x=>x.id===activeId).valRules[i][k] = v; apply(); }
         
-        /* [Fix Req 2] Validation Rules Render: Single Row */
+        /* [Fix Req 1 & 2] Validation Rules Render: Compact & Single Row */
         function renderValRules() {
             if(!activeId) return;
             const f = fields.find(x=>x.id===activeId);
@@ -1242,8 +1242,8 @@
                                 <option value="val" ${r.target==='val'?'selected':''}>數值</option>
                                 <option value="dec" ${r.target==='dec'?'selected':''}>小數</option>
                             </select>
-                            <input type="number" class="val-inp" value="${r.val1}" placeholder="位數" oninput="upValRule(${i},'val1',this.value)">
-                            <select style="flex:1; min-width:80px;" onchange="upValRule(${i},'op1',this.value)">
+                            <input type="number" style="width:40px; min-width:40px; padding:4px;" value="${r.val1}" placeholder="位數" oninput="upValRule(${i},'val1',this.value)">
+                            <select style="flex:1; min-width:80px; padding:4px 0;" onchange="upValRule(${i},'op1',this.value)">
                                 <option value="round" ${r.op1==='round'?'selected':''}>四捨五入</option>
                                 <option value="ceil" ${r.op1==='ceil'?'selected':''}>無條件進位</option>
                                 <option value="floor" ${r.op1==='floor'?'selected':''}>無條件捨去</option>
@@ -1428,11 +1428,27 @@
             if(f.type === 'machine') renderMachineRules();
         };
 
-        /* [Fix Req 3] Added Toggle Check Function for Canvas Click Testing */
-        function toggleCheck(el, style, isRadio) {
-            // Prevent event bubbling if necessary, though inline onclick already handles some logic
+        /* [Fix Req 3] Updated Toggle Check Function for Radio Logic */
+        function toggleCheck(el, style, isRadio, fid) {
             if(!style) style = 'mark-check';
             
+            // If Radio mode (Single or Mixed Radio), uncheck all others in the SAME field first
+            if(isRadio) {
+                // Find parent container that holds all options for this field
+                // In this simplified render, options are siblings within a container
+                const container = el.closest('.card') ? el.closest('.card').querySelector('div:nth-of-type(2)') : null; // Body container
+                
+                // Better approach: Find all icons with same fid data attribute or just within the same card
+                if(container) {
+                     const siblings = container.querySelectorAll('.fake-icon.radio');
+                     siblings.forEach(sib => {
+                         if(sib !== el) {
+                             sib.classList.remove('checked-v', 'checked-x');
+                         }
+                     });
+                }
+            }
+
             // Simple visual toggle for preview
             if(style === 'mark-check') {
                 if(el.classList.contains('checked-v')) el.classList.remove('checked-v');
