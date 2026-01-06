@@ -634,6 +634,8 @@
                 /* [Fix Req 2] Default grid headers to true if undefined */
                 if(f.showCol === undefined) f.showCol = true;
                 if(f.showRow === undefined) f.showRow = true;
+                /* Also default corner to true if undefined */
+                if(f.corner === undefined) f.corner = true; 
             }
             while(f.colModes.length < f.cols.length) f.colModes.push('text');
             return f;
@@ -1007,6 +1009,7 @@
                 /* [Fix Req 2] Default Checked for Grid Headers in Sidebar */
                 setChk('pShowCol', f.showCol);
                 setChk('pShowRow', f.showRow);
+                setChk('pCorner', f.corner);
             }
         }
         
