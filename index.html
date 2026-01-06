@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>專業表單規格生成器 v62.14 (Fixes & Optimization)</title>
+    <title>專業表單規格生成器 v62.15 (Layout & Validation Fix)</title>
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&display=swap" rel="stylesheet">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/Sortable/1.15.0/Sortable.min.js"></script>
     <style>
@@ -87,7 +87,10 @@
         .fake-icon.checked-x { border-color: var(--danger); background-color: #fff5f5; color: var(--danger); font-size: 12px; } .fake-icon.checked-x::after { content: '✕'; }
         .fake-icon.radio.checked-x::after { content: '✕'; }
         
-        .opt-item { display: flex; align-items: center; gap: 8px; margin-top: 5px; } 
+        /* Fixed: Opt Item Layout for Mixed/Text modes */
+        .opt-item { display: flex; align-items: center; gap: 8px; margin-top: 5px; width: 100%; } 
+        .opt-item input.style-v27-box { flex: 1; width: auto; margin-left: auto; } /* Ensure input fills row */
+        
         .preview-dropdown { display: flex; justify-content: space-between; align-items: center; border: 1px solid #ccc; padding: 10px; border-radius: 8px; background: #fff; color: #666; font-size: 14px; cursor: pointer; }
         .p-item { margin-bottom: 15px; }
         .p-item label { display: flex; align-items: center; font-weight: bold; font-size: 13px; margin-bottom: 5px; }
@@ -100,7 +103,10 @@
         /* Logic Panel */
         .logic-panel { background: #fffde7; border: 1px dashed #fbc02d; padding: 10px; border-radius: 8px; margin-top: 8px; }
         .logic-line { display: flex; align-items: center; gap: 4px; margin-bottom: 5px; font-size: 12px; flex-wrap: wrap; } 
+        /* Fixed: Time Input Width */
+        .logic-line input[type="time"] { min-width: 105px; }
         .logic-line input, .logic-line select { padding: 3px; border: 1px solid #ccc; border-radius: 3px; }
+        
         .opt-manage-item { display: flex; align-items: center; gap: 5px; margin-bottom: 6px; }
         .opt-manage-item input { flex: 1; padding: 6px; border: 1px solid #eee; border-radius: 4px; font-size: 12px; }
         .opt-manage-item span { cursor: pointer; color: #ccc; }
@@ -157,9 +163,10 @@
         .palette-custom-row:hover { background: #f5f5f5; }
         .custom-color-icon { width: 16px; height: 16px; border-radius: 50%; background: linear-gradient(to right, red, yellow, lime, cyan, blue, magenta, red); border: 1px solid #ccc; }
 
-        /* Updated Validation Rule Item CSS */
+        /* Fixed: Validation Rules CSS */
         .val-rule-item { display: flex; align-items: center; gap: 4px; margin-bottom: 5px; background: #fdfdfd; padding: 4px; border-radius: 4px; border: 1px solid #eee; flex-wrap: nowrap; height: auto; }
-        .val-rule-item select, .val-rule-item input { padding: 4px; border: 1px solid #ccc; border-radius: 3px; font-size: 12px; }
+        .val-rule-item select { width: auto; max-width: 80px; padding: 4px; border: 1px solid #ccc; border-radius: 3px; font-size: 12px; }
+        .val-rule-item input { width: 50px; padding: 4px; border: 1px solid #ccc; border-radius: 3px; font-size: 12px; }
         
         .header-split { display: flex; align-items: center; justify-content: space-between; margin-bottom: 5px; }
         .header-right-check { font-size: 12px; font-weight: normal; margin-left: auto; }
@@ -375,15 +382,7 @@
                     <option value="radio">單選</option>
                     <option value="checkbox">多選</option>
                 </select>
-                <div id="markStyleSec" style="margin-top:10px; border-top:1px dashed #ddd; padding-top:8px;">
-                    <label>標記樣式</label>
-                    <select class="inp-p" id="pMarkStyle" onchange="apply()">
-                        <option value="mark-check">打勾 (預設)</option>
-                        <option value="mark-cross">打叉</option>
-                        <option value="mark-both">打勾或打叉 (三態)</option>
-                    </select>
-                </div>
-
+                
                 <div style="margin-top:10px; background:#f0f9ff; padding:10px; border-radius:6px; font-size:12px; color:#444;">
                     <label style="margin:0 0 5px 0;">
                         智慧連動規則
@@ -392,6 +391,15 @@
                     <div id="mRules"></div>
                     <span class="add-link" onclick="addMachineRule()">+ 新增連動規則</span>
                 </div>
+            </div>
+            
+            <div id="markStyleSec" class="p-item sec-divider" style="display:none;">
+                <label>標記樣式</label>
+                <select class="inp-p" id="pMarkStyle" onchange="apply()">
+                    <option value="mark-check">打勾 (預設)</option>
+                    <option value="mark-cross">打叉</option>
+                    <option value="mark-both">打勾或打叉 (三態)</option>
+                </select>
             </div>
 
             <div id="optSec" class="p-item sec-divider" style="display:none;">
@@ -714,10 +722,12 @@
                          if(f.type==='dropdown') body = `${autoPrevBadge}<div class="preview-dropdown" onclick="select('${f.id}')"><select class="no-drag" style="width:100%; border:none; background:transparent;"><option>-- 請選擇 --</option>${(f.opts||[]).map(o=>`<option>${o}</option>`).join('')}</select></div>`;
                          else {
                              if(f.mode === 'text') {
+                                 // Fixed: Text Mode Layout (One Row, Auto Input Width)
                                  body = `${autoPrevBadge}<div style="display:flex; flex-direction:column; gap:8px;">${(f.opts||[]).map(o=> {
                                         return `<div class="opt-item" onclick="select('${f.id}')"><span>${o}</span> ${renderInput('style-v27-box','')}</div>`;
                                  }).join('')}</div>`;
                              } else {
+                                 // Fixed: Mixed Mode Layout (One Row, Auto Input Width)
                                  body = `${autoPrevBadge}<div style="display:flex; flex-direction:column; gap:8px;">${(f.opts||[]).map(o=> {
                                         const mark = renderMark(f.mode==='radio' || f.mode==='mixed-radio');
                                         const input = (f.mode==='mixed-radio'||f.mode==='mixed-checkbox') ? renderInput('style-v27-box','') : '';
@@ -750,7 +760,7 @@
             list.innerHTML = htmlArr.join('');
         }
 
-        /* --- Machine Logic (Updated for v62.14) --- */
+        /* --- Machine Logic (Updated for v62.15) --- */
         function runMachineLogic(id, val) {
             const f = fields.find(x => x.id === id);
             if (!f || !f.machineRules) return;
@@ -928,6 +938,7 @@
             const isMachine = f.type === 'machine';
             document.getElementById('machineSec').style.display = isMachine ? 'block' : 'none';
             
+            /* Fixed: Mark Style Visibility Logic */
             const showMarkStyle = ['choices','grid'].includes(f.type) || (isMachine && ['radio','checkbox'].includes(f.machineStyle));
             document.getElementById('markStyleSec').style.display = showMarkStyle ? 'block' : 'none';
 
@@ -1254,13 +1265,13 @@
                     const msIdTarget = `msMachTarget${i}`;
                     const machOpts = (f.opts || []).map(o => ({id:o, title:o}));
                     const selectedVals = r.val ? r.val.split(',') : [];
+                    // Fixed: Always fetch fresh fields list for targets to ensure new cards appear
                     const allFieldOpts = fields.map(ff => ({id:ff.id, title:`${ff.title} (${ff.type})`}));
                     
                     const selectedTargets = [];
                     if(r.target) {
                         const targetTitles = r.target.split(',');
                         targetTitles.forEach(tTitle => {
-                            // Match by ID first, then Title
                             let found = fields.find(ff => ff.id === tTitle.trim());
                             if(!found) found = fields.find(ff => ff.title === tTitle.trim());
                             if(found) selectedTargets.push(found.id);
