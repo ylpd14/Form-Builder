@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>專業表單規格生成器 v62.19 (Radio Fix & Layout)</title>
+    <title>專業表單規格生成器 v62.20 (Grid & UI Polish)</title>
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&display=swap" rel="stylesheet">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/Sortable/1.15.0/Sortable.min.js"></script>
     <style>
@@ -75,6 +75,9 @@
         .grid-add-btn:hover { background: #eee; }
         .grid-add-col { width: 40px; height: 100%; border-left: 1px solid #ddd; }
         .grid-add-row { height: 35px; border-top: 1px solid #eee; }
+        /* [Fix Req 4] Grid Header Mode Switcher */
+        .grid-header-mode-icon { position:absolute; top:2px; left:2px; font-size:12px; cursor:pointer; opacity:0.6; z-index:10; background:rgba(255,255,255,0.8); border-radius:3px; padding:1px; }
+        .grid-header-mode-icon:hover { opacity:1; background:#fff; box-shadow: 0 0 2px rgba(0,0,0,0.2); }
 
         /* Icons & Logic */
         .fake-icon { display: inline-flex; align-items: center; justify-content: center; width: 18px; height: 18px; border: 2px solid #ccc; background: #fff; cursor: pointer; flex-shrink: 0; font-size: 14px; color: transparent; font-weight: bold; transition: 0.2s; user-select: none; position: relative; z-index: 2; }
@@ -101,10 +104,10 @@
         /* Logic Panel */
         .logic-panel { background: #fffde7; border: 1px dashed #fbc02d; padding: 10px; border-radius: 8px; margin-top: 8px; }
         
-        /* [Fix Req 2] Single Row Layout for Rules */
+        /* [Fix Req 1] Expanded width for time inputs to prevent cutout */
         .logic-line { display: flex; align-items: center; gap: 6px; margin-bottom: 6px; font-size: 12px; flex-wrap: nowrap; width: 100%; white-space: nowrap; overflow: hidden; }
         .logic-line input, .logic-line select { padding: 4px; border: 1px solid #ccc; border-radius: 3px; font-size: 12px; flex-shrink: 0; }
-        .time-inp-fix { width: 90px; flex-shrink: 0; }
+        .time-inp-fix { width: 125px; flex-shrink: 0; } 
         .val-inp-fix { width: 50px; flex: 1; }
         
         .opt-manage-item { display: flex; align-items: center; gap: 5px; margin-bottom: 6px; }
@@ -163,16 +166,20 @@
         .palette-custom-row:hover { background: #f5f5f5; }
         .custom-color-icon { width: 16px; height: 16px; border-radius: 50%; background: linear-gradient(to right, red, yellow, lime, cyan, blue, magenta, red); border: 1px solid #ccc; }
 
-        /* [Fix Req 1 & 2] Compact Single Row Layout for Validation Rules */
+        /* [Fix Req 2] Consistent Validation Rule Styling */
         .val-rule-item { display: flex; align-items: center; gap: 4px; margin-bottom: 6px; background: #fdfdfd; padding: 4px; border-radius: 4px; border: 1px solid #eee; flex-wrap: nowrap; width: 100%; white-space: nowrap; overflow: hidden; }
-        .val-type-sel { width: 55px; min-width: 55px; flex-shrink: 0; padding: 4px 0; border: 1px solid #ccc; border-radius: 3px; font-size: 12px; text-align:center; }
-        .val-op-sel { width: 35px; min-width: 35px; flex-shrink: 0; padding: 4px 0; border: 1px solid #ccc; border-radius: 3px; font-size: 12px; text-align: center; }
-        .val-inp { flex: 1; min-width: 40px; padding: 4px; border: 1px solid #ccc; border-radius: 3px; font-size: 12px; }
+        .val-rule-item select, .val-rule-item input { padding: 4px; border: 1px solid #ccc; border-radius: 3px; font-size: 12px; height: 26px; box-sizing: border-box; }
+        .val-type-sel { width: 55px; min-width: 55px; flex-shrink: 0; text-align:center; }
+        .val-op-sel { width: 35px; min-width: 35px; flex-shrink: 0; text-align: center; }
+        .val-inp { flex: 1; min-width: 40px; }
         .val-del { flex-shrink: 0; cursor: pointer; color: #999; margin-left: auto; padding: 0 4px; font-weight: bold; }
         
         .header-split { display: flex; align-items: center; justify-content: space-between; margin-bottom: 5px; }
         .header-right-check { font-size: 12px; font-weight: normal; margin-left: auto; }
         
+        /* [Fix Req 3] Card UI Hints */
+        .ui-hint-badge { display: inline-block; font-size: 10px; padding: 1px 4px; border-radius: 3px; margin-left: 5px; background-color: #f1f3f4; color: #5f6368; border: 1px solid #dadce0; vertical-align: middle; }
+
         /* Excel Visuals */
         .layout-visual-container { display: flex; gap: 15px; margin-top: 8px; font-size: 12px; color: #666; justify-content: center; background: #f9f9f9; padding: 8px; border-radius: 4px; border: 1px solid #eee; }
         .layout-option { display: flex; flex-direction: column; align-items: center; gap: 4px; }
@@ -626,6 +633,7 @@
                 id, type, title, width:'w-100', size:14, color:'#000000', bgColor: 'transparent', bold:false, italic:false, underline:false,
                 req:false, descE:false, desc:'', unitB:'', uEnable:false, uRules: [], 
                 mode:'text', manual:false,
+                /* [Fix Req 4] Grid Default Show Headers */
                 rows:['第 1 列'], cols:['第 1 欄'], colModes: ['text'],
                 corner:true, cornerTop:'欄名', cornerBot:'列名', showCol:true, showRow:true,
                 opts:['選項 1'], testV:'', link:'', upper:false, defVal:'', 
@@ -669,9 +677,24 @@
                     sanitizeField(f);
                     const s = `font-size:${f.size}px; color:${f.color}; background-color:${f.bgColor}; font-weight:${f.bold?'bold':'normal'}; font-style:${f.italic?'italic':'normal'}; text-decoration:${f.underline?'underline':'none'};`;
                     const renderInput = (cls, ph) => `<input class="${cls} no-drag" style="width:100%; border:1px solid #ccc; border-radius:4px; padding:4px 6px; font-size:12px; height:28px; outline:none; background:#fff; ${f.upper ? 'text-transform:uppercase;' : ''}" placeholder="${ph}" oninput="validateInput(this, '${f.id}')" onblur="handleBlur(this, '${f.id}')" onfocus="select('${f.id}')" data-fid="${f.id}" value="${f.defVal || ''}">`;
-                    /* [Fix Req 3] Use f.markStyle in renderMark calls */
                     const renderMark = (isRadio, customMarkStyle) => `<div class="fake-icon ${isRadio?'radio':'checkbox'} no-drag" onclick="toggleCheck(this, '${customMarkStyle || f.markStyle}', ${isRadio}, '${f.id}')"></div>`;
                     
+                    /* [Fix Req 3] UI Hints for Mode/Mark Style */
+                    let uiHints = '';
+                    if (['choices', 'machine'].includes(f.type)) {
+                        let ms = (f.type==='machine') ? f.machineStyle : f.mode;
+                        let mark = f.markStyle;
+                        if(ms.includes('radio') || ms === 'dropdown') uiHints += `<span class="ui-hint-badge">單選</span>`;
+                        if(ms.includes('checkbox')) uiHints += `<span class="ui-hint-badge">多選</span>`;
+                        
+                        // Only show mark style hint if relevant (not dropdown)
+                        if (ms !== 'dropdown') {
+                            if(mark === 'mark-check') uiHints += `<span class="ui-hint-badge">打勾</span>`;
+                            else if(mark === 'mark-cross') uiHints += `<span class="ui-hint-badge">打叉</span>`;
+                            else if(mark === 'mark-both') uiHints += `<span class="ui-hint-badge">三態</span>`;
+                        }
+                    }
+
                     let autoPrevBadge = '';
                     if((f.autoPrevRules || []).length > 0) {
                         const times = f.autoPrevRules.map(r => `${r.start}~${r.end}`).join(', ');
@@ -682,10 +705,8 @@
                     if(f.type === 'batch') body = `<div class="batch-container"><label class="batch-label"><div class="fake-icon checkbox no-drag" onclick="toggleCheck(this, 'mark-check'); select('${f.id}')"></div> FA</label>${renderInput('batch-input-flex', '主批號(3)')}<span>-</span>${renderInput('batch-input-flex', '子批號(2)')}</div>`;
                     else if(f.type === 'machine') {
                         if(f.machineStyle === 'dropdown') body = `${autoPrevBadge}<div class="preview-dropdown" onclick="select('${f.id}')"><select class="no-drag" style="width:100%; border:none; background:transparent;" onchange="runMachineLogic('${f.id}', this.value)"><option>-- 請選擇機台 --</option>${(f.opts||[]).map(o=>`<option value="${o}">${o}</option>`).join('')}</select></div>`;
-                        /* [Fix Req 3] Correctly passing f.markStyle */
                         else body = `${autoPrevBadge}<div style="display:flex; gap:10px; flex-wrap:wrap;">${(f.opts||[]).map(o=>`<label style="display:flex;align-items:center;gap:4px;font-size:13px;" onclick="select('${f.id}'); runMachineLogic('${f.id}', '${o}')">${renderMark(f.machineStyle==='radio', f.markStyle)} ${o}</label>`).join('')}</div>`;
                         if((f.machineRules||[]).length > 0) {
-                            /* [Fix Req 1] Display machine rules correctly by iterating through targets */
                             const ruleText = f.machineRules.map(r=> `<span style="font-size:10px; background:#eee; padding:1px 3px;">${r.val}→${r.target.split(',').length}欄位</span>`).join(' ');
                             body = `<div style="font-size:11px; color:#888; margin-bottom:4px;">連動規則 ${ruleText}</div>` + body;
                         }
@@ -699,7 +720,8 @@
                          let thead = '';
                          if(f.showCol) {
                             let headerCell = f.corner && f.showRow ? `<th class="slash-header"><input class="slash-top no-drag" value="${f.cornerTop}" placeholder="欄" onfocus="select('${f.id}')"><input class="slash-bot no-drag" value="${f.cornerBot}" placeholder="列" onfocus="select('${f.id}')"></th>` : (f.showRow ? `<th></th>` : '');
-                            const ths = f.cols.map((c,i) => `<th><div style="display:flex;align-items:center;justify-content:center;position:relative;"><input class="grid-inp no-drag" value="${c}" onchange="syncGridCol('${f.id}',${i},this.value)" onfocus="select('${f.id}')"><span class="del-col-btn no-drag" onclick="delCol('${f.id}',${i})">×</span></div></th>`).join('');
+                            /* [Fix Req 4] Grid Header Mode Switcher */
+                            const ths = f.cols.map((c,i) => `<th><div style="display:flex;align-items:center;justify-content:center;position:relative;"><span class="grid-header-mode-icon no-drag" onclick="cycleGridColMode('${f.id}', ${i})" title="切換模式 (文字/單選/多選/混合)">${getIconForMode(f.colModes[i])}</span><input class="grid-inp no-drag" value="${c}" onchange="syncGridCol('${f.id}',${i},this.value)" onfocus="select('${f.id}')"><span class="del-col-btn no-drag" onclick="delCol('${f.id}',${i})">×</span></div></th>`).join('');
                             thead = `<thead><tr>${headerCell}${ths}<th class="grid-add-btn grid-add-col no-drag" onclick="addCol('${f.id}')">+</th></tr></thead>`;
                          }
                          const trs = f.rows.map((r,i) => `<tr>${f.showRow?`<td><div style="display:flex;align-items:center;justify-content:center;"><input class="grid-inp no-drag" value="${r}" onchange="syncGridRow('${f.id}',${i},this.value)" onfocus="select('${f.id}')"><span class="del-row-btn no-drag" onclick="delRow('${f.id}',${i})">🗑</span></div></td>`:''}${f.cols.map((c, colIndex) => {
@@ -751,7 +773,7 @@
                                     ${f.link ? `<a href="${f.link}" target="_blank" class="no-drag" style="text-decoration:none; margin-left:5px;">🔗</a>` : ''}
                                     ${f.req?'<span style="color:red;">*</span>':''}
                                 </div>
-                                <span style="font-size:10px; color:#aaa; border:1px solid #eee; padding:2px 5px; border-radius:4px;">${f.type.toUpperCase()}</span>
+                                <span style="font-size:10px; color:#aaa; border:1px solid #eee; padding:2px 5px; border-radius:4px; white-space:nowrap;">${f.type.toUpperCase()}${uiHints}</span>
                             </div>
                             ${f.descE?`<div style="margin-bottom:8px; font-size:12px; color:#666;"><textarea class="desc-inp no-drag" rows="1" placeholder="輸入說明..." oninput="autoResize(this); syncDesc('${f.id}',this.value)" onfocus="select('${f.id}')">${f.desc || ''}</textarea></div>`:''}
                             <div>${body}</div>
@@ -976,9 +998,17 @@
         }
         function toggleGridColMode(id, idx, btn) {
             const f = fields.find(x => x.id === id);
+            /* [Fix Req 4] Cycling Grid Modes */
             const modes = ['text', 'radio', 'checkbox', 'mixed-radio', 'mixed-checkbox'];
             let current = f.colModes[idx]; let next = modes[(modes.indexOf(current) + 1) % modes.length];
-            f.colModes[idx] = next; btn.innerHTML = getIconForMode(next); render();
+            f.colModes[idx] = next; 
+            if(btn) btn.innerHTML = getIconForMode(next); 
+            render();
+        }
+        
+        /* [Fix Req 4] Global function to be called from Canvas Grid Header */
+        function cycleGridColMode(id, idx) {
+            toggleGridColMode(id, idx, null); // btn is null, render() will update view
         }
 
         function applyGlobal() {
@@ -1235,6 +1265,7 @@
             if(f) {
                 document.getElementById('valRulesList').innerHTML = (f.valRules||[]).map((r,i) => {
                     if(r.target === 'dec') {
+                        /* [Fix Req 2] Decimal Rule Styling fixed to match others */
                         return `
                         <div class="val-rule-item">
                             <select class="val-type-sel" onchange="upValRule(${i},'target',this.value)">
@@ -1242,8 +1273,8 @@
                                 <option value="val" ${r.target==='val'?'selected':''}>數值</option>
                                 <option value="dec" ${r.target==='dec'?'selected':''}>小數</option>
                             </select>
-                            <input type="number" style="width:40px; min-width:40px; padding:4px;" value="${r.val1}" placeholder="位數" oninput="upValRule(${i},'val1',this.value)">
-                            <select style="flex:1; min-width:80px; padding:4px 0;" onchange="upValRule(${i},'op1',this.value)">
+                            <input type="number" style="width:40px; min-width:40px;" value="${r.val1}" placeholder="位數" oninput="upValRule(${i},'val1',this.value)">
+                            <select style="flex:1; min-width:80px;" onchange="upValRule(${i},'op1',this.value)">
                                 <option value="round" ${r.op1==='round'?'selected':''}>四捨五入</option>
                                 <option value="ceil" ${r.op1==='ceil'?'selected':''}>無條件進位</option>
                                 <option value="floor" ${r.op1==='floor'?'selected':''}>無條件捨去</option>
@@ -1329,7 +1360,7 @@
         window.delM = (i) => { if(!activeId) return; fields.find(x=>x.id===activeId).machineRules.splice(i,1); renderMachineRules(); };
         /* --- Other Helpers --- */
         function addShiftRule() { fields.find(x=>x.id===activeId).shiftRules.push({start:'08:00', end:'12:00', val:'早班'}); renderShiftRules(); render(); }
-        /* [Fix Req 2] Shift Rules Render: Single Row */
+        /* [Fix Req 1 & 2] Shift Rules Render: Single Row, Fixed Time Width */
         function renderShiftRules() { const f = fields.find(x=>x.id===activeId);
             document.getElementById('sRules').innerHTML = (f.shiftRules||[]).map((r,i) => `<div class="logic-line"><input type="time" class="time-inp-fix" value="${r.start}" oninput="upS(${i},'start',this.value)"> ~ <input type="time" class="time-inp-fix" value="${r.end}" oninput="upS(${i},'end',this.value)"> <input style="width:50px; flex:1;" placeholder="班別" value="${r.val}" oninput="upS(${i},'val',this.value)"> <span style="cursor:pointer; margin-left:auto;" onclick="delS(${i})">🗑</span></div>`).join('');
         }
