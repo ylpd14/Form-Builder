@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>專業表單規格生成器 v62.17 (Layout & Logic Fixes)</title>
+    <title>專業表單規格生成器 v62.18 (Layout & Logic Final)</title>
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&display=swap" rel="stylesheet">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/Sortable/1.15.0/Sortable.min.js"></script>
     <style>
@@ -102,9 +102,9 @@
         .logic-panel { background: #fffde7; border: 1px dashed #fbc02d; padding: 10px; border-radius: 8px; margin-top: 8px; }
         
         /* [Fix Req 2] Single Row Layout for Rules */
-        .logic-line { display: flex; align-items: center; gap: 6px; margin-bottom: 6px; font-size: 12px; flex-wrap: nowrap; width: 100%; overflow-x: auto; padding-bottom: 2px; }
+        .logic-line { display: flex; align-items: center; gap: 4px; margin-bottom: 6px; font-size: 12px; flex-wrap: nowrap; width: 100%; overflow: hidden; }
         .logic-line input, .logic-line select { padding: 4px; border: 1px solid #ccc; border-radius: 3px; font-size: 12px; flex-shrink: 0; }
-        .time-inp-fix { min-width: 95px; width: 95px; } /* Ensure full time shows */
+        .time-inp-fix { min-width: 90px; width: 90px; } /* Ensure full time shows */
         .val-inp-fix { min-width: 50px; flex: 1; } 
         
         .opt-manage-item { display: flex; align-items: center; gap: 5px; margin-bottom: 6px; }
@@ -163,11 +163,12 @@
         .palette-custom-row:hover { background: #f5f5f5; }
         .custom-color-icon { width: 16px; height: 16px; border-radius: 50%; background: linear-gradient(to right, red, yellow, lime, cyan, blue, magenta, red); border: 1px solid #ccc; }
 
-        /* [Fix Req 2] Updated Validation Rule Item CSS to be Single Row */
-        .val-rule-item { display: flex; align-items: center; gap: 6px; margin-bottom: 6px; background: #fdfdfd; padding: 6px; border-radius: 4px; border: 1px solid #eee; flex-wrap: nowrap; width: 100%; justify-content: space-between; overflow-x: auto; }
-        .val-rule-item select { padding: 4px; border: 1px solid #ccc; border-radius: 3px; font-size: 12px; min-width: 60px; flex-shrink: 0; }
-        .val-rule-item input { padding: 4px; border: 1px solid #ccc; border-radius: 3px; font-size: 12px; flex: 1; min-width: 40px; }
-        .val-rule-item span { flex-shrink: 0; }
+        /* [Fix Req 2] Updated Validation Rule Item CSS to be Single Row (No Wrap) */
+        .val-rule-item { display: flex; align-items: center; gap: 4px; margin-bottom: 6px; background: #fdfdfd; padding: 6px; border-radius: 4px; border: 1px solid #eee; flex-wrap: nowrap; width: 100%; white-space: nowrap; overflow: hidden; }
+        .val-type-sel { width: 60px; min-width: 60px; flex-shrink: 0; padding: 4px; border: 1px solid #ccc; border-radius: 3px; font-size: 12px; }
+        .val-op-sel { width: 45px; min-width: 45px; flex-shrink: 0; padding: 4px; border: 1px solid #ccc; border-radius: 3px; font-size: 12px; text-align: center; }
+        .val-inp { flex: 1; min-width: 0; width: 100%; padding: 4px; border: 1px solid #ccc; border-radius: 3px; font-size: 12px; }
+        .val-del { flex-shrink: 0; cursor: pointer; color: #999; margin-left: auto; padding: 0 4px; font-weight: bold; }
         
         .header-split { display: flex; align-items: center; justify-content: space-between; margin-bottom: 5px; }
         .header-right-check { font-size: 12px; font-weight: normal; margin-left: auto; }
@@ -409,6 +410,10 @@
                     <span class="add-link" onclick="addSidebarOpt()">+ 新增選項</span>
                     <span class="add-link" onclick="bulkAddSidebarOpt()">+ 批量新增</span>
                 </div>
+            </div>
+            
+            <div id="optSecLocked" class="p-item sec-divider" style="display:none; background:#fff3cd; padding:8px; border:1px solid #ffeeba; border-radius:4px; color:#856404; font-size:12px;">
+                ⚠️ 此欄位選項由「機台連動規則」控制，請至對應的機台欄位設定規則。
             </div>
 
             <div id="gridSec" class="p-item sec-divider" style="display:none;">
@@ -943,8 +948,20 @@
             if(msDiv) msDiv.style.display = showMarkStyle ? 'block' : 'none';
 
             document.getElementById('dateSec').style.display = f.type==='datetime'?'block':'none';
-            document.getElementById('optSec').style.display = ['dropdown','shift','machine','choices'].includes(f.type) ? 'block' : 'none';
-            if(['dropdown','shift','machine','choices'].includes(f.type)) renderSidebarOpts();
+            
+            /* [Fix Req 1] Hide Option Management for Linked Fields */
+            let isLinked = false;
+            fields.forEach(ff => {
+                if(ff.machineRules) ff.machineRules.forEach(r => {
+                    if(r.target && r.target.split(',').includes(f.id)) isLinked = true;
+                });
+            });
+            const canHaveOpts = ['dropdown','shift','machine','choices'].includes(f.type);
+            document.getElementById('optSec').style.display = (canHaveOpts && !isLinked) ? 'block' : 'none';
+            document.getElementById('optSecLocked').style.display = (canHaveOpts && isLinked) ? 'block' : 'none';
+            
+            if(canHaveOpts && !isLinked) renderSidebarOpts();
+            
             document.getElementById('modeSec').style.display = ['choices'].includes(f.type)?'block':'none';
             if(f.type === 'grid') {
                 const colContainer = document.getElementById('gridColSettings');
@@ -1220,38 +1237,38 @@
                     if(r.target === 'dec') {
                         return `
                         <div class="val-rule-item">
-                            <select style="width:65px" onchange="upValRule(${i},'target',this.value)">
+                            <select class="val-type-sel" onchange="upValRule(${i},'target',this.value)">
                                 <option value="len" ${r.target==='len'?'selected':''}>字數</option>
                                 <option value="val" ${r.target==='val'?'selected':''}>數值</option>
                                 <option value="dec" ${r.target==='dec'?'selected':''}>小數</option>
                             </select>
-                            <input type="number" class="val-inp-fix" value="${r.val1}" placeholder="位數" oninput="upValRule(${i},'val1',this.value)">
+                            <input type="number" class="val-inp" value="${r.val1}" placeholder="位數" oninput="upValRule(${i},'val1',this.value)">
                             <select style="flex:1; min-width:80px;" onchange="upValRule(${i},'op1',this.value)">
                                 <option value="round" ${r.op1==='round'?'selected':''}>四捨五入</option>
                                 <option value="ceil" ${r.op1==='ceil'?'selected':''}>無條件進位</option>
                                 <option value="floor" ${r.op1==='floor'?'selected':''}>無條件捨去</option>
                             </select>
-                            <span style="cursor:pointer; color:#999; margin-left:auto; padding-left:5px;" onclick="delValRule(${i})">×</span>
+                            <span class="val-del" onclick="delValRule(${i})">×</span>
                         </div>`;
                     }
                     const isLen = r.target === 'len';
                     return `
                      <div class="val-rule-item">
-                        <select style="width:65px" onchange="upValRule(${i},'target',this.value)">
+                        <select class="val-type-sel" onchange="upValRule(${i},'target',this.value)">
                             <option value="len" ${r.target==='len'?'selected':''}>字數</option>
                             <option value="val" ${r.target==='val'?'selected':''}>數值</option>
                             <option value="dec" ${r.target==='dec'?'selected':''}>小數</option>
                         </select>
-                        <input type="number" class="val-inp-fix" value="${r.val1}" placeholder="${isLen?'Min':'A'}" oninput="upValRule(${i},'val1',this.value)">
-                        <select style="width:40px" onchange="upValRule(${i},'op1',this.value)">
+                        <input type="number" class="val-inp" value="${r.val1}" placeholder="${isLen?'Min':'A'}" oninput="upValRule(${i},'val1',this.value)">
+                        <select class="val-op-sel" onchange="upValRule(${i},'op1',this.value)">
                             <option value="" ${r.op1===''?'selected':''}>&gt;</option><option value="<" ${r.op1==='<'?'selected':''}>&lt;</option><option value="=" ${r.op1==='='?'selected':''}>=</option><option value=">=" ${r.op1==='>='?'selected':''}>≥</option><option value="<=" ${r.op1==='<='?'selected':''}>≤</option>
                         </select>
                         <span style="font-weight:bold; color:#666; padding:0 2px;">/</span>
-                        <select style="width:40px" onchange="upValRule(${i},'op2',this.value)">
+                        <select class="val-op-sel" onchange="upValRule(${i},'op2',this.value)">
                             <option value="" ${r.op2===''?'selected':''}>&gt;</option><option value="<" ${r.op2==='<'?'selected':''}>&lt;</option><option value="=" ${r.op2==='='?'selected':''}>=</option><option value=">=" ${r.op2==='>='?'selected':''}>≥</option><option value="<=" ${r.op2==='<='?'selected':''}>≤</option>
                         </select>
-                        <input type="number" class="val-inp-fix" value="${r.val2}" placeholder="${isLen?'Max':'B'}" oninput="upValRule(${i},'val2',this.value)">
-                        <span style="cursor:pointer; color:#999; margin-left:auto; padding-left:5px;" onclick="delValRule(${i})">×</span>
+                        <input type="number" class="val-inp" value="${r.val2}" placeholder="${isLen?'Max':'B'}" oninput="upValRule(${i},'val2',this.value)">
+                        <span class="val-del" onclick="delValRule(${i})">×</span>
                     </div>
                 `;}).join('');
             }
@@ -1371,7 +1388,9 @@
             if(f) { 
                 f.opts.push(`選項 ${f.opts.length+1}`);
                 renderSidebarOpts(); 
-                render(); 
+                render();
+                /* [Fix Req 1] Force re-render of machine rules when options change */
+                if(f.type === 'machine') renderMachineRules(); 
             } 
         }
         function bulkAddSidebarOpt() {
@@ -1383,6 +1402,8 @@
                     f.opts = [...f.opts, ...lines];
                     renderSidebarOpts();
                     render();
+                    /* [Fix Req 1] Force re-render of machine rules when options change */
+                    if(f.type === 'machine') renderMachineRules();
                 }
             }
         }
@@ -1391,8 +1412,46 @@
             const f = fields.find(x=>x.id===activeId);
             document.getElementById('optList').innerHTML = (f.opts||[]).map((o,i) => `<div class="opt-manage-item"><input value="${o}" oninput="upOpt(${i},this.value)"> <span onclick="delOpt(${i})">×</span></div>`).join('');
         }
-        window.upOpt = (i,v) => { fields.find(x=>x.id===activeId).opts[i]=v; render(); };
-        window.delOpt = (i) => { const f=fields.find(x=>x.id===activeId); f.opts.splice(i,1); renderSidebarOpts(); render(); };
+        window.upOpt = (i,v) => { 
+            const f = fields.find(x=>x.id===activeId);
+            f.opts[i]=v; 
+            render();
+            /* [Fix Req 1] Force re-render of machine rules when options change */
+            if(f.type === 'machine') renderMachineRules();
+        };
+        window.delOpt = (i) => { 
+            const f=fields.find(x=>x.id===activeId); 
+            f.opts.splice(i,1); 
+            renderSidebarOpts(); 
+            render();
+            /* [Fix Req 1] Force re-render of machine rules when options change */
+            if(f.type === 'machine') renderMachineRules();
+        };
+
+        /* [Fix Req 3] Added Toggle Check Function for Canvas Click Testing */
+        function toggleCheck(el, style, isRadio) {
+            // Prevent event bubbling if necessary, though inline onclick already handles some logic
+            if(!style) style = 'mark-check';
+            
+            // Simple visual toggle for preview
+            if(style === 'mark-check') {
+                if(el.classList.contains('checked-v')) el.classList.remove('checked-v');
+                else { el.classList.remove('checked-x'); el.classList.add('checked-v'); }
+            } else if(style === 'mark-cross') {
+                if(el.classList.contains('checked-x')) el.classList.remove('checked-x');
+                else { el.classList.remove('checked-v'); el.classList.add('checked-x'); }
+            } else {
+                // Three-state: empty -> v -> x -> empty
+                if(el.classList.contains('checked-v')) {
+                    el.classList.remove('checked-v');
+                    el.classList.add('checked-x');
+                } else if(el.classList.contains('checked-x')) {
+                    el.classList.remove('checked-x');
+                } else {
+                    el.classList.add('checked-v');
+                }
+            }
+        }
 
     </script>
 </body>
