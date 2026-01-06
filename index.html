@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>專業表單規格生成器 v62.22 (Final Polish)</title>
+    <title>專業表單規格生成器 v62.23 (Logic Fixes)</title>
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&display=swap" rel="stylesheet">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/Sortable/1.15.0/Sortable.min.js"></script>
     <style>
@@ -109,10 +109,10 @@
         /* Logic Panel */
         .logic-panel { background: #fffde7; border: 1px dashed #fbc02d; padding: 10px; border-radius: 8px; margin-top: 8px; }
         
-        /* [Fix Req 1] Adjusted Time and Layout CSS */
+        /* [Fix Req 1] Expanded width for time inputs, better flex for delete button */
         .logic-line { display: flex; align-items: center; gap: 6px; margin-bottom: 6px; font-size: 12px; flex-wrap: nowrap; width: 100%; white-space: nowrap; overflow: hidden; }
         .logic-line input, .logic-line select { padding: 4px; border: 1px solid #ccc; border-radius: 3px; font-size: 12px; flex-shrink: 0; }
-        .time-inp-fix { width: 105px; flex-shrink: 0; } /* [Fix Req 1] Full Time Display */
+        .time-inp-fix { width: 105px; flex-shrink: 0; } /* [Fix Req 1] Fixed Time Width */
         .val-inp-fix { width: 50px; flex: 1; }
         .logic-val-input { flex: 1; min-width: 0; } /* Auto fill space */
         .logic-del-btn { cursor: pointer; margin-left: auto; font-weight: bold; color: #999; flex-shrink: 0; padding: 0 4px; }
@@ -443,7 +443,7 @@
                 <label class="p-check-row"><input type="checkbox" id="pCorner" onchange="apply()"> 顯示斜線表頭</label>
                 <label class="p-check-row"><input type="checkbox" id="pShowCol" onchange="apply()"> 顯示欄標題</label>
                 <label class="p-check-row"><input type="checkbox" id="pShowRow" onchange="apply()"> 顯示列標題</label>
-                </div>
+            </div>
 
             <div id="contentSec" class="p-item sec-divider">
                 <label>內容限制與格式</label>
@@ -1004,7 +1004,9 @@
             
             document.getElementById('modeSec').style.display = ['choices'].includes(f.type)?'block':'none';
             if(f.type === 'grid') {
-                /* [Fix Req 2] Simplified Grid Sidebar: Only Show/Hide Checks */
+                /* [Fix Req 2] Default Checked for Grid Headers in Sidebar */
+                setChk('pShowCol', f.showCol);
+                setChk('pShowRow', f.showRow);
             }
         }
         
@@ -1275,9 +1277,23 @@
             }
         }
         function delValRule(i) { if(!activeId) return; fields.find(x=>x.id===activeId).valRules.splice(i, 1); renderValRules(); apply(); }
-        function upValRule(i, k, v) { if(!activeId) return; fields.find(x=>x.id===activeId).valRules[i][k] = v; apply(); }
         
-        /* [Fix Req 3] Validation Rules Render: Dynamic switching */
+        /* [Fix Req 1] Dynamic Switch Logic */
+        function upValRule(i, k, v) { 
+            if(!activeId) return; 
+            const f = fields.find(x=>x.id===activeId);
+            if(k === 'target') {
+                if(v === 'dec') f.valRules[i] = { target: 'dec', val1: '2', op1: 'round' };
+                else if(v === 'len') f.valRules[i] = { target: 'len', op1: '', val1: '0', op2: '', val2: '50' };
+                else f.valRules[i] = { target: 'val', op1: '', val1: '0', op2: '', val2: '100' };
+                renderValRules(); // Force UI update immediately
+            } else {
+                f.valRules[i][k] = v; 
+                apply(); // Standard update
+            }
+        }
+        
+        /* [Fix Req 1 & 3] Validation Rules Render: Dynamic switching */
         function renderValRules() {
             if(!activeId) return;
             const f = fields.find(x=>x.id===activeId);
