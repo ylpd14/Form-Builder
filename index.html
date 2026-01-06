@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>專業表單規格生成器 v62.15 (UI Layout & Bug Fixes)</title>
+    <title>專業表單規格生成器 v62.16 (Layout & Logic Fixes)</title>
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&display=swap" rel="stylesheet">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/Sortable/1.15.0/Sortable.min.js"></script>
     <style>
@@ -85,7 +85,6 @@
         .fake-icon.checked-x { border-color: var(--danger); background-color: #fff5f5; color: var(--danger); font-size: 12px; } .fake-icon.checked-x::after { content: '✕'; }
         .fake-icon.radio.checked-x::after { content: '✕'; }
         
-        /* [Fix Req 4] Layout Update for Mixed Mode: Flex Row & Auto-fill Input */
         .opt-item { display: flex; align-items: center; gap: 8px; margin-top: 5px; width: 100%; }
         .opt-item span { white-space: nowrap; flex-shrink: 0; }
         .opt-item .style-v27-box { flex: 1; min-width: 0; width: auto; margin-left: 0; }
@@ -101,9 +100,14 @@
         
         /* Logic Panel */
         .logic-panel { background: #fffde7; border: 1px dashed #fbc02d; padding: 10px; border-radius: 8px; margin-top: 8px; }
-        /* [Fix Req 5] Logic Line Wrap and Input Size */
-        .logic-line { display: flex; align-items: center; gap: 4px; margin-bottom: 5px; font-size: 12px; flex-wrap: wrap; }
-        .logic-line input, .logic-line select { padding: 3px; border: 1px solid #ccc; border-radius: 3px; }
+        
+        /* [Fix Req 1 & 4] Single Row Layout for Rules */
+        .logic-line { display: flex; align-items: center; gap: 6px; margin-bottom: 6px; font-size: 12px; flex-wrap: nowrap; width: 100%; }
+        .logic-line input, .logic-line select { padding: 4px; border: 1px solid #ccc; border-radius: 3px; font-size: 12px; }
+        /* Specific widths for logic inputs to match screenshot */
+        .time-inp-fix { width: 95px !important; min-width: 95px; }
+        .val-inp-fix { width: 50px !important; flex: 0 0 50px; }
+        
         .opt-manage-item { display: flex; align-items: center; gap: 5px; margin-bottom: 6px; }
         .opt-manage-item input { flex: 1; padding: 6px; border: 1px solid #eee; border-radius: 4px; font-size: 12px; }
         .opt-manage-item span { cursor: pointer; color: #ccc; }
@@ -160,10 +164,11 @@
         .palette-custom-row:hover { background: #f5f5f5; }
         .custom-color-icon { width: 16px; height: 16px; border-radius: 50%; background: linear-gradient(to right, red, yellow, lime, cyan, blue, magenta, red); border: 1px solid #ccc; }
 
-        /* [Fix Req 1] Updated Validation Rule Item CSS */
-        .val-rule-item { display: flex; align-items: center; gap: 8px; margin-bottom: 5px; background: #fdfdfd; padding: 6px; border-radius: 4px; border: 1px solid #eee; flex-wrap: wrap; height: auto; }
-        .val-rule-item select { padding: 4px; border: 1px solid #ccc; border-radius: 3px; font-size: 12px; min-width: 70px; flex: 1; }
-        .val-rule-item input { padding: 4px; border: 1px solid #ccc; border-radius: 3px; font-size: 12px; min-width: 50px; flex: 1; }
+        /* [Fix Req 1 & 4] Updated Validation Rule Item CSS to be Single Row */
+        .val-rule-item { display: flex; align-items: center; gap: 6px; margin-bottom: 6px; background: #fdfdfd; padding: 6px; border-radius: 4px; border: 1px solid #eee; flex-wrap: nowrap; width: 100%; justify-content: space-between; }
+        .val-rule-item select { padding: 4px; border: 1px solid #ccc; border-radius: 3px; font-size: 12px; min-width: 60px; flex-shrink: 0; }
+        .val-rule-item input { padding: 4px; border: 1px solid #ccc; border-radius: 3px; font-size: 12px; flex: 1; min-width: 40px; }
+        .val-rule-item span { flex-shrink: 0; }
         
         .header-split { display: flex; align-items: center; justify-content: space-between; margin-bottom: 5px; }
         .header-right-check { font-size: 12px; font-weight: normal; margin-left: auto; }
@@ -659,6 +664,7 @@
                     sanitizeField(f);
                     const s = `font-size:${f.size}px; color:${f.color}; background-color:${f.bgColor}; font-weight:${f.bold?'bold':'normal'}; font-style:${f.italic?'italic':'normal'}; text-decoration:${f.underline?'underline':'none'};`;
                     const renderInput = (cls, ph) => `<input class="${cls} no-drag" style="width:100%; border:1px solid #ccc; border-radius:4px; padding:4px 6px; font-size:12px; height:28px; outline:none; background:#fff; ${f.upper ? 'text-transform:uppercase;' : ''}" placeholder="${ph}" oninput="validateInput(this, '${f.id}')" onblur="handleBlur(this, '${f.id}')" onfocus="select('${f.id}')" data-fid="${f.id}" value="${f.defVal || ''}">`;
+                    /* [Fix Req 3] Use f.markStyle in renderMark calls */
                     const renderMark = (isRadio, customMarkStyle) => `<div class="fake-icon ${isRadio?'radio':'checkbox'} no-drag" onclick="toggleCheck(this, '${customMarkStyle || f.markStyle}', ${isRadio}); select('${f.id}')"></div>`;
                     
                     let autoPrevBadge = '';
@@ -671,7 +677,7 @@
                     if(f.type === 'batch') body = `<div class="batch-container"><label class="batch-label"><div class="fake-icon checkbox no-drag" onclick="toggleCheck(this, 'mark-check'); select('${f.id}')"></div> FA</label>${renderInput('batch-input-flex', '主批號(3)')}<span>-</span>${renderInput('batch-input-flex', '子批號(2)')}</div>`;
                     else if(f.type === 'machine') {
                         if(f.machineStyle === 'dropdown') body = `${autoPrevBadge}<div class="preview-dropdown" onclick="select('${f.id}')"><select class="no-drag" style="width:100%; border:none; background:transparent;" onchange="runMachineLogic('${f.id}', this.value)"><option>-- 請選擇機台 --</option>${(f.opts||[]).map(o=>`<option value="${o}">${o}</option>`).join('')}</select></div>`;
-                        /* [Fix Req 3] Use f.markStyle for correct preview */
+                        /* [Fix Req 3] Correctly passing f.markStyle */
                         else body = `${autoPrevBadge}<div style="display:flex; gap:10px; flex-wrap:wrap;">${(f.opts||[]).map(o=>`<label style="display:flex;align-items:center;gap:4px;font-size:13px;" onclick="select('${f.id}'); runMachineLogic('${f.id}', '${o}')">${renderMark(f.machineStyle==='radio', f.markStyle)} ${o}</label>`).join('')}</div>`;
                         if((f.machineRules||[]).length > 0) {
                             const ruleText = f.machineRules.map(r=> `<span style="font-size:10px; background:#eee; padding:1px 3px;">${r.val}→${r.target}</span>`).join(' ');
@@ -694,10 +700,10 @@
                              const mode = f.colModes[colIndex] || 'text';
                              let inner = '';
                              if(mode === 'text') inner = renderInput('style-v27-box','');
-                             else if(mode === 'radio') inner = `<div class="grid-cell-wrapper" onclick="select('${f.id}')">${renderMark(true)}</div>`;
-                             else if(mode === 'checkbox') inner = `<div class="grid-cell-wrapper" onclick="select('${f.id}')">${renderMark(false)}</div>`;
-                             else if(mode === 'mixed-radio') inner = `<div class="grid-cell-wrapper" onclick="select('${f.id}')">${renderMark(true)}${renderInput('style-v27-box','')}</div>`;
-                             else if(mode === 'mixed-checkbox') inner = `<div class="grid-cell-wrapper" onclick="select('${f.id}')">${renderMark(false)}${renderInput('style-v27-box','')}</div>`;
+                             else if(mode === 'radio') inner = `<div class="grid-cell-wrapper" onclick="select('${f.id}')">${renderMark(true, f.markStyle)}</div>`;
+                             else if(mode === 'checkbox') inner = `<div class="grid-cell-wrapper" onclick="select('${f.id}')">${renderMark(false, f.markStyle)}</div>`;
+                             else if(mode === 'mixed-radio') inner = `<div class="grid-cell-wrapper" onclick="select('${f.id}')">${renderMark(true, f.markStyle)}${renderInput('style-v27-box','')}</div>`;
+                             else if(mode === 'mixed-checkbox') inner = `<div class="grid-cell-wrapper" onclick="select('${f.id}')">${renderMark(false, f.markStyle)}${renderInput('style-v27-box','')}</div>`;
                              return `<td>${inner}</td>`;
                          }).join('')}</tr>`).join('');
                          const footerRow = `<tr><td colspan="${f.cols.length + (f.showRow?1:0) + 1}" class="grid-add-btn grid-add-row no-drag" onclick="addRow('${f.id}')">+</td></tr>`;
@@ -721,9 +727,8 @@
                                  }).join('')}</div>`;
                              } else {
                                  body = `${autoPrevBadge}<div style="display:flex; flex-direction:column; gap:8px;">${(f.opts||[]).map(o=> {
-                                        const mark = renderMark(f.mode==='radio' || f.mode==='mixed-radio');
+                                        const mark = renderMark(f.mode==='radio' || f.mode==='mixed-radio', f.markStyle);
                                         const isMixed = f.mode==='mixed-radio'||f.mode==='mixed-checkbox';
-                                        /* [Fix Req 4] Flex 1 for mixed input mode */
                                         const input = isMixed ? renderInput('style-v27-box','') : '';
                                         return `<div class="opt-item" onclick="select('${f.id}')">${mark} <span>${o}</span> ${input}</div>`;
                                  }).join('')}</div>`;
@@ -932,7 +937,8 @@
             if(isMachine) renderMachineRules();
 
             const showMarkStyle = ['choices','grid'].includes(f.type) || (isMachine && ['radio','checkbox'].includes(f.machineStyle));
-            document.getElementById('markStyleSec').style.display = showMarkStyle ? 'block' : 'none';
+            const msDiv = document.getElementById('markStyleSec');
+            if(msDiv) msDiv.style.display = showMarkStyle ? 'block' : 'none';
 
             document.getElementById('dateSec').style.display = f.type==='datetime'?'block':'none';
             document.getElementById('optSec').style.display = ['dropdown','shift','machine','choices'].includes(f.type) ? 'block' : 'none';
@@ -1172,11 +1178,12 @@
                 render(); 
             }
         }
+        /* [Fix Req 4] Updated Auto Prev Render: Single Row */
         function renderAutoPrevRules() { 
             if(!activeId) return;
             const f = fields.find(x=>x.id===activeId); 
             if(f) {
-                document.getElementById('apRules').innerHTML = (f.autoPrevRules||[]).map((r,i) => `<div class="logic-line"><input type="time" style="flex:1;" value="${r.start}" oninput="upAP(${i},'start',this.value)"> ~ <input type="time" style="flex:1;" value="${r.end}" oninput="upAP(${i},'end',this.value)"> <span style="cursor:pointer; margin-left:4px;" onclick="delAP(${i})">🗑</span></div>`).join('');
+                document.getElementById('apRules').innerHTML = (f.autoPrevRules||[]).map((r,i) => `<div class="logic-line"><input type="time" class="time-inp-fix" value="${r.start}" oninput="upAP(${i},'start',this.value)"> ~ <input type="time" class="time-inp-fix" value="${r.end}" oninput="upAP(${i},'end',this.value)"> <span style="cursor:pointer; margin-left:auto;" onclick="delAP(${i})">🗑</span></div>`).join('');
             }
         }
         window.upAP = (i,k,v) => { if(!activeId) return; fields.find(x=>x.id===activeId).autoPrevRules[i][k]=v; render(); };
@@ -1200,6 +1207,8 @@
         }
         function delValRule(i) { if(!activeId) return; fields.find(x=>x.id===activeId).valRules.splice(i, 1); renderValRules(); apply(); }
         function upValRule(i, k, v) { if(!activeId) return; fields.find(x=>x.id===activeId).valRules[i][k] = v; apply(); }
+        
+        /* [Fix Req 1] Validation Rules Render: Single Row */
         function renderValRules() {
             if(!activeId) return;
             const f = fields.find(x=>x.id===activeId);
@@ -1213,8 +1222,8 @@
                                 <option value="val" ${r.target==='val'?'selected':''}>數值</option>
                                 <option value="dec" ${r.target==='dec'?'selected':''}>小數</option>
                             </select>
-                            <input type="number" style="flex:1; min-width:40px;" value="${r.val1}" placeholder="位數" oninput="upValRule(${i},'val1',this.value)">
-                            <select style="flex:1; min-width:70px;" onchange="upValRule(${i},'op1',this.value)">
+                            <input type="number" class="val-inp-fix" value="${r.val1}" placeholder="位數" oninput="upValRule(${i},'val1',this.value)">
+                            <select style="flex:1; min-width:80px;" onchange="upValRule(${i},'op1',this.value)">
                                 <option value="round" ${r.op1==='round'?'selected':''}>四捨五入</option>
                                 <option value="ceil" ${r.op1==='ceil'?'selected':''}>無條件進位</option>
                                 <option value="floor" ${r.op1==='floor'?'selected':''}>無條件捨去</option>
@@ -1230,15 +1239,15 @@
                             <option value="val" ${r.target==='val'?'selected':''}>數值</option>
                             <option value="dec" ${r.target==='dec'?'selected':''}>小數</option>
                         </select>
-                        <input type="number" style="width:40px" value="${r.val1}" placeholder="${isLen?'Min':'A'}" oninput="upValRule(${i},'val1',this.value)">
+                        <input type="number" class="val-inp-fix" value="${r.val1}" placeholder="${isLen?'Min':'A'}" oninput="upValRule(${i},'val1',this.value)">
                         <select style="width:40px" onchange="upValRule(${i},'op1',this.value)">
                             <option value="" ${r.op1===''?'selected':''}>&gt;</option><option value="<" ${r.op1==='<'?'selected':''}>&lt;</option><option value="=" ${r.op1==='='?'selected':''}>=</option><option value=">=" ${r.op1==='>='?'selected':''}>≥</option><option value="<=" ${r.op1==='<='?'selected':''}>≤</option>
                         </select>
-                        <span style="font-weight:bold; color:#666;">X</span>
+                        <span style="font-weight:bold; color:#666; padding:0 2px;">/</span>
                         <select style="width:40px" onchange="upValRule(${i},'op2',this.value)">
                             <option value="" ${r.op2===''?'selected':''}>&gt;</option><option value="<" ${r.op2==='<'?'selected':''}>&lt;</option><option value="=" ${r.op2==='='?'selected':''}>=</option><option value=">=" ${r.op2==='>='?'selected':''}>≥</option><option value="<=" ${r.op2==='<='?'selected':''}>≤</option>
                         </select>
-                        <input type="number" style="width:40px" value="${r.val2}" placeholder="${isLen?'Max':'B'}" oninput="upValRule(${i},'val2',this.value)">
+                        <input type="number" class="val-inp-fix" value="${r.val2}" placeholder="${isLen?'Max':'B'}" oninput="upValRule(${i},'val2',this.value)">
                         <span style="cursor:pointer; color:#999; margin-left:auto; padding-left:5px;" onclick="delValRule(${i})">×</span>
                     </div>
                 `;}).join('');
@@ -1259,18 +1268,18 @@
             if(!activeId) return;
             const f = fields.find(x=>x.id===activeId);
             if(f) {
+                /* [Fix Req 2] Ensure fresh field options every time we render rules */
+                const allFieldOpts = fields.map(ff => ({id:ff.id, title:`${ff.title} (${ff.type})`}));
+
                 document.getElementById('mRules').innerHTML = (f.machineRules||[]).map((r,i) => {
                     const msIdVal = `msMachVal${i}`;
                     const msIdTarget = `msMachTarget${i}`;
                     const machOpts = (f.opts || []).map(o => ({id:o, title:o}));
                     const selectedVals = r.val ? r.val.split(',') : [];
-                    const allFieldOpts = fields.map(ff => ({id:ff.id, title:`${ff.title} (${ff.type})`}));
-                    
                     const selectedTargets = [];
                     if(r.target) {
                         const targetTitles = r.target.split(',');
                         targetTitles.forEach(tTitle => {
-                            // Match by ID first, then Title
                             let found = fields.find(ff => ff.id === tTitle.trim());
                             if(!found) found = fields.find(ff => ff.title === tTitle.trim());
                             if(found) selectedTargets.push(found.id);
@@ -1300,14 +1309,15 @@
         window.delM = (i) => { if(!activeId) return; fields.find(x=>x.id===activeId).machineRules.splice(i,1); renderMachineRules(); };
         /* --- Other Helpers --- */
         function addShiftRule() { fields.find(x=>x.id===activeId).shiftRules.push({start:'08:00', end:'12:00', val:'早班'}); renderShiftRules(); render(); }
-        /* [Fix Req 5] Updated Shift Rules Render for Better Visibility */
+        /* [Fix Req 4] Shift Rules Render: Single Row */
         function renderShiftRules() { const f = fields.find(x=>x.id===activeId);
-            document.getElementById('sRules').innerHTML = (f.shiftRules||[]).map((r,i) => `<div class="logic-line" style="flex-wrap:wrap;"><input type="time" style="width:auto; min-width:90px;" value="${r.start}" oninput="upS(${i},'start',this.value)"> ~ <input type="time" style="width:auto; min-width:90px;" value="${r.end}" oninput="upS(${i},'end',this.value)"> <input style="width:50px" placeholder="班別" value="${r.val}" oninput="upS(${i},'val',this.value)"> <span style="cursor:pointer; margin-left:4px;" onclick="delS(${i})">🗑</span></div>`).join('');
+            document.getElementById('sRules').innerHTML = (f.shiftRules||[]).map((r,i) => `<div class="logic-line"><input type="time" class="time-inp-fix" value="${r.start}" oninput="upS(${i},'start',this.value)"> ~ <input type="time" class="time-inp-fix" value="${r.end}" oninput="upS(${i},'end',this.value)"> <input style="width:50px; flex:1;" placeholder="班別" value="${r.val}" oninput="upS(${i},'val',this.value)"> <span style="cursor:pointer; margin-left:auto;" onclick="delS(${i})">🗑</span></div>`).join('');
         }
         window.upS = (i,k,v) => { fields.find(x=>x.id===activeId).shiftRules[i][k]=v; render(); };
         window.delS = (i) => { fields.find(x=>x.id===activeId).shiftRules.splice(i,1); renderShiftRules(); render(); };
         
         function addURule() { fields.find(x=>x.id===activeId).uRules.push({cond:'', val:'', res:''}); renderRules(); }
+        /* [Fix Req 4] Unit Rules Render: Single Row */
         function renderRules() { const f = fields.find(x=>x.id===activeId);
             document.getElementById('uRules').innerHTML = (f.uRules||[]).map((r,i)=>`<div class="logic-line">當 <select onchange="upR(${i},'cond',this.value)">
             <option value="" ${r.cond===''?'selected':''}></option>
@@ -1316,7 +1326,7 @@
             <option value="=" ${r.cond==='='?'selected':''}>=</option>
             <option value=">=" ${r.cond==='>='?'selected':''}>≥</option>
             <option value="<=" ${r.cond==='<='?'selected':''}>≤</option>
-            </select> <input style="width:40px" value="${r.val}" oninput="upR(${i},'val',this.value)"> 帶入 <input style="width:40px" value="${r.res}" oninput="upR(${i},'res',this.value)"> <span style="cursor:pointer" onclick="delR(${i})">🗑</span></div>`).join('');
+            </select> <input style="width:40px; flex:1;" value="${r.val}" oninput="upR(${i},'val',this.value)"> 帶入 <input style="width:40px; flex:1;" value="${r.res}" oninput="upR(${i},'res',this.value)"> <span style="cursor:pointer; margin-left:auto;" onclick="delR(${i})">🗑</span></div>`).join('');
         }
         
         window.upR = (i,k,v) => { 
