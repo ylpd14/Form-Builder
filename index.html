@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>專業表單規格生成器 v62.16 (Layout & Logic Fixes)</title>
+    <title>專業表單規格生成器 v62.17 (Layout & Logic Fixes)</title>
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&display=swap" rel="stylesheet">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/Sortable/1.15.0/Sortable.min.js"></script>
     <style>
@@ -101,12 +101,11 @@
         /* Logic Panel */
         .logic-panel { background: #fffde7; border: 1px dashed #fbc02d; padding: 10px; border-radius: 8px; margin-top: 8px; }
         
-        /* [Fix Req 1 & 4] Single Row Layout for Rules */
-        .logic-line { display: flex; align-items: center; gap: 6px; margin-bottom: 6px; font-size: 12px; flex-wrap: nowrap; width: 100%; }
-        .logic-line input, .logic-line select { padding: 4px; border: 1px solid #ccc; border-radius: 3px; font-size: 12px; }
-        /* Specific widths for logic inputs to match screenshot */
-        .time-inp-fix { width: 95px !important; min-width: 95px; }
-        .val-inp-fix { width: 50px !important; flex: 0 0 50px; }
+        /* [Fix Req 2] Single Row Layout for Rules */
+        .logic-line { display: flex; align-items: center; gap: 6px; margin-bottom: 6px; font-size: 12px; flex-wrap: nowrap; width: 100%; overflow-x: auto; padding-bottom: 2px; }
+        .logic-line input, .logic-line select { padding: 4px; border: 1px solid #ccc; border-radius: 3px; font-size: 12px; flex-shrink: 0; }
+        .time-inp-fix { min-width: 95px; width: 95px; } /* Ensure full time shows */
+        .val-inp-fix { min-width: 50px; flex: 1; } 
         
         .opt-manage-item { display: flex; align-items: center; gap: 5px; margin-bottom: 6px; }
         .opt-manage-item input { flex: 1; padding: 6px; border: 1px solid #eee; border-radius: 4px; font-size: 12px; }
@@ -164,8 +163,8 @@
         .palette-custom-row:hover { background: #f5f5f5; }
         .custom-color-icon { width: 16px; height: 16px; border-radius: 50%; background: linear-gradient(to right, red, yellow, lime, cyan, blue, magenta, red); border: 1px solid #ccc; }
 
-        /* [Fix Req 1 & 4] Updated Validation Rule Item CSS to be Single Row */
-        .val-rule-item { display: flex; align-items: center; gap: 6px; margin-bottom: 6px; background: #fdfdfd; padding: 6px; border-radius: 4px; border: 1px solid #eee; flex-wrap: nowrap; width: 100%; justify-content: space-between; }
+        /* [Fix Req 2] Updated Validation Rule Item CSS to be Single Row */
+        .val-rule-item { display: flex; align-items: center; gap: 6px; margin-bottom: 6px; background: #fdfdfd; padding: 6px; border-radius: 4px; border: 1px solid #eee; flex-wrap: nowrap; width: 100%; justify-content: space-between; overflow-x: auto; }
         .val-rule-item select { padding: 4px; border: 1px solid #ccc; border-radius: 3px; font-size: 12px; min-width: 60px; flex-shrink: 0; }
         .val-rule-item input { padding: 4px; border: 1px solid #ccc; border-radius: 3px; font-size: 12px; flex: 1; min-width: 40px; }
         .val-rule-item span { flex-shrink: 0; }
@@ -376,6 +375,15 @@
                 </select>
             </div>
 
+            <div id="markStyleSec" class="p-item sec-divider" style="display:none; margin-top:10px;">
+                <label>標記樣式</label>
+                <select class="inp-p" id="pMarkStyle" onchange="apply()">
+                    <option value="mark-check">打勾 (預設)</option>
+                    <option value="mark-cross">打叉</option>
+                    <option value="mark-both">打勾或打叉 (三態)</option>
+                </select>
+            </div>
+
             <div id="machineSec" class="p-item sec-divider" style="display:none;">
                 <label>機台顯示樣式</label>
                 <select class="inp-p" id="pMachineStyle" onchange="apply()">
@@ -383,14 +391,6 @@
                     <option value="radio">單選</option>
                     <option value="checkbox">多選</option>
                 </select>
-                <div id="markStyleSec" style="margin-top:10px; border-top:1px dashed #ddd; padding-top:8px;">
-                    <label>標記樣式</label>
-                    <select class="inp-p" id="pMarkStyle" onchange="apply()">
-                        <option value="mark-check">打勾 (預設)</option>
-                        <option value="mark-cross">打叉</option>
-                        <option value="mark-both">打勾或打叉 (三態)</option>
-                    </select>
-                </div>
 
                 <div style="margin-top:10px; background:#f0f9ff; padding:10px; border-radius:6px; font-size:12px; color:#444;">
                     <label style="margin:0 0 5px 0;">
@@ -680,8 +680,9 @@
                         /* [Fix Req 3] Correctly passing f.markStyle */
                         else body = `${autoPrevBadge}<div style="display:flex; gap:10px; flex-wrap:wrap;">${(f.opts||[]).map(o=>`<label style="display:flex;align-items:center;gap:4px;font-size:13px;" onclick="select('${f.id}'); runMachineLogic('${f.id}', '${o}')">${renderMark(f.machineStyle==='radio', f.markStyle)} ${o}</label>`).join('')}</div>`;
                         if((f.machineRules||[]).length > 0) {
-                            const ruleText = f.machineRules.map(r=> `<span style="font-size:10px; background:#eee; padding:1px 3px;">${r.val}→${r.target}</span>`).join(' ');
-                            body = `<div style="font-size:11px; color:#888; margin-bottom:4px;">連動 ${ruleText}</div>` + body;
+                            /* [Fix Req 1] Display machine rules correctly by iterating through targets */
+                            const ruleText = f.machineRules.map(r=> `<span style="font-size:10px; background:#eee; padding:1px 3px;">${r.val}→${r.target.split(',').length}欄位</span>`).join(' ');
+                            body = `<div style="font-size:11px; color:#888; margin-bottom:4px;">連動規則 ${ruleText}</div>` + body;
                         }
                     } else if(f.type === 'shift') {
                         if(f.shiftStyle === 'radio') body = `${autoPrevBadge}<div style="display:flex; gap:10px; flex-wrap:wrap;">${(f.opts||[]).map(o=>`<label style="display:flex;align-items:center;gap:4px;font-size:13px;" onclick="select('${f.id}')">${renderMark(true, 'mark-check')} ${o}</label>`).join('')}</div>`;
@@ -759,7 +760,7 @@
             list.innerHTML = htmlArr.join('');
         }
 
-        /* --- Machine Logic (Updated for v62.14) --- */
+        /* [Fix Req 1] Improved Machine Logic: Use IDs for target finding */
         function runMachineLogic(id, val) {
             const f = fields.find(x => x.id === id);
             if (!f || !f.machineRules) return;
@@ -767,8 +768,8 @@
             if (rule) {
                 const targetIds = rule.target.split(',');
                 targetIds.forEach(tid => {
-                    let tf = fields.find(x => x.title === tid.trim());
-                    if(!tf) tf = fields.find(x => x.id === tid.trim());
+                    let tf = fields.find(x => x.id === tid.trim()); // Try ID first
+                    if(!tf) tf = fields.find(x => x.title === tid.trim()); // Fallback to title
                     
                     if (tf) {
                         const newOpts = rule.targetOpts.split(',').map(s=>s.trim()).filter(s=>s);
@@ -933,9 +934,10 @@
             /* Logic for Machine Section and Mark Style */
             const isMachine = f.type === 'machine';
             document.getElementById('machineSec').style.display = isMachine ? 'block' : 'none';
-            /* [Fix Req 2] Ensure fresh list for Machine targets */
+            /* [Fix Req 1] Force re-render of machine rules to ensure proper select list state */
             if(isMachine) renderMachineRules();
 
+            /* [Fix Req 3] markStyleSec logic moved above machineSec and logic updated */
             const showMarkStyle = ['choices','grid'].includes(f.type) || (isMachine && ['radio','checkbox'].includes(f.machineStyle));
             const msDiv = document.getElementById('markStyleSec');
             if(msDiv) msDiv.style.display = showMarkStyle ? 'block' : 'none';
@@ -1130,8 +1132,9 @@
                 const idx = parseInt(contextStr.replace('mach_target',''));
                 const f = fields.find(x=>x.id===activeId); 
                 if(f && f.machineRules[idx]) { 
-                    const titles = selected.map(sid => { const ff = fields.find(x=>x.id===sid); return ff ? ff.title : sid; });
-                    f.machineRules[idx].target = titles.join(','); // Store titles or IDs
+                    /* [Fix Req 1] Save IDs instead of titles to avoid ambiguity */
+                    const ids = selected.join(',');
+                    f.machineRules[idx].target = ids; 
                     renderMachineRules();
                 } 
             }
@@ -1178,7 +1181,7 @@
                 render(); 
             }
         }
-        /* [Fix Req 4] Updated Auto Prev Render: Single Row */
+        /* [Fix Req 2] Updated Auto Prev Render: Single Row */
         function renderAutoPrevRules() { 
             if(!activeId) return;
             const f = fields.find(x=>x.id===activeId); 
@@ -1208,7 +1211,7 @@
         function delValRule(i) { if(!activeId) return; fields.find(x=>x.id===activeId).valRules.splice(i, 1); renderValRules(); apply(); }
         function upValRule(i, k, v) { if(!activeId) return; fields.find(x=>x.id===activeId).valRules[i][k] = v; apply(); }
         
-        /* [Fix Req 1] Validation Rules Render: Single Row */
+        /* [Fix Req 2] Validation Rules Render: Single Row */
         function renderValRules() {
             if(!activeId) return;
             const f = fields.find(x=>x.id===activeId);
@@ -1268,7 +1271,7 @@
             if(!activeId) return;
             const f = fields.find(x=>x.id===activeId);
             if(f) {
-                /* [Fix Req 2] Ensure fresh field options every time we render rules */
+                /* [Fix Req 1] Refresh options to ensure IDs are valid */
                 const allFieldOpts = fields.map(ff => ({id:ff.id, title:`${ff.title} (${ff.type})`}));
 
                 document.getElementById('mRules').innerHTML = (f.machineRules||[]).map((r,i) => {
@@ -1276,13 +1279,13 @@
                     const msIdTarget = `msMachTarget${i}`;
                     const machOpts = (f.opts || []).map(o => ({id:o, title:o}));
                     const selectedVals = r.val ? r.val.split(',') : [];
+                    
                     const selectedTargets = [];
                     if(r.target) {
-                        const targetTitles = r.target.split(',');
-                        targetTitles.forEach(tTitle => {
-                            let found = fields.find(ff => ff.id === tTitle.trim());
-                            if(!found) found = fields.find(ff => ff.title === tTitle.trim());
-                            if(found) selectedTargets.push(found.id);
+                        const targetIds = r.target.split(',');
+                        targetIds.forEach(tId => {
+                            // Ensure the ID still exists in current fields
+                            if(fields.some(ff => ff.id === tId)) selectedTargets.push(tId);
                         });
                     }
 
@@ -1309,7 +1312,7 @@
         window.delM = (i) => { if(!activeId) return; fields.find(x=>x.id===activeId).machineRules.splice(i,1); renderMachineRules(); };
         /* --- Other Helpers --- */
         function addShiftRule() { fields.find(x=>x.id===activeId).shiftRules.push({start:'08:00', end:'12:00', val:'早班'}); renderShiftRules(); render(); }
-        /* [Fix Req 4] Shift Rules Render: Single Row */
+        /* [Fix Req 2] Shift Rules Render: Single Row */
         function renderShiftRules() { const f = fields.find(x=>x.id===activeId);
             document.getElementById('sRules').innerHTML = (f.shiftRules||[]).map((r,i) => `<div class="logic-line"><input type="time" class="time-inp-fix" value="${r.start}" oninput="upS(${i},'start',this.value)"> ~ <input type="time" class="time-inp-fix" value="${r.end}" oninput="upS(${i},'end',this.value)"> <input style="width:50px; flex:1;" placeholder="班別" value="${r.val}" oninput="upS(${i},'val',this.value)"> <span style="cursor:pointer; margin-left:auto;" onclick="delS(${i})">🗑</span></div>`).join('');
         }
@@ -1317,7 +1320,7 @@
         window.delS = (i) => { fields.find(x=>x.id===activeId).shiftRules.splice(i,1); renderShiftRules(); render(); };
         
         function addURule() { fields.find(x=>x.id===activeId).uRules.push({cond:'', val:'', res:''}); renderRules(); }
-        /* [Fix Req 4] Unit Rules Render: Single Row */
+        /* [Fix Req 2] Unit Rules Render: Single Row */
         function renderRules() { const f = fields.find(x=>x.id===activeId);
             document.getElementById('uRules').innerHTML = (f.uRules||[]).map((r,i)=>`<div class="logic-line">當 <select onchange="upR(${i},'cond',this.value)">
             <option value="" ${r.cond===''?'selected':''}></option>
