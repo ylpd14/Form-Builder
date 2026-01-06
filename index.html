@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>專業表單規格生成器 v62.20 (Grid & UI Polish)</title>
+    <title>專業表單規格生成器 v62.21 (Option Sort & Grid Polish)</title>
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&display=swap" rel="stylesheet">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/Sortable/1.15.0/Sortable.min.js"></script>
     <style>
@@ -75,7 +75,7 @@
         .grid-add-btn:hover { background: #eee; }
         .grid-add-col { width: 40px; height: 100%; border-left: 1px solid #ddd; }
         .grid-add-row { height: 35px; border-top: 1px solid #eee; }
-        /* [Fix Req 4] Grid Header Mode Switcher */
+        /* Grid Header Mode Switcher */
         .grid-header-mode-icon { position:absolute; top:2px; left:2px; font-size:12px; cursor:pointer; opacity:0.6; z-index:10; background:rgba(255,255,255,0.8); border-radius:3px; padding:1px; }
         .grid-header-mode-icon:hover { opacity:1; background:#fff; box-shadow: 0 0 2px rgba(0,0,0,0.2); }
 
@@ -104,16 +104,19 @@
         /* Logic Panel */
         .logic-panel { background: #fffde7; border: 1px dashed #fbc02d; padding: 10px; border-radius: 8px; margin-top: 8px; }
         
-        /* [Fix Req 1] Expanded width for time inputs to prevent cutout */
+        /* [Fix Req 1] Expanded width for time inputs to prevent cutout (130px) */
         .logic-line { display: flex; align-items: center; gap: 6px; margin-bottom: 6px; font-size: 12px; flex-wrap: nowrap; width: 100%; white-space: nowrap; overflow: hidden; }
         .logic-line input, .logic-line select { padding: 4px; border: 1px solid #ccc; border-radius: 3px; font-size: 12px; flex-shrink: 0; }
-        .time-inp-fix { width: 125px; flex-shrink: 0; } 
+        .time-inp-fix { width: 130px; flex-shrink: 0; } 
         .val-inp-fix { width: 50px; flex: 1; }
         
-        .opt-manage-item { display: flex; align-items: center; gap: 5px; margin-bottom: 6px; }
-        .opt-manage-item input { flex: 1; padding: 6px; border: 1px solid #eee; border-radius: 4px; font-size: 12px; }
+        .opt-manage-item { display: flex; align-items: center; gap: 5px; margin-bottom: 6px; background:#fff; border:1px solid #eee; padding:4px; border-radius:4px; }
+        .opt-manage-item input { flex: 1; padding: 4px; border: 1px solid #ddd; border-radius: 3px; font-size: 12px; }
         .opt-manage-item span { cursor: pointer; color: #ccc; }
         .opt-manage-item span:hover { color: var(--danger); }
+        .opt-drag-handle { cursor: grab; color: #bbb; margin-right: 4px; font-size: 14px; user-select: none; }
+        .opt-drag-handle:hover { color: #666; }
+        
         .add-link { color: var(--p); font-size: 12px; font-weight: bold; cursor: pointer; margin-top: 8px; display: inline-block; }
         .sec-divider { margin-top: 15px; border-top: 1px solid #eee; padding-top: 10px; }
         .link-icon { color: var(--p); margin-left: 5px; text-decoration: none; font-size: 14px; cursor: pointer; }
@@ -166,7 +169,7 @@
         .palette-custom-row:hover { background: #f5f5f5; }
         .custom-color-icon { width: 16px; height: 16px; border-radius: 50%; background: linear-gradient(to right, red, yellow, lime, cyan, blue, magenta, red); border: 1px solid #ccc; }
 
-        /* [Fix Req 2] Consistent Validation Rule Styling */
+        /* Validation Rule Item CSS */
         .val-rule-item { display: flex; align-items: center; gap: 4px; margin-bottom: 6px; background: #fdfdfd; padding: 4px; border-radius: 4px; border: 1px solid #eee; flex-wrap: nowrap; width: 100%; white-space: nowrap; overflow: hidden; }
         .val-rule-item select, .val-rule-item input { padding: 4px; border: 1px solid #ccc; border-radius: 3px; font-size: 12px; height: 26px; box-sizing: border-box; }
         .val-type-sel { width: 55px; min-width: 55px; flex-shrink: 0; text-align:center; }
@@ -177,7 +180,7 @@
         .header-split { display: flex; align-items: center; justify-content: space-between; margin-bottom: 5px; }
         .header-right-check { font-size: 12px; font-weight: normal; margin-left: auto; }
         
-        /* [Fix Req 3] Card UI Hints */
+        /* Card UI Hints */
         .ui-hint-badge { display: inline-block; font-size: 10px; padding: 1px 4px; border-radius: 3px; margin-left: 5px; background-color: #f1f3f4; color: #5f6368; border: 1px solid #dadce0; vertical-align: middle; }
 
         /* Excel Visuals */
@@ -428,11 +431,7 @@
                 <label class="p-check-row"><input type="checkbox" id="pCorner" onchange="apply()"> 顯示斜線表頭</label>
                 <label class="p-check-row"><input type="checkbox" id="pShowCol" onchange="apply()"> 顯示欄標題</label>
                 <label class="p-check-row"><input type="checkbox" id="pShowRow" onchange="apply()"> 顯示列標題</label>
-                <div style="margin-top:10px; border-top:1px dashed #ddd; padding-top:5px;">
-                    <label style="font-size:12px; color:#666;">欄位模式設定 (每欄獨立)</label>
-                    <div id="gridColSettings"></div>
                 </div>
-            </div>
 
             <div id="contentSec" class="p-item sec-divider">
                 <label>內容限制與格式</label>
@@ -633,7 +632,7 @@
                 id, type, title, width:'w-100', size:14, color:'#000000', bgColor: 'transparent', bold:false, italic:false, underline:false,
                 req:false, descE:false, desc:'', unitB:'', uEnable:false, uRules: [], 
                 mode:'text', manual:false,
-                /* [Fix Req 4] Grid Default Show Headers */
+                /* [Fix Req 3] Grid Default Show Headers */
                 rows:['第 1 列'], cols:['第 1 欄'], colModes: ['text'],
                 corner:true, cornerTop:'欄名', cornerBot:'列名', showCol:true, showRow:true,
                 opts:['選項 1'], testV:'', link:'', upper:false, defVal:'', 
@@ -985,10 +984,7 @@
             if(canHaveOpts && !isLinked) renderSidebarOpts();
             
             document.getElementById('modeSec').style.display = ['choices'].includes(f.type)?'block':'none';
-            if(f.type === 'grid') {
-                const colContainer = document.getElementById('gridColSettings');
-                colContainer.innerHTML = f.cols.map((c, i) => `<div class="grid-col-config"><input value="${c}" onchange="syncGridCol('${f.id}',${i},this.value)"><div class="mode-icon-btn" onclick="toggleGridColMode('${f.id}', ${i}, this)" title="切換模式">${getIconForMode(f.colModes[i])}</div><span onclick="delCol('${f.id}',${i})">×</span></div>`).join('');
-            }
+            /* [Fix Req 3] Removed Grid Col Settings from sidebar as they are editable on canvas */
         }
         
         function getIconForMode(m) {
@@ -1360,7 +1356,7 @@
         window.delM = (i) => { if(!activeId) return; fields.find(x=>x.id===activeId).machineRules.splice(i,1); renderMachineRules(); };
         /* --- Other Helpers --- */
         function addShiftRule() { fields.find(x=>x.id===activeId).shiftRules.push({start:'08:00', end:'12:00', val:'早班'}); renderShiftRules(); render(); }
-        /* [Fix Req 1 & 2] Shift Rules Render: Single Row, Fixed Time Width */
+        /* [Fix Req 1 & 2] Shift Rules Render: Single Row, Fixed Time Width (130px) */
         function renderShiftRules() { const f = fields.find(x=>x.id===activeId);
             document.getElementById('sRules').innerHTML = (f.shiftRules||[]).map((r,i) => `<div class="logic-line"><input type="time" class="time-inp-fix" value="${r.start}" oninput="upS(${i},'start',this.value)"> ~ <input type="time" class="time-inp-fix" value="${r.end}" oninput="upS(${i},'end',this.value)"> <input style="width:50px; flex:1;" placeholder="班別" value="${r.val}" oninput="upS(${i},'val',this.value)"> <span style="cursor:pointer; margin-left:auto;" onclick="delS(${i})">🗑</span></div>`).join('');
         }
@@ -1441,13 +1437,34 @@
         function renderSidebarOpts() {
             if(!activeId) return;
             const f = fields.find(x=>x.id===activeId);
-            document.getElementById('optList').innerHTML = (f.opts||[]).map((o,i) => `<div class="opt-manage-item"><input value="${o}" oninput="upOpt(${i},this.value)"> <span onclick="delOpt(${i})">×</span></div>`).join('');
+            /* [Fix Req 2] Added SortableJS to optList */
+            const container = document.getElementById('optList');
+            container.innerHTML = (f.opts||[]).map((o,i) => `<div class="opt-manage-item" data-idx="${i}"><span class="opt-drag-handle">☰</span><input value="${o}" oninput="upOpt(${i},this.value)"> <span onclick="delOpt(${i})">×</span></div>`).join('');
+            
+            try {
+                if(container._sortable) container._sortable.destroy();
+                container._sortable = new Sortable(container, {
+                    handle: '.opt-drag-handle',
+                    animation: 150,
+                    onEnd: function (evt) {
+                        const oldIdx = evt.oldIndex;
+                        const newIdx = evt.newIndex;
+                        if (oldIdx !== newIdx) {
+                            const item = f.opts.splice(oldIdx, 1)[0];
+                            f.opts.splice(newIdx, 0, item);
+                            // Re-render canvas but keep sidebar list DOM to avoid breaking drag state
+                            // We need to re-bind inputs though
+                            render();
+                            renderSidebarOpts(); // Refresh sidebar to correct oninput indices
+                        }
+                    }
+                });
+            } catch(e) { console.log('Sortable error', e); }
         }
         window.upOpt = (i,v) => { 
             const f = fields.find(x=>x.id===activeId);
             f.opts[i]=v; 
             render();
-            /* [Fix Req 1] Force re-render of machine rules when options change */
             if(f.type === 'machine') renderMachineRules();
         };
         window.delOpt = (i) => { 
@@ -1455,7 +1472,6 @@
             f.opts.splice(i,1); 
             renderSidebarOpts(); 
             render();
-            /* [Fix Req 1] Force re-render of machine rules when options change */
             if(f.type === 'machine') renderMachineRules();
         };
 
@@ -1466,10 +1482,8 @@
             // If Radio mode (Single or Mixed Radio), uncheck all others in the SAME field first
             if(isRadio) {
                 // Find parent container that holds all options for this field
-                // In this simplified render, options are siblings within a container
-                const container = el.closest('.card') ? el.closest('.card').querySelector('div:nth-of-type(2)') : null; // Body container
+                const container = el.closest('.card') ? el.closest('.card').querySelector('div:nth-of-type(2)') : null; 
                 
-                // Better approach: Find all icons with same fid data attribute or just within the same card
                 if(container) {
                      const siblings = container.querySelectorAll('.fake-icon.radio');
                      siblings.forEach(sib => {
